@@ -1,0 +1,163 @@
+import numpy as np
+import numpy.random as npr
+import numpy.linalg as npl
+
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from matplotlib import gridspec
+
+import networkx as nx
+
+import parser
+
+
+class GraphGenerator(object):
+    """ Returns different types of network configurations (i.e. topologies, etc)
+    """
+    @staticmethod
+    def get_random_graph(node_num=20, edge_prob=0.6):
+        return nx.gnp_random_graph(node_num, edge_prob)
+
+    @staticmethod
+    def get_regulatory_graph(file):
+        return parser.generate_tf_gene_regulation(file)
+
+class GraphHandler(object):
+    """ Central entity to conduct experiments/analyses on a given network
+    """
+    def __init__(self, graph):
+        self.graph = graph
+        self.adja_m = nx.to_numpy_matrix(self.graph)
+
+    def dump_adjacency_matrix(self, file):
+        """ Dumps adjacency matrix into specified file
+        """
+        np.savetxt(file, self.adja_m)
+
+    def dump_node_names(self, file):
+        """ Dumps node names into specified file
+        """
+        with open(file, 'w') as fd:
+            for n in nx.nodes_iter(self.graph):
+                fd.write('%s\n' % n)
+
+    def get_node_names(self):
+        """ Returns node names in lowercase
+        """
+        return [n.lower() for n in nx.nodes_iter(self.graph)]
+
+    def visualize(self, file):
+        """ Visualize current graph and saves resulting image to specified file
+        """
+        pos = nx.random_layout(self.graph)
+        nx.draw(
+            self.graph, pos,
+            with_labels=True,
+            linewidths=0,
+            width=0.1
+        )
+        plt.savefig(file, dpi=150)
+
+    def simulate(self, runs=11, initial=None):
+        """ Simulates network evolution by adjacency matrix multiplication
+        """
+        if not initial:
+            initial = np.array([npr.random() for i in range(self.graph.number_of_nodes())])
+
+        data = [initial]
+        for i in range(runs):
+            cur = [self.adja_m.dot(data[-1])[0, i] for i in range(self.graph.number_of_nodes())]
+            cur /= npl.norm(cur)
+
+            data = np.vstack((data, cur))
+
+        return data
+
+    def get_perron_frobenius(self):
+        """ Returns characteristic (normalized) Perron-Frobenius eigenvector
+        """
+        val, vec = npl.eig(self.adja_m) # returns already normalized eigenvectors
+        max_eigenvalue_index = np.argmax(np.real(val))
+        perron_frobenius = np.array(np.transpose(np.real(vec[:, max_eigenvalue_index])).tolist()[0])
+
+        sorted_vals = sorted(np.real(val))
+        x = (sorted_vals[-1]-sorted_vals[-2])/sorted_vals[-1]
+        y = min(sum(perron_frobenius<0), sum(perron_frobenius>0)) # find number of mismatching entries after proper rescaling
+        print("Stats:", x, y)
+
+        if all(i <= 0 for i in perron_frobenius):
+            print("Rescaled pf-eigenvector by -1")
+            perron_frobenius *= -1
+        elif any(i < 0 for i in perron_frobenius):
+            print("Error, pf-eigenvector is malformed")
+            #print(perron_frobenius)
+            return None
+
+        return perron_frobenius
+
+    def get_pagerank(self):
+        """ Computes normalized page rank of current graph
+        """
+        pagerank = np.array(nx.pagerank(self.graph)).tolist()
+
+        vals = [v for v in pagerank.values()]
+        vals /= npl.norm(vals)
+
+        return vals
+
+    def get_degree_distribution(self):
+        """ Computes normalized degree distribution of current graph
+        """
+        deg_di = nx.degree(self.graph).values()
+        max_deg = max(nx.degree(self.graph).values())
+
+        vals = [d/max_deg for d in deg_di]
+        vals /= npl.norm(vals)
+
+        return vals
+
+class Plotter(object):
+    @staticmethod
+    def present_graph(data, perron_frobenius, page_rank, degree_distribution):
+        """ Shows a nice representation of the graphs features after evolution
+        """
+        info = [
+            {
+                'data': data[::-1],
+                'title': 'Excitation Development via Adjacency-Matrix Multiplication',
+                'rel_height': 6
+            },
+            {
+                'data': np.array([perron_frobenius]),
+                'title': 'Perron-Frobenius Eigenvector',
+                'rel_height': 1
+            },
+            {
+                'data': np.array([page_rank]),
+                'title': 'Pagerank',
+                'rel_height': 1
+            },
+            {
+                'data': np.array([degree_distribution]),
+                'title': 'Degree Distribution',
+                'rel_height': 1
+            },
+            {
+                'data': abs(np.array([degree_distribution])-np.array([perron_frobenius])),
+                'title': 'Difference between Degree Distribution and Perron-Frobenius Eigenvector',
+                'rel_height': 1
+            }
+        ]
+
+        fig = plt.figure()
+        gs = gridspec.GridSpec(len(info), 1, height_ratios=[e['rel_height'] for e in info])
+        for entry, g in zip(info, gs):
+            ax = plt.subplot(g)
+
+            ax.pcolor(entry['data'], cmap=cm.gray, vmin=-0.1, vmax=1)
+
+            ax.set_title(entry['title'])
+            ax.xaxis.set_major_locator(plt.NullLocator())
+            ax.yaxis.set_major_locator(plt.NullLocator())
+
+        plt.show()
