@@ -2,6 +2,8 @@ import numpy as np
 import numpy.random as npr
 import numpy.linalg as npl
 
+import scipy.stats as scits
+
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import gridspec
@@ -83,7 +85,6 @@ class GraphHandler(object):
         sorted_vals = sorted(np.real(val))
         x = (sorted_vals[-1]-sorted_vals[-2])/sorted_vals[-1]
         y = min(sum(perron_frobenius<0), sum(perron_frobenius>0)) # find number of mismatching entries after proper rescaling
-        print("Stats:", x, y)
 
         if all(i <= 0 for i in perron_frobenius):
             print("Rescaled pf-eigenvector by -1")
@@ -116,6 +117,27 @@ class GraphHandler(object):
 
         return vals
 
+class StatsHandler(object):
+    @staticmethod
+    def correlate(x, y):
+        """ Computes Pearson coefficient of x, y and compares it to the correlation of shuffled forms of x, y
+        """
+        (corr, null_hypo) = scits.pearsonr(x, y) # correlation r [-1,1], prob. that null-hypothesis (i.e. x,y uncorrelated) holds [0,1]
+
+        xs = np.copy(x)
+        ys = np.copy(y)
+
+        rs = []
+        for i in range(3333):
+            npr.shuffle(xs)
+            npr.shuffle(ys)
+
+            (r, p) = scits.pearsonr(xs, ys)
+            rs.append(r)
+
+        mi, ma = min(rs), max(rs)
+        return corr, mi, ma
+
 class Plotter(object):
     @staticmethod
     def present_graph(data, perron_frobenius, page_rank, degree_distribution):
@@ -140,11 +162,6 @@ class Plotter(object):
             {
                 'data': np.array([degree_distribution]),
                 'title': 'Degree Distribution',
-                'rel_height': 1
-            },
-            {
-                'data': abs(np.array([degree_distribution])-np.array([perron_frobenius])),
-                'title': 'Difference between Degree Distribution and Perron-Frobenius Eigenvector',
                 'rel_height': 1
             }
         ]
