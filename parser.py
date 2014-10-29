@@ -30,8 +30,8 @@ def generate_tf_gene_regulation(file):
 
     return graph
 
-def parse_concentration(names, file):
-    """ Returns concentrations of given entries and list of unprocessable entries
+def parse_concentration(names, file, conc_range=[0]):
+    """ Returns concentrations (at specified point in time) of given entries and list of unprocessable entries
     """
     def parse_line(line):
         """ Reads line and returns concentrations
@@ -57,10 +57,16 @@ def parse_concentration(names, file):
                 continue
 
             gene = parts[1]
-            conc = parts[2]
+            conc = []
+            for i in conc_range:
+                try:
+                    conc.append(float(parts[2+i]))
+                except ValueError:
+                    conc.append(None)
+            if len(conc) == 1: conc = conc[0] # small fix for compatibility and stuff
 
             if n.lower() == gene.lower():
-                concs.append(float(conc))
+                concs.append(conc)
                 break
         else:
             #print("Nothing found for", n)
