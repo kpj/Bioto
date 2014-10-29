@@ -1,3 +1,6 @@
+import sys
+import os.path
+
 import numpy as np
 import numpy.random as npr
 import numpy.linalg as npl
@@ -82,9 +85,9 @@ class GraphHandler(object):
         max_eigenvalue_index = np.argmax(np.real(val))
         perron_frobenius = np.array(np.transpose(np.real(vec[:, max_eigenvalue_index])).tolist()[0])
 
-        sorted_vals = sorted(np.real(val))
-        x = (sorted_vals[-1]-sorted_vals[-2])/sorted_vals[-1]
-        y = min(sum(perron_frobenius<0), sum(perron_frobenius>0)) # find number of mismatching entries after proper rescaling
+        #sorted_vals = sorted(np.real(val))
+        #x = (sorted_vals[-1]-sorted_vals[-2])/sorted_vals[-1]
+        #y = min(sum(perron_frobenius<0), sum(perron_frobenius>0)) # find number of mismatching entries after proper rescaling
 
         if all(i <= 0 for i in perron_frobenius):
             print("Rescaled pf-eigenvector by -1")
@@ -92,6 +95,7 @@ class GraphHandler(object):
         elif any(i < 0 for i in perron_frobenius):
             print("Error, pf-eigenvector is malformed")
             #print(perron_frobenius)
+            sys.exit(1)
             return None
 
         return perron_frobenius
@@ -137,6 +141,32 @@ class StatsHandler(object):
 
         mi, ma = min(rs), max(rs)
         return corr, mi, ma
+
+class DataHandler(object):
+    @staticmethod
+    def load_concentrations(graph, file):
+        """ Loads concentrations for given graph from given file and caches results for later reuse
+        """
+        bak_fname = 'conc_%s.bak' % os.path.basename(file)
+
+        if os.path.isfile('%s.npy' % bak_fname):
+            print('Recovering data from', bak_fname)
+            concentrations = np.load('%s.npy' % bak_fname)
+        else:
+            print('Parsing data file')
+            names = graph.get_node_names()
+            concentrations, fail = parser.parse_concentration(
+                names,
+                file
+            )
+            concentrations = np.array(concentrations) / np.linalg.norm(concentrations)
+
+            print('> coverage', round(1 - len(fail)/len(names), 3))
+
+            # save for faster reuse
+            np.save(bak_fname, concentrations)
+
+        return concentrations
 
 class Plotter(object):
     @staticmethod

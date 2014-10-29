@@ -1,5 +1,3 @@
-import os.path
-
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import gridspec
@@ -11,6 +9,7 @@ import networkx as nx
 import utils, parser
 
 
+# create graph
 g = utils.GraphHandler(
     utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
 )
@@ -18,28 +17,13 @@ g = utils.GraphHandler(
 #g.dump_adjacency_matrix('foo.txt')
 #g.dump_node_names('names.txt')
 
-perron_frobenius = None
-while perron_frobenius == None:
-    perron_frobenius = g.get_perron_frobenius()
+# compute data
+perron_frobenius = g.get_perron_frobenius()
+concentrations = utils.DataHandler.load_concentrations(g, '../data/concentrations/GDS3597_full.soft')
 
-fname = 'conc.bak'
-if os.path.isfile('%s.npy' % fname):
-    print('Recovering data from', fname)
-    concentrations = np.load('%s.npy' % fname)
-else:
-    names = g.get_node_names()
-    concentrations, fail = parser.parse_concentration(
-        names,
-        '../data/concentrations/GDS3597_full.soft'
-    )
-    concentrations = np.array(concentrations) / np.linalg.norm(concentrations)
+print('correlation', np.correlate(concentrations, perron_frobenius))
 
-    print('coverage', round(1 - len(fail)/len(names), 3))
-    print('correlation', np.correlate(concentrations, perron_frobenius))
-
-    # save for faster reuse
-    np.save(fname, concentrations)
-
+# plot results
 fig = plt.figure()
 ax = plt.gca()
 
