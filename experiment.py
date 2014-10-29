@@ -43,14 +43,15 @@ else:
 fig = plt.figure()
 ax = plt.gca()
 
-sc = concentrations[:]
-sp = perron_frobenius[:]
-
-print(sc)
-print(sp)
+sc = sp = []
+for c, p in zip(concentrations, perron_frobenius):
+    if not (c == 0 or p == 0):
+        sc.append(c)
+        sp.append(p)
 
 ax.loglog(sc, sp)
 
+plt.title('Real-life comparisons')
 plt.xlabel('Actual Concentrations')
 plt.ylabel('Perron-Frobenius Eigenvector')
 
