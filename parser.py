@@ -70,7 +70,7 @@ def parse_concentration(names, file, conc_range=[0]):
                 break
         else:
             #print("Nothing found for", n)
-            concs.append(0)
+            concs.append(0 if len(conc_range) == 1 else [0]*len(conc_range))
             no_match.append(n)
 
     return concs, no_match
