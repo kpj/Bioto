@@ -21,13 +21,12 @@ g = utils.GraphHandler(
 perron_frobenius = g.get_perron_frobenius()
 concentrations = utils.DataHandler.load_concentrations(g, '../data/concentrations/GDS3597_full.soft')
 
-print('correlation', np.correlate(concentrations, perron_frobenius))
-
 # plot results
 fig = plt.figure()
 ax = plt.gca()
 
-sc = sp = []
+sc = []
+sp = []
 for c, p in zip(concentrations, perron_frobenius):
     if not (c == 0 or p == 0):
         sc.append(c)
