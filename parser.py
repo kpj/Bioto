@@ -33,11 +33,6 @@ def generate_tf_gene_regulation(file):
 def parse_concentration(names, file, conc_range=[0]):
     """ Returns concentrations (at specified point in time) of given entries and list of unprocessable entries
     """
-    def parse_line(line):
-        """ Reads line and returns concentrations
-        """
-        conc = line.split()[3]
-        return float(conc)
     with open(file, 'r') as fd:
         content = fd.read()
 

@@ -42,9 +42,8 @@ class GraphHandler(object):
     def dump_node_names(self, file):
         """ Dumps node names into specified file
         """
-        with open(file, 'w') as fd:
-            for n in nx.nodes_iter(self.graph):
-                fd.write('%s\n' % n)
+        for n in self.get_node_names():
+            fd.write('%s\n' % n)
 
     def get_node_names(self):
         """ Returns node names in lowercase
@@ -114,7 +113,7 @@ class GraphHandler(object):
         """ Computes normalized degree distribution of current graph
         """
         deg_di = nx.degree(self.graph).values()
-        max_deg = max(nx.degree(self.graph).values())
+        max_deg = max(deg_di)
 
         vals = [d/max_deg for d in deg_di]
         vals /= npl.norm(vals)
