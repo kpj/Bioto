@@ -34,6 +34,11 @@ class GraphHandler(object):
         self.graph = graph
         self.adja_m = nx.to_numpy_matrix(self.graph)
 
+    def __len__(self):
+        """ Returns number of nodes in wrapped graph
+        """
+        return nx.number_of_nodes(self.graph)
+
     def dump_adjacency_matrix(self, file):
         """ Dumps adjacency matrix into specified file
         """

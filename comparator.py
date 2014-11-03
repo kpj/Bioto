@@ -23,14 +23,14 @@ perron_frobenius = g.get_perron_frobenius()
 
 # get concentrations
 #concentrations = utils.DataHandler.load_concentrations(g, '../data/concentrations/GDS3597_full.soft')
+#concentrations = utils.DataHandler.load_averaged_concentrations(g, '../data/concentrations/')
 #concentrations = data_generator.NonlinearModel('../data/architecture/network_tf_gene.txt').generate()[-1,:]
-#concentrations = data_generator.BooleanModel().generate()[-1,:]
-concentrations = utils.DataHandler.load_averaged_concentrations(g, '../data/concentrations/')
+concentrations = data_generator.BooleanModel(node_num=len(g)).generate()[-1,:]
 
 concentrations /= npl.norm(concentrations)
 
 # plot results
 utils.Plotter.plot_loglog(
     concentrations, perron_frobenius,
-    'Real-life comparisons', 'Averaged Concentrations', 'Perron-Frobenius Eigenvector'
+    'Real-life comparisons', 'Gene Concentrations', 'Perron-Frobenius Eigenvector'
 )
