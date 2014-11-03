@@ -102,11 +102,16 @@ def parse_concentration(names, file, conc_range=[0]):
 
         gene = parts[1]
         conc = []
+        cont = False
         for i in conc_range:
             try:
                 conc.append(float(parts[2+i]))
             except ValueError:
-                conc.append(None)
+                cont = True
+                break
+        if cont:
+            continue
+
         if len(conc) == 1: conc = conc[0] # small fix for compatibility and stuff
 
         data[gene.lower()] = conc
