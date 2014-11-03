@@ -1,5 +1,5 @@
 import sys
-import os.path
+import os, os.path
 
 import numpy as np
 import numpy.random as npr
@@ -152,7 +152,7 @@ class DataHandler(object):
             print('Recovering data from', bak_fname)
             concentrations = np.load('%s.npy' % bak_fname)
         else:
-            print('Parsing data file')
+            print('Parsing data file', file)
             names = graph.get_node_names()
             concentrations, fail = parser.parse_concentration(
                 names,
@@ -160,12 +160,29 @@ class DataHandler(object):
             )
             concentrations = np.array(concentrations) / np.linalg.norm(concentrations)
 
-            print('> coverage', round(1 - len(fail)/len(names), 3))
+            print('> coverage:', round(1 - len(fail)/len(names), 3))
 
             # save for faster reuse
             np.save(bak_fname, concentrations)
 
         return concentrations
+
+    @staticmethod
+    def load_averaged_concentrations(graph, directory):
+        """ Loads concentration files in given directory and averages them
+        """
+        concs = []
+        for file in os.listdir(directory):
+            if not file.endswith('.soft'): continue
+
+            f = os.path.join(directory, file)
+            concs.append(DataHandler.load_concentrations(graph, f))
+
+        res = []
+        for col in np.array(concs).T:
+            res.append(sum(col)/len(col))
+
+        return np.array(res)
 
 class Plotter(object):
     @staticmethod
@@ -205,5 +222,28 @@ class Plotter(object):
             ax.set_title(entry['title'])
             ax.xaxis.set_major_locator(plt.NullLocator())
             ax.yaxis.set_major_locator(plt.NullLocator())
+
+        plt.show()
+
+    @staticmethod
+    def plot_loglog(x, y, title, xlabel, ylabel):
+        """ Creates loglog plot of given data and removes 0-pairs beforehand
+        """
+        fig = plt.figure()
+        ax = plt.gca()
+
+        xs = []
+        ys = []
+        for i, j in zip(x, y):
+            # remove 0-pairs
+            if not (i == 0 or j == 0):
+                xs.append(i)
+                ys.append(j)
+
+        ax.loglog(xs, ys)
+
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
 
         plt.show()

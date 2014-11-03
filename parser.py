@@ -88,9 +88,9 @@ def parse_concentration(names, file, conc_range=[0]):
 
     concs = []
     lines = content.split('\n')
-    stop = False
     header = None
     no_match = []
+
     for n in names:
         for l in lines:
             parts = l.split()
