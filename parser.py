@@ -87,33 +87,35 @@ def parse_concentration(names, file, conc_range=[0]):
         content = fd.read()
 
     concs = []
-    lines = content.split('\n')
-    header = None
     no_match = []
+    data = {}
+    header = None
 
-    for n in names:
-        for l in lines:
-            parts = l.split()
-            if len(l) == 0 or l[0] in '#^!':
-                continue
-            if not header:
-                # assume first non-comment row to be header
-                header = parts
-                continue
+    for line in content.split('\n'):
+        parts = line.split()
+        if len(line) == 0 or line[0] in '#^!':
+            continue
+        if not header:
+            # assume first non-comment row to be header
+            header = parts
+            continue
 
-            gene = parts[1]
-            conc = []
-            for i in conc_range:
-                try:
-                    conc.append(float(parts[2+i]))
-                except ValueError:
-                    conc.append(None)
-            if len(conc) == 1: conc = conc[0] # small fix for compatibility and stuff
+        gene = parts[1]
+        conc = []
+        for i in conc_range:
+            try:
+                conc.append(float(parts[2+i]))
+            except ValueError:
+                conc.append(None)
+        if len(conc) == 1: conc = conc[0] # small fix for compatibility and stuff
 
-            if n.lower() == gene.lower():
-                concs.append(conc)
-                break
-        else:
+        data[gene.lower()] = conc
+
+    for name in names:
+        n = name.lower()
+        try:
+            concs.append(data[n])
+        except KeyError:
             #print("Nothing found for", n)
             concs.append(0 if len(conc_range) == 1 else [0]*len(conc_range))
             no_match.append(n)
