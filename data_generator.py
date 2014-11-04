@@ -9,22 +9,23 @@ import parser
 
 
 class Model(object):
+    def __init__(self, graph):
+        self.adja_m = graph.adja_m
+        self.setup()
+
     def setup(self):
         pass
 
-    def generate(self, runs=10):
+    def generate(self):
         pass
 
 class BooleanModel(Model):
-    def __init__(self, node_num=50, edge_prob=0.6):
-        self.graph = nx.erdos_renyi_graph(node_num, edge_prob)
-        self.setup()
+    """ Simple model to generate gene expression data
+    """
 
     def setup(self):
         """ Declare activating and inhibiting links
         """
-        self.adja_m = nx.to_numpy_matrix(self.graph)
-
         # randomly inhibit or activate
         for y in range(self.adja_m.shape[0]):
             for x in range(self.adja_m.shape[1]):
@@ -58,21 +59,14 @@ class BooleanModel(Model):
 
         return np.array(data)
 
-class NonlinearModel(Model):
-    def __init__(self, file):
-        """ Nonlinear model to generate gene expression data
-        """
-        self.adja_m = parser.get_advanced_adjacency_matrix(file)
-        self.setup()
-
+class ODEModel(Model):
+    """ General model of ODEs to generate data
+    """
     def setup(self):
-        """ Initializes needed constants
+        """ Setup needed constants
         """
         self.e1 = 0.2
         self.e2 = 0.2
-
-        self.f1 = lambda x: 1/(1+x)
-        self.f2 = lambda x: x/(1+x)
 
     def generate(self, runs=10):
         """ Solves nonlinear system and returns solution
@@ -101,10 +95,23 @@ class NonlinearModel(Model):
         res = odeint(func, x0, t)
         return res
 
+class LinearModel(ODEModel):
+    def setup(self):
+        super(NonlinearModel, self).setup()
+
+        self.f1 = lambda x: x
+        self.f2 = lambda x: -x
+
+class NonlinearModel(ODEModel):
+    def setup(self):
+        super(NonlinearModel, self).setup()
+
+        self.f1 = lambda x: 1/(1+x)
+        self.f2 = lambda x: x/(1+x)
+
 
 if __name__ == '__main__':
-    nm = NonlinearModel('../data/architecture/network_tf_gene.txt')
-    print(nm.generate()[-1,:])
+    import utils
 
-    bm = BooleanModel()
-    print(bm.generate()[-1,:])
+    m = NonlinearModel(utils.GraphGenerator.get_random_graph())
+    print(m.generate())

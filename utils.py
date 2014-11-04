@@ -21,7 +21,7 @@ class GraphGenerator(object):
     """
     @staticmethod
     def get_random_graph(node_num=20, edge_prob=0.6):
-        return nx.gnp_random_graph(node_num, edge_prob)
+        return GraphHandler(nx.erdos_renyi_graph(node_num, edge_prob, directed=True), largest=True)
 
     @staticmethod
     def get_regulatory_graph(file):
