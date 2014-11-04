@@ -30,8 +30,13 @@ class GraphGenerator(object):
 class GraphHandler(object):
     """ Central entity to conduct experiments/analyses on a given network
     """
-    def __init__(self, graph):
+    def __init__(self, graph, largest=False):
+        """ Only considers largest weakly connected component by default
+        """
         self.graph = graph
+        if largest:
+            self.graph = max(nx.weakly_connected_component_subgraphs(self.graph), key=len)
+
         self.adja_m = nx.to_numpy_matrix(self.graph)
 
     def __len__(self):
