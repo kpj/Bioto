@@ -7,6 +7,8 @@ import numpy.linalg as npl
 
 import scipy.stats as scits
 
+import sympy as sp
+
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import gridspec
@@ -25,7 +27,7 @@ class GraphGenerator(object):
 
     @staticmethod
     def get_regulatory_graph(file):
-        return parser.generate_tf_gene_regulation(file)
+        return GraphHandler(parser.generate_tf_gene_regulation(file))
 
 class GraphHandler(object):
     """ Central entity to conduct experiments/analyses on a given network
@@ -94,9 +96,9 @@ class GraphHandler(object):
         max_eigenvalue_index = np.argmax(np.real(val))
         perron_frobenius = np.array(np.transpose(np.real(vec[:, max_eigenvalue_index])).tolist()[0])
 
-        #sorted_vals = sorted(np.real(val))
-        #x = (sorted_vals[-1]-sorted_vals[-2])/sorted_vals[-1]
-        #y = min(sum(perron_frobenius<0), sum(perron_frobenius>0)) # find number of mismatching entries after proper rescaling
+        #mat = sp.Matrix(self.adja_m.tolist())
+        #eigs = mat.eigenvects()
+        #perron_frobenius = np.array(max(eigs, key=lambda e: e[0])[2][0]).T[0]
 
         if all(i <= 0 for i in perron_frobenius):
             print("Rescaled pf-eigenvector by -1")

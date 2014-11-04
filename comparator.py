@@ -11,21 +11,17 @@ import utils, parser, data_generator
 
 
 # create graph
-g = utils.GraphHandler(
-    utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
-)
-#g.visualize('regnet.png')
-#g.dump_adjacency_matrix('foo.txt')
-#g.dump_node_names('names.txt')
+g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
+#g = utils.GraphGenerator.get_random_graph(node_num=20)
 
 # compute data
 perron_frobenius = g.get_perron_frobenius()
 
 # get concentrations
 #concentrations = utils.DataHandler.load_concentrations(g, '../data/concentrations/GDS3597_full.soft')
-#concentrations = utils.DataHandler.load_averaged_concentrations(g, '../data/concentrations/')
-#concentrations = data_generator.NonlinearModel(utils.GraphGenerator.get_random_graph()).generate()[-1,:]
-concentrations = data_generator.BooleanModel(utils.GraphGenerator.get_random_graph()).generate()[-1,:]
+concentrations = utils.DataHandler.load_averaged_concentrations(g, '../data/concentrations/')
+#concentrations = data_generator.NonlinearModel(g).generate()[-1,:]
+#concentrations = data_generator.BooleanModel(g).generate()[-1,:]
 
 concentrations /= npl.norm(concentrations)
 
