@@ -10,8 +10,6 @@ class Model(object):
         self.graph = graph
         self.setup()
 
-        print('Applying model, this might change the adjacency matrix')
-
     def setup(self):
         pass
 
@@ -41,20 +39,22 @@ class BooleanModel(Model):
     def setup(self):
         """ Declare activating and inhibiting links
         """
+        self.aug_adja_m = np.copy(self.graph.adja_m)
+
         # randomly inhibit or activate
-        for y in range(self.graph.adja_m.shape[0]):
-            for x in range(self.graph.adja_m.shape[1]):
-                if self.graph.adja_m[x,y] == 1:
-                    self.graph.adja_m[x,y] = npr.choice([-1, 1])
+        for y in range(self.aug_adja_m.shape[0]):
+            for x in range(self.aug_adja_m.shape[1]):
+                if self.aug_adja_m[x,y] == 1:
+                    self.aug_adja_m[x,y] = npr.choice([-1, 1])
 
         # add self-inhibitory links for all nodes without incoming inhibitory links
-        for x in range(self.graph.adja_m.shape[1]):
-            col = self.graph.adja_m[:,x]
+        for x in range(self.aug_adja_m.shape[1]):
+            col = self.aug_adja_m[:,x]
             col[col==1] = 0
             s = sum(abs(col))
 
             if s == 0:
-                self.graph.adja_m[x,x] = -1
+                self.aug_adja_m[x,x] = -1
 
     def generate(self, runs=10):
         """ Applies rule a couple of times and returns system evolution
@@ -62,9 +62,9 @@ class BooleanModel(Model):
         def rule(x):
             """ Apply rule
             """
-            return np.transpose(self.graph.adja_m.dot(np.transpose(x)))
+            return np.transpose(self.aug_adja_m.dot(np.transpose(x)))
 
-        num = self.graph.adja_m.shape[0]
+        num = self.aug_adja_m.shape[0]
         x0 = npr.sample(num)
 
         data = np.matrix(x0)
