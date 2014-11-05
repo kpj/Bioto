@@ -47,11 +47,13 @@ class StatsHandler(object):
         return corr, mi, ma
 
 class DataHandler(object):
+    backup_dir = 'conc_baks'
+
     @staticmethod
     def load_concentrations(graph, file):
         """ Loads concentrations for given graph from given file and caches results for later reuse
         """
-        bak_fname = 'conc_%s.bak' % os.path.basename(file)
+        bak_fname = os.path.join(DataHandler.backup_dir, 'conc_%s.bak' % os.path.basename(file))
 
         if os.path.isfile('%s.npy' % bak_fname):
             print('Recovering data from', bak_fname)
@@ -68,6 +70,8 @@ class DataHandler(object):
             print('> coverage:', round(1 - len(fail)/len(names), 3))
 
             # save for faster reuse
+            if not os.path.exists(DataHandler.backup_dir):
+                os.makedirs(DataHandler.backup_dir)
             np.save(bak_fname, concentrations)
 
         return concentrations
