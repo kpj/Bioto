@@ -38,6 +38,7 @@ def generate_tf_gene_regulation(file):
 
         for entry in data[tf]:
             sink = entry[0].lower()
+            effect = entry[1]
 
             graph.add_nodes_from([source, sink])
             graph.add_edge(source, sink)

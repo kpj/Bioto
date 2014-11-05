@@ -8,7 +8,7 @@ import utils, models
 
 
 # config
-node_num = 50
+node_num = 10
 edge_prob = 0.3
 runs = 11
 
@@ -16,7 +16,7 @@ runs = 11
 graph_handler = utils.GraphGenerator.get_random_graph(node_num, edge_prob)
 
 # generate data
-data = graph_handler.system.simulate(models.MultiplicatorModel, runs)
+data = graph_handler.system.simulate(models.NonlinearModel, runs)
 
 # get perron frobenius eigenvector/page rank
 perron_frobenius = graph_handler.math.get_perron_frobenius()

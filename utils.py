@@ -5,10 +5,6 @@ import numpy.random as npr
 
 import scipy.stats as scits
 
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from matplotlib import gridspec
-
 import networkx as nx
 
 import parser, graph
@@ -92,81 +88,3 @@ class DataHandler(object):
             res.append(sum(col)/len(col))
 
         return np.array(res)
-
-class Plotter(object):
-    plot_save_directory = 'plot_dir'
-
-    @staticmethod
-    def present_graph(data, perron_frobenius, page_rank, degree_distribution):
-        """ Shows a nice representation of the graphs features after evolution
-        """
-        info = [
-            {
-                'data': data[::-1],
-                'title': 'Excitation Development via Adjacency-Matrix Multiplication',
-                'rel_height': 6
-            },
-            {
-                'data': np.array([perron_frobenius]),
-                'title': 'Perron-Frobenius Eigenvector',
-                'rel_height': 1
-            },
-            {
-                'data': np.array([page_rank]),
-                'title': 'Pagerank',
-                'rel_height': 1
-            },
-            {
-                'data': np.array([degree_distribution]),
-                'title': 'Degree Distribution',
-                'rel_height': 1
-            }
-        ]
-
-        gs = gridspec.GridSpec(len(info), 1, height_ratios=[e['rel_height'] for e in info])
-        for entry, g in zip(info, gs):
-            ax = plt.subplot(g)
-
-            ax.pcolor(entry['data'], cmap=cm.gray, vmin=-0.1, vmax=1)
-
-            ax.set_title(entry['title'])
-            ax.xaxis.set_major_locator(plt.NullLocator())
-            ax.yaxis.set_major_locator(plt.NullLocator())
-
-        fig = plt.gcf()
-        plt.show()
-
-        if not os.path.exists(Plotter.plot_save_directory):
-            os.makedirs(Plotter.plot_save_directory)
-        fig.savefig(os.path.join(Plotter.plot_save_directory, 'overview.png'), dpi=150)
-
-    @staticmethod
-    def plot_loglog(x, y, title, xlabel, ylabel):
-        """ Creates loglog plot of given data and removes 0-pairs beforehand
-        """
-        ax = plt.gca()
-
-        xs = []
-        ys = []
-        for i, j in zip(x, y):
-            # remove 0-pairs
-            if not (i == 0 or j == 0):
-                xs.append(i)
-                ys.append(j)
-
-        ax.loglog(
-            xs, ys,
-            linestyle='None',
-            marker='.', markeredgecolor='blue'
-        )
-
-        plt.title(title)
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
-
-        fig = plt.gcf()
-        plt.show()
-
-        if not os.path.exists(Plotter.plot_save_directory):
-            os.makedirs(Plotter.plot_save_directory)
-        fig.savefig(os.path.join(Plotter.plot_save_directory, '%s.png' % title.replace(' ', '_')), dpi=150)

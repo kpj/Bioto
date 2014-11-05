@@ -2,7 +2,7 @@ import sys
 
 import numpy.linalg as npl
 
-import utils, models
+import utils, models, plotter
 
 
 ####################
@@ -20,10 +20,46 @@ def loglog(graph, concentrations, title, xlabel, ylabel):
     concentrations /= npl.norm(concentrations)
 
     # plot data
-    utils.Plotter.plot_loglog(
+    plotter.Plotter.loglog(
         concentrations, perron_frobenius,
         title, xlabel, ylabel
     )
+
+def analysis(graph, Model):
+    """ Examines different concentration components vs pf-ev
+    """
+    # generate data
+    pf = graph.math.get_perron_frobenius()
+    data = graph.system.simulate(Model)
+
+    # get individual points
+    fpc = data[-1,:]
+    pc = data[5,:]
+    fpc_pc = fpc - pc
+    pc_pc = pc - data[9,:]
+
+    # plot result
+    plotter.Plotter.multi_loglog(
+        'Analysis of %s' % Model.name,
+        'perron-frobenius eigenvector', [
+        {
+            'x': pf,
+            'y': fpc,
+            'ylabel': 'FP [c]'
+        }, {
+            'x': pf,
+            'y': pc,
+            'ylabel': 'P [c]'
+        }, {
+            'x': pf,
+            'y': fpc_pc,
+            'ylabel': 'FP-P [c]'
+        }, {
+            'x': pf,
+            'y': pc_pc,
+            'ylabel': 'P-P [c]'
+        }
+    ])
 
 
 ##################
@@ -36,7 +72,7 @@ def real_life_single():
 
     loglog(
         g, c,
-        'Real-Life Data', 'gene concentration', 'perron-forbenius eigenvector'
+        'Real-Life Data', 'gene concentration', 'perron-frobenius eigenvector'
     )
 
 def real_life_average():
@@ -45,7 +81,7 @@ def real_life_average():
 
     loglog(
         g, c,
-        'Real-Life Data', 'averaged gene concentration', 'perron-forbenius eigenvector'
+        'Real-Life Data (averaged)', 'averaged gene concentration', 'perron-frobenius eigenvector'
     )
 
 
@@ -59,7 +95,7 @@ def boolean_model(n=100, e=0.3):
 
     loglog(
         g, c,
-        'Boolean Model', 'gene concentration', 'perron-forbenius eigenvector'
+        'Boolean Model', 'gene concentration', 'perron-frobenius eigenvector'
     )
 
 def linear_model(n=100, e=0.3):
@@ -68,7 +104,7 @@ def linear_model(n=100, e=0.3):
 
     loglog(
         g, c,
-        'Linear Model', 'gene concentration', 'perron-forbenius eigenvector'
+        'Linear Model', 'gene concentration', 'perron-frobenius eigenvector'
     )
 
 def nonlinear_model(n=100, e=0.3):
@@ -77,7 +113,7 @@ def nonlinear_model(n=100, e=0.3):
 
     loglog(
         g, c,
-        'Nonlinear Model', 'gene concentration', 'perron-forbenius eigenvector'
+        'Nonlinear Model', 'gene concentration', 'perron-frobenius eigenvector'
     )
 
 
@@ -93,4 +129,6 @@ if __name__ == '__main__':
 
     #boolean_model()
     #linear_model()
-    #nonlinear_model()
+    nonlinear_model()
+
+    #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
