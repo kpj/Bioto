@@ -1,4 +1,4 @@
-import sys
+import sys, os
 
 import numpy as np
 import numpy.linalg as npl
@@ -34,14 +34,10 @@ class IOComponent(object):
     def visualize(self, file):
         """ Visualize current graph and saves resulting image to specified file
         """
-        pos = nx.random_layout(self.graph)
-        nx.draw(
-            self.graph, pos,
-            with_labels=True,
-            linewidths=0,
-            width=0.1
-        )
-        plt.savefig(file, dpi=150)
+        self.dump_adjacency_matrix('adja_m.txt')
+        self.dump_node_names('node_names.txt')
+
+        os.system('Rscript network_plotter.R "%s"' % file)
 
     def load_concentrations(self, file):
         """ Delegates to utils.DataHandler

@@ -18,7 +18,7 @@ class GraphGenerator(object):
     """ Returns different types of network configurations (i.e. topologies, etc)
     """
     @staticmethod
-    def get_random_graph(node_num=20, edge_prob=0.6):
+    def get_random_graph(node_num=20, edge_prob=0.3):
         return graph.Graph(nx.erdos_renyi_graph(node_num, edge_prob, directed=True))
 
     @staticmethod
