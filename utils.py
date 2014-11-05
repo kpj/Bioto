@@ -1,13 +1,9 @@
-import sys
 import os, os.path
 
 import numpy as np
 import numpy.random as npr
-import numpy.linalg as npl
 
 import scipy.stats as scits
-
-import sympy as sp
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -15,7 +11,7 @@ from matplotlib import gridspec
 
 import networkx as nx
 
-import parser
+import parser, graph
 
 
 class GraphGenerator(object):
@@ -23,114 +19,11 @@ class GraphGenerator(object):
     """
     @staticmethod
     def get_random_graph(node_num=20, edge_prob=0.6):
-        return GraphHandler(nx.erdos_renyi_graph(node_num, edge_prob, directed=True), largest=True)
+        return graph.Graph(nx.erdos_renyi_graph(node_num, edge_prob, directed=True))
 
     @staticmethod
     def get_regulatory_graph(file):
-        return GraphHandler(parser.generate_tf_gene_regulation(file))
-
-class GraphHandler(object):
-    """ Central entity to conduct experiments/analyses on a given network
-    """
-    def __init__(self, graph, largest=False):
-        """ Only considers largest weakly connected component by default
-        """
-        self.graph = graph
-        if largest:
-            self.graph = max(nx.weakly_connected_component_subgraphs(self.graph), key=len)
-
-        self.adja_m = nx.to_numpy_matrix(self.graph)
-
-    def __len__(self):
-        """ Returns number of nodes in wrapped graph
-        """
-        return nx.number_of_nodes(self.graph)
-
-    def dump_adjacency_matrix(self, file):
-        """ Dumps adjacency matrix into specified file
-        """
-        np.savetxt(file, self.adja_m)
-
-    def dump_node_names(self, file):
-        """ Dumps node names into specified file
-        """
-        for n in self.get_node_names():
-            fd.write('%s\n' % n)
-
-    def get_node_names(self):
-        """ Returns node names in lowercase
-        """
-        return [n.lower() for n in nx.nodes_iter(self.graph)]
-
-    def visualize(self, file):
-        """ Visualize current graph and saves resulting image to specified file
-        """
-        pos = nx.random_layout(self.graph)
-        nx.draw(
-            self.graph, pos,
-            with_labels=True,
-            linewidths=0,
-            width=0.1
-        )
-        plt.savefig(file, dpi=150)
-
-    def simulate(self, runs=11, initial=None):
-        """ Simulates network evolution by adjacency matrix multiplication
-        """
-        if not initial:
-            initial = np.array([npr.random() for i in range(self.graph.number_of_nodes())])
-
-        data = [initial]
-        for i in range(runs):
-            cur = [self.adja_m.dot(data[-1])[0, i] for i in range(self.graph.number_of_nodes())]
-            cur /= npl.norm(cur)
-
-            data = np.vstack((data, cur))
-
-        return data
-
-    def get_perron_frobenius(self):
-        """ Returns characteristic (normalized) Perron-Frobenius eigenvector
-        """
-        val, vec = npl.eig(self.adja_m) # returns already normalized eigenvectors
-        max_eigenvalue_index = np.argmax(np.real(val))
-        perron_frobenius = np.array(np.transpose(np.real(vec[:, max_eigenvalue_index])).tolist()[0])
-
-        #mat = sp.Matrix(self.adja_m.tolist())
-        #eigs = mat.eigenvects()
-        #perron_frobenius = np.array(max(eigs, key=lambda e: e[0])[2][0]).T[0]
-
-        if all(i <= 0 for i in perron_frobenius):
-            print("Rescaled pf-eigenvector by -1")
-            perron_frobenius *= -1
-        elif any(i < 0 for i in perron_frobenius):
-            print("Error, pf-eigenvector is malformed")
-            #print(perron_frobenius)
-            sys.exit(1)
-            return None
-
-        return perron_frobenius
-
-    def get_pagerank(self):
-        """ Computes normalized page rank of current graph
-        """
-        pagerank = np.array(nx.pagerank(self.graph)).tolist()
-
-        vals = [v for v in pagerank.values()]
-        vals /= npl.norm(vals)
-
-        return vals
-
-    def get_degree_distribution(self):
-        """ Computes normalized degree distribution of current graph
-        """
-        deg_di = nx.degree(self.graph).values()
-        max_deg = max(deg_di)
-
-        vals = [d/max_deg for d in deg_di]
-        vals /= npl.norm(vals)
-
-        return vals
+        return graph.Graph(parser.generate_tf_gene_regulation(file), largest=True)
 
 class StatsHandler(object):
     @staticmethod
@@ -165,7 +58,7 @@ class DataHandler(object):
             concentrations = np.load('%s.npy' % bak_fname)
         else:
             print('Parsing data file', file)
-            names = graph.get_node_names()
+            names = list(graph)
             concentrations, fail = parser.parse_concentration(
                 names,
                 file
@@ -224,7 +117,6 @@ class Plotter(object):
             }
         ]
 
-        fig = plt.figure()
         gs = gridspec.GridSpec(len(info), 1, height_ratios=[e['rel_height'] for e in info])
         for entry, g in zip(info, gs):
             ax = plt.subplot(g)
@@ -241,7 +133,6 @@ class Plotter(object):
     def plot_loglog(x, y, title, xlabel, ylabel):
         """ Creates loglog plot of given data and removes 0-pairs beforehand
         """
-        fig = plt.figure()
         ax = plt.gca()
 
         xs = []

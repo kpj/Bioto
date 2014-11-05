@@ -1,29 +1,28 @@
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from matplotlib import gridspec
+import sys
 
-import numpy as np
 import numpy.linalg as npl
 
-import networkx as nx
-
-import utils, parser, data_generator
+import utils, models
 
 
 # create graph
-g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
-#g = utils.GraphGenerator.get_random_graph(node_num=20)
-
-# compute data
-perron_frobenius = g.get_perron_frobenius()
+graph = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
+#graph = utils.GraphGenerator.get_random_graph(node_num=200)
 
 # get concentrations
-#concentrations = utils.DataHandler.load_concentrations(g, '../data/concentrations/GDS3597_full.soft')
-concentrations = utils.DataHandler.load_averaged_concentrations(g, '../data/concentrations/')
-#concentrations = data_generator.NonlinearModel(g).generate()[-1,:]
-#concentrations = data_generator.BooleanModel(g).generate()[-1,:]
+#concentrations = graph.io.load_concentrations('../data/concentrations/GDS3597.soft')
+concentrations = graph.io.load_averaged_concentrations('../data/concentrations/')
+#concentrations = graph.system.simulate(models.LinearModel)[-1,:]
+#concentrations = graph.system.simulate(models.NonlinearModel)[-1,:]
+#concentrations = graph.system.simulate(models.BooleanModel)[-1,:]
 
 concentrations /= npl.norm(concentrations)
+
+# compute pf-ev
+perron_frobenius = graph.math.get_perron_frobenius()
+if perron_frobenius is None:
+    print('Could not determine pf ev, aborting...')
+    sys.exit(1)
 
 # plot results
 utils.Plotter.plot_loglog(
