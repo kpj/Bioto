@@ -94,6 +94,8 @@ class DataHandler(object):
         return np.array(res)
 
 class Plotter(object):
+    plot_save_directory = 'plot_dir'
+
     @staticmethod
     def present_graph(data, perron_frobenius, page_rank, degree_distribution):
         """ Shows a nice representation of the graphs features after evolution
@@ -131,7 +133,12 @@ class Plotter(object):
             ax.xaxis.set_major_locator(plt.NullLocator())
             ax.yaxis.set_major_locator(plt.NullLocator())
 
+        fig = plt.gcf()
         plt.show()
+
+        if not os.path.exists(Plotter.plot_save_directory):
+            os.makedirs(Plotter.plot_save_directory)
+        fig.savefig(os.path.join(Plotter.plot_save_directory, 'overview.png'), dpi=150)
 
     @staticmethod
     def plot_loglog(x, y, title, xlabel, ylabel):
@@ -157,4 +164,9 @@ class Plotter(object):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
 
+        fig = plt.gcf()
         plt.show()
+
+        if not os.path.exists(Plotter.plot_save_directory):
+            os.makedirs(Plotter.plot_save_directory)
+        fig.savefig(os.path.join(Plotter.plot_save_directory, '%s.png' % title.replace(' ', '_')), dpi=150)
