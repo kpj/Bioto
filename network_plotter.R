@@ -19,7 +19,7 @@ plotg <- function(net, fname, value=NULL) {
   edges$midY <- (edges$Y1 + edges$Y2) / 2
 
   pnet <- ggplot() +
-    geom_segment(aes(x=X1, y=Y1, xend = X2, yend = Y2), data=edges, size=0.5, colour="grey") +
+    geom_segment(aes(x=X1, y=Y1, xend=X2, yend=Y2), data=edges, size=0.5, colour="grey") +
     geom_point(aes(x=X1, y=X2, col=elements, fill=5), data=plotcord, position=position_jitterdodge(dodge.width=3)) +
     geom_text(aes(x=X1, y=X2, label=elements), data=plotcord) +
     scale_x_continuous(breaks=NULL) +
