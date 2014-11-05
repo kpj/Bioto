@@ -64,10 +64,28 @@ class BooleanModel(Model):
         def rule(x):
             """ Apply rule
             """
-            return np.transpose(self.aug_adja_m.dot(np.transpose(x)))
+            xnext = []
+
+            for i in x.T:
+                sigma = 0
+                for j in x.T:
+                    sigma += self.aug_adja_m[i,j] * j
+                sigma = sigma.tolist()[0][0]
+
+                res = -1
+                if sigma > 0:
+                    res = 1
+                elif sigma < 0:
+                    res = 0
+                else:
+                    res = i.tolist()[0][0]
+
+                xnext.append(res)
+
+            return xnext
 
         num = self.aug_adja_m.shape[0]
-        x0 = npr.sample(num)
+        x0 = npr.randint(2, size=num)
 
         data = np.matrix(x0)
         for t in range(runs):
