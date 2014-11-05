@@ -19,6 +19,7 @@ class Model(object):
 class MultiplicatorModel(Model):
     """ Simulates network evolution by adjacency matrix multiplication
     """
+    name = 'Multiplicator Model'
 
     def generate(self, runs=10):
         initial = np.array([npr.random() for i in range(len(self.graph))])
@@ -35,6 +36,7 @@ class MultiplicatorModel(Model):
 class BooleanModel(Model):
     """ Simple model to generate gene expression data
     """
+    name = 'Boolean Model'
 
     def setup(self):
         """ Declare activating and inhibiting links
@@ -92,18 +94,18 @@ class ODEModel(Model):
         x0 = npr.sample(num)
 
         def func(X, t=0):
-            def iter(fun, i):
-                """ Generates term using given nonlinear function
+            def iter(fun, i, fac):
+                """ Generates term using given specified functions
                 """
                 sigma = 0
                 for j in range(num):
                     e = self.graph.adja_m[i, j]
-                    sigma += 0.5 * (abs(e) - e) * fun(X[j])
+                    sigma += 0.5 * (abs(e) + fac * e) * fun(X[j])
                 return sigma
             terms = []
 
             for i in range(num):
-                terms.append(self.e1 * iter(self.f1, i) + self.e1 * iter(self.f2, i))
+                terms.append(self.e1 * iter(self.f1, i, -1) + self.e1 * iter(self.f2, i, 1))
 
             return np.array(terms)
 
@@ -111,6 +113,8 @@ class ODEModel(Model):
         return res
 
 class LinearModel(ODEModel):
+    name = 'Linear Model'
+
     def setup(self):
         super(LinearModel, self).setup()
 
@@ -118,6 +122,8 @@ class LinearModel(ODEModel):
         self.f2 = lambda x: -x
 
 class NonlinearModel(ODEModel):
+    name = 'Nonlinear Model'
+
     def setup(self):
         super(NonlinearModel, self).setup()
 
