@@ -252,7 +252,11 @@ class Plotter(object):
                 xs.append(i)
                 ys.append(j)
 
-        ax.loglog(xs, ys)
+        ax.loglog(
+            xs, ys,
+            linestyle='None',
+            marker='.', markeredgecolor='blue'
+        )
 
         plt.title(title)
         plt.xlabel(xlabel)
