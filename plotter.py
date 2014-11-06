@@ -9,13 +9,18 @@ from matplotlib import gridspec
 
 class Plotter(object):
     plot_save_directory = 'plot_dir'
+    show_plots = True
 
     @staticmethod
     def show(name):
         """ Shows plot and automatically saves after closing preview
         """
         fig = plt.gcf()
-        plt.show()
+        
+        if Plotter.show_plots:
+            plt.show()
+        else:
+            plt.close()
 
         if not os.path.exists(Plotter.plot_save_directory):
             os.makedirs(Plotter.plot_save_directory)

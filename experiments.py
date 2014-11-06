@@ -104,14 +104,14 @@ def simulate_model(Model, n=100, e=0.3):
 ##################
 
 if __name__ == '__main__':
-    pass
+    plotter.Plotter.show_plots = False
 
     #real_life_single()
     #real_life_average()
 
     simulate_model(models.MultiplicatorModel)
-    #simulate_model(models.BooleanModel)
-    #simulate_model(models.LinearModel)
-    #simulate_model(models.NonlinearModel)
+    simulate_model(models.BooleanModel)
+    simulate_model(models.LinearModel)
+    simulate_model(models.NonlinearModel)
 
-    #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
+    analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
