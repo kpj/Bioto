@@ -89,31 +89,13 @@ def real_life_average():
 # Generated data #
 ##################
 
-def boolean_model(n=100, e=0.3):
+def simulate_model(Model, n=100, e=0.3):
     g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
-    c = g.system.simulate(models.BooleanModel)[-1,:]
+    c = g.system.simulate(Model)[-1,:]
 
     loglog(
         g, c,
-        'Boolean Model', 'gene concentration', 'perron-frobenius eigenvector'
-    )
-
-def linear_model(n=100, e=0.3):
-    g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
-    c = g.system.simulate(models.LinearModel)[-1,:]
-
-    loglog(
-        g, c,
-        'Linear Model', 'gene concentration', 'perron-frobenius eigenvector'
-    )
-
-def nonlinear_model(n=100, e=0.3):
-    g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
-    c = g.system.simulate(models.NonlinearModel)[-1,:]
-
-    loglog(
-        g, c,
-        'Nonlinear Model', 'gene concentration', 'perron-frobenius eigenvector'
+        Model.name, 'gene concentration', 'perron-frobenius eigenvector'
     )
 
 
@@ -127,8 +109,9 @@ if __name__ == '__main__':
     #real_life_single()
     #real_life_average()
 
-    #boolean_model()
-    #linear_model()
-    nonlinear_model()
+    simulate_model(models.MultiplicatorModel)
+    #simulate_model(models.BooleanModel)
+    #simulate_model(models.LinearModel)
+    #simulate_model(models.NonlinearModel)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
