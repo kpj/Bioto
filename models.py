@@ -39,7 +39,7 @@ class BooleanModel(Model):
     name = 'Boolean Model'
 
     def setup(self):
-        """ Declare activating and inhibiting links
+        """ Declare activating and inhibiting links and further constants
         """
         self.aug_adja_m = np.copy(self.graph.adja_m)
 
@@ -51,15 +51,15 @@ class BooleanModel(Model):
 
         # add self-inhibitory links for all nodes without incoming inhibitory links
         for x in range(self.aug_adja_m.shape[1]):
-            col = self.aug_adja_m[:,x]
+            col = np.copy(self.aug_adja_m[:,x])
             col[col==1] = 0
             s = sum(abs(col))
 
             if s == 0:
                 self.aug_adja_m[x,x] = -1
 
-    def generate(self, runs=10):
-        """ Applies rule a couple of times and returns system evolution
+    def generate_binary_time_series(self, runs=10):
+        """ Applies rule a couple of times and returns system evolution as binary ON/OFF states
         """
         def rule(x):
             """ Apply rule
@@ -93,6 +93,38 @@ class BooleanModel(Model):
             data = np.vstack((data, cur))
 
         return np.array(data)
+
+    def generate(self, runs=10):
+        """ Generates continuous data from binary evolution
+        """
+        time_window = 30
+        model_runs = 300 # how many times to run the simulation
+
+        data = np.array([])
+
+        # concatenate time series
+        for i in range(model_runs):
+            res = self.generate_binary_time_series(runs)
+            data = np.vstack((data, res)) if len(data) > 0 else res
+
+        # average gene activations over time window
+        concs = []
+        for i in range(0, len(data), time_window):
+            concs.append([])
+            for n in range(len(self.graph)):
+                window = data.T[n,i:i+time_window]
+                concs[-1].append(window.mean())
+        concs = np.array(concs)
+
+        # normalize of genes (vs nrmlz over time)
+        out = []
+        for gene_expr in concs.T:
+            norm = npl.norm(gene_expr, 1)
+            gene_expr /= norm if norm != 0 else 1
+            out.append(gene_expr)
+        out = np.array(out).T
+
+        return out
 
 class ODEModel(Model):
     """ General model of ODEs to generate data
