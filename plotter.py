@@ -71,6 +71,8 @@ class Plotter(object):
         """
         for entry in data:
             plt.plot(entry['x'], entry['y'], label=entry['label'])
+
+        plt.title(title)
         plt.legend(loc='best')
 
         Plotter.show(title)
