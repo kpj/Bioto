@@ -52,11 +52,14 @@ class IOComponent(object):
 class DynamicalSystem(object):
     def __init__(self, graph):
         self.graph = graph
+        self.used_model = None
 
     def simulate(self, Model, runs=10):
         """ Simulates network evolution by using given model
             Model is passed as class, not as object
         """
+        self.used_model = Model
+
         model = Model(self.graph)
         res = model.generate(runs)
 
