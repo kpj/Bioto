@@ -66,9 +66,9 @@ def analysis(graph, Model):
 # Real-life data #
 ##################
 
-def real_life_single():
+def real_life_single(file):
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
-    c = g.io.load_concentrations('../data/concentrations/GDS3597.soft')
+    c = g.io.load_concentrations('../data/concentrations/%s' % file)
 
     loglog(
         g, c,
@@ -104,14 +104,14 @@ def simulate_model(Model, n=100, e=0.3):
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = False
+    plotter.Plotter.show_plots = True
 
-    #real_life_single()
+    real_life_single('GDS3597.soft')
     #real_life_average()
 
-    simulate_model(models.MultiplicatorModel)
-    simulate_model(models.BooleanModel)
-    simulate_model(models.LinearModel)
-    simulate_model(models.NonlinearModel)
+    #simulate_model(models.MultiplicatorModel)
+    #simulate_model(models.BooleanModel)
+    #simulate_model(models.LinearModel)
+    #simulate_model(models.NonlinearModel)
 
-    analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
+    #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
