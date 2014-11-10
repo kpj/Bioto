@@ -17,7 +17,7 @@ def loglog(graph, concentrations, title, xlabel, ylabel):
         sys.exit(1)
 
     # normalize data
-    concentrations /= npl.norm(concentrations)
+    #concentrations /= npl.norm(concentrations)
 
     # plot data
     plotter.Plotter.loglog(
@@ -29,17 +29,23 @@ def show_evolution(graph, sim, t_window, genes=range(5)):
     """ Plots evolution of individual genes over time interval
     """
     pf = graph.math.get_perron_frobenius()
+    if pf is None:
+        print('Could not determine pf ev, aborting...')
+        sys.exit(1)
 
     data = []
     for ge in genes:
+        evolution_data = sim.T[ge]
+        evolen = len(evolution_data)
+
         gene_evolution = {
-            'x': range(t_window),
-            'y': sim.T[ge][:t_window], # cut off if there is too much data available
+            'x': range(evolen),
+            'y': evolution_data,
             'label': 'gene %i' % ge
         }
         pf_ev = {
-            'x': range(t_window),
-            'y': [pf[ge]]*t_window,
+            'x': range(evolen),
+            'y': [pf[ge]]*evolen,
             'label': 'pf comp for gene %i' % ge
         }
 
@@ -48,41 +54,26 @@ def show_evolution(graph, sim, t_window, genes=range(5)):
 
     plotter.Plotter.multi_plot('System Evolution of %s' % graph.system.used_model.name, data)
 
-def analysis(graph, Model):
+def analysis(graph, Model, runs=10):
     """ Examines different concentration components vs pf-ev
     """
     # generate data
     pf = graph.math.get_perron_frobenius()
-    data = graph.system.simulate(Model)
+    sim = graph.system.simulate(Model, runs)
 
-    # get individual points
-    fpc = data[-1,:]
-    pc = data[5,:]
-    fpc_pc = fpc - pc
-    pc_pc = pc - data[9,:]
+    # gather data
+    data = []
+    for i in range(runs):
+        cur = {
+            'x': pf,
+            'y': sim[i,:],
+            'ylabel': 't: %i' % i
+        }
+
+        data.append(cur)
 
     # plot result
-    plotter.Plotter.multi_loglog(
-        'Analysis of %s' % Model.name,
-        'perron-frobenius eigenvector', [
-        {
-            'x': pf,
-            'y': fpc,
-            'ylabel': 'FP [c]'
-        }, {
-            'x': pf,
-            'y': pc,
-            'ylabel': 'P [c]'
-        }, {
-            'x': pf,
-            'y': fpc_pc,
-            'ylabel': 'FP-P [c]'
-        }, {
-            'x': pf,
-            'y': pc_pc,
-            'ylabel': 'P-P [c]'
-        }
-    ])
+    plotter.Plotter.multi_loglog('Analysis of %s' % Model.name, 'perron-frobenius eigenvector', data)
 
 
 ##################
@@ -136,6 +127,6 @@ if __name__ == '__main__':
     #simulate_model(models.MultiplicatorModel)
     #simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel)
-    simulate_model(models.NonlinearModel)
+    #simulate_model(models.NonlinearModel)
 
-    #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
+    analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.BooleanModel)
