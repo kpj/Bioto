@@ -25,6 +25,29 @@ def loglog(graph, concentrations, title, xlabel, ylabel):
         title, xlabel, ylabel
     )
 
+def show_evolution(graph, sim, t_window, genes=range(5)):
+    """ Plots evolution of individual genes over time interval
+    """
+    pf = graph.math.get_perron_frobenius()
+
+    data = []
+    for ge in genes:
+        gene_evolution = {
+            'x': range(t_window),
+            'y': sim.T[ge][:t_window], # cut off if there is too much data available
+            'label': 'gene %i' % ge
+        }
+        pf_ev = {
+            'x': range(t_window),
+            'y': [pf[ge]]*t_window,
+            'label': 'pf comp for gene %i' % ge
+        }
+
+        data.append(gene_evolution)
+        data.append(pf_ev)
+
+    plotter.Plotter.multi_plot('System Evolution of %s' % graph.system.used_model.name, data)
+
 def analysis(graph, Model):
     """ Examines different concentration components vs pf-ev
     """
@@ -89,40 +112,15 @@ def real_life_average():
 # Generated data #
 ##################
 
-def simulate_model(Model, n=100, e=0.3):
+def simulate_model(Model, n=100, e=0.3, runs=20):
     g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
-    c = g.system.simulate(Model)[-1,:]
+    sim = g.system.simulate(Model, runs)
 
+    show_evolution(g, sim, runs)
     loglog(
-        g, c,
+        g, sim[-1,:],
         Model.name, 'gene concentration', 'perron-frobenius eigenvector'
     )
-
-def show_evolution(Model, n=10, e=0.3, t_window=100, genes=range(5)):
-    """ Plots evolution of individual genes over time interval
-    """
-    g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
-    sim = g.system.simulate(Model, t_window)
-
-    pf = g.math.get_perron_frobenius()
-
-    data = []
-    for ge in genes:
-        gene_evolution = {
-            'x': range(t_window),
-            'y': sim.T[ge][:t_window], # cut off if there is too much data available
-            'label': 'gene %i' % ge
-        }
-        pf_ev = {
-            'x': range(t_window),
-            'y': [pf[ge]]*t_window,
-            'label': 'pf comp for gene %i' % ge
-        }
-
-        data.append(gene_evolution)
-        data.append(pf_ev)
-
-    plotter.Plotter.multi_plot('System Evolution of %s' % Model.name, data)
 
 
 ##################
@@ -138,11 +136,6 @@ if __name__ == '__main__':
     #simulate_model(models.MultiplicatorModel)
     #simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel)
-    #simulate_model(models.NonlinearModel)
-
-    #show_evolution(models.MultiplicatorModel, t_window=20)
-    #show_evolution(models.BooleanModel)
-    #show_evolution(models.LinearModel)
-    show_evolution(models.NonlinearModel)
+    simulate_model(models.NonlinearModel)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
