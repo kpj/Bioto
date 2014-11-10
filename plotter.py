@@ -78,11 +78,11 @@ class Plotter(object):
         Plotter.show(title)
 
     @staticmethod
-    def loglog(x, y, title='', xlabel='', ylabel=''):
+    def loglog(x, y, title, xlabel='', ylabel=''):
         """ Yields loglog plot
         """
         ax = Plotter.set_loglog(plt.gca(), x, y, title, xlabel, ylabel)
-        Plotter.show('%s.png')
+        Plotter.show('%s.png' % title)
 
     @staticmethod
     def multi_loglog(title, xlabel, data):
@@ -96,7 +96,7 @@ class Plotter(object):
             Plotter.set_loglog(ax, e['x'], e['y'], ylabel=e['ylabel'])
         axarr[-1].set_xlabel(xlabel)
 
-        Plotter.show('%s.png')
+        Plotter.show('%s.png' % title)
 
     @staticmethod
     def set_loglog(ax, x, y, title='', xlabel='', ylabel=''):
