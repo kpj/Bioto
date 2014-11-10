@@ -31,13 +31,24 @@ class IOComponent(object):
             for node in self.graph:
                 fd.write('%s\n' % node)
 
-    def visualize(self, file):
+    def visualize(self, file, use_R=True):
         """ Visualize current graph and saves resulting image to specified file
         """
-        self.dump_adjacency_matrix('adja_m.txt')
-        self.dump_node_names('node_names.txt')
+        if use_R:
+            self.dump_adjacency_matrix('adja_m.txt')
+            self.dump_node_names('node_names.txt')
 
-        os.system('Rscript network_plotter.R "%s"' % file)
+            os.system('Rscript network_plotter.R "%s"' % file)
+        else:
+            pos = nx.random_layout(self.graph.graph)
+            nx.draw(
+                self.graph.graph, pos,
+                with_labels=True,
+                linewidths=0,
+                width=0.1
+            )
+            plt.savefig(file, dpi=150)
+            plt.close()
 
     def load_concentrations(self, file):
         """ Delegates to utils.DataHandler
