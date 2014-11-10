@@ -98,6 +98,32 @@ def simulate_model(Model, n=100, e=0.3):
         Model.name, 'gene concentration', 'perron-frobenius eigenvector'
     )
 
+def show_evolution(Model, n=10, e=0.3, t_window=100, genes=range(5)):
+    """ Plots evolution of individual genes over time interval
+    """
+    g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
+    sim = g.system.simulate(Model, t_window)
+
+    pf = g.math.get_perron_frobenius()
+
+    data = []
+    for ge in genes:
+        gene_evolution = {
+            'x': range(t_window),
+            'y': sim.T[ge][:t_window], # cut off if there is too much data available
+            'label': 'gene %i' % ge
+        }
+        pf_ev = {
+            'x': range(t_window),
+            'y': [pf[ge]]*t_window,
+            'label': 'pf comp for gene %i' % ge
+        }
+
+        data.append(gene_evolution)
+        data.append(pf_ev)
+
+    plotter.Plotter.multi_plot('System Evolution of %s' % Model.name, data)
+
 
 ##################
 # Command Center #
@@ -106,12 +132,17 @@ def simulate_model(Model, n=100, e=0.3):
 if __name__ == '__main__':
     plotter.Plotter.show_plots = True
 
-    real_life_single('GDS3597.soft')
+    #real_life_single('GDS3597.soft')
     #real_life_average()
 
     #simulate_model(models.MultiplicatorModel)
     #simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel)
     #simulate_model(models.NonlinearModel)
+
+    #show_evolution(models.MultiplicatorModel, t_window=20)
+    #show_evolution(models.BooleanModel)
+    #show_evolution(models.LinearModel)
+    show_evolution(models.NonlinearModel)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)

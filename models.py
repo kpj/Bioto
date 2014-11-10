@@ -25,7 +25,7 @@ class MultiplicatorModel(Model):
         initial = np.array([npr.random() for i in range(len(self.graph))])
 
         data = [initial]
-        for i in range(runs):
+        for i in range(runs-1):
             cur = [self.graph.adja_m.dot(data[-1])[0, i] for i in range(len(self.graph))]
             cur /= npl.norm(cur)
 
@@ -88,7 +88,7 @@ class BooleanModel(Model):
         x0 = npr.randint(2, size=num)
 
         data = np.matrix(x0)
-        for t in range(runs):
+        for t in range(runs-1):
             cur = rule(data[-1])
             data = np.vstack((data, cur))
 

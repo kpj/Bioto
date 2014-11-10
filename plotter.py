@@ -16,7 +16,7 @@ class Plotter(object):
         """ Shows plot and automatically saves after closing preview
         """
         fig = plt.gcf()
-        
+
         if Plotter.show_plots:
             plt.show()
         else:
@@ -24,7 +24,7 @@ class Plotter(object):
 
         if not os.path.exists(Plotter.plot_save_directory):
             os.makedirs(Plotter.plot_save_directory)
-        fig.savefig(os.path.join(Plotter.plot_save_directory, name), dpi=150)
+        fig.savefig(os.path.join(Plotter.plot_save_directory, name.replace(' ', '_')), dpi=150)
 
     @staticmethod
     def present_graph(data, perron_frobenius, page_rank, degree_distribution):
@@ -66,11 +66,21 @@ class Plotter(object):
         Plotter.show('overview')
 
     @staticmethod
+    def multi_plot(title, data):
+        """ Plots multiple graphs into same coordinate system
+        """
+        for entry in data:
+            plt.plot(entry['x'], entry['y'], label=entry['label'])
+        plt.legend(loc='best')
+
+        Plotter.show(title)
+
+    @staticmethod
     def loglog(x, y, title='', xlabel='', ylabel=''):
         """ Yields loglog plot
         """
         ax = Plotter.set_loglog(plt.gca(), x, y, title, xlabel, ylabel)
-        Plotter.show('%s.png' % title.replace(' ', '_'))
+        Plotter.show('%s.png')
 
     @staticmethod
     def multi_loglog(title, xlabel, data):
@@ -84,7 +94,7 @@ class Plotter(object):
             Plotter.set_loglog(ax, e['x'], e['y'], ylabel=e['ylabel'])
         axarr[-1].set_xlabel(xlabel)
 
-        Plotter.show('%s.png' % title.replace(' ', '_'))
+        Plotter.show('%s.png')
 
     @staticmethod
     def set_loglog(ax, x, y, title='', xlabel='', ylabel=''):
