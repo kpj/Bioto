@@ -16,6 +16,26 @@ class Model(object):
     def generate(self):
         Exception('This model lacks any generating function')
 
+    def get_augmented_adja_m(self):
+        aug_adja_m = np.copy(self.graph.adja_m)
+
+        # randomly inhibit or activate
+        for y in range(aug_adja_m.shape[0]):
+            for x in range(aug_adja_m.shape[1]):
+                if aug_adja_m[x,y] == 1:
+                    aug_adja_m[x,y] = npr.choice([-1, 1])
+
+        # add self-inhibitory links for all nodes without incoming inhibitory links
+        for x in range(aug_adja_m.shape[1]):
+            col = np.copy(aug_adja_m[:,x])
+            col[col==1] = 0
+            s = sum(abs(col))
+
+            if s == 0:
+                aug_adja_m[x,x] = -1
+
+        return aug_adja_m
+
 class MultiplicatorModel(Model):
     """ Simulates network evolution by adjacency matrix multiplication
     """
@@ -41,22 +61,7 @@ class BooleanModel(Model):
     def setup(self):
         """ Declare activating and inhibiting links and further constants
         """
-        self.aug_adja_m = np.copy(self.graph.adja_m)
-
-        # randomly inhibit or activate
-        for y in range(self.aug_adja_m.shape[0]):
-            for x in range(self.aug_adja_m.shape[1]):
-                if self.aug_adja_m[x,y] == 1:
-                    self.aug_adja_m[x,y] = npr.choice([-1, 1])
-
-        # add self-inhibitory links for all nodes without incoming inhibitory links
-        for x in range(self.aug_adja_m.shape[1]):
-            col = np.copy(self.aug_adja_m[:,x])
-            col[col==1] = 0
-            s = sum(abs(col))
-
-            if s == 0:
-                self.aug_adja_m[x,x] = -1
+        self.aug_adja_m = self.get_augmented_adja_m()
 
     def generate_binary_time_series(self, runs=10):
         """ Applies rule a couple of times and returns system evolution as binary ON/OFF states
@@ -135,10 +140,12 @@ class ODEModel(Model):
         self.e1 = 0.2
         self.e2 = 0.2
 
+        self.aug_adja_m = self.get_augmented_adja_m()
+
     def generate(self, runs=10):
         """ Solves nonlinear system and returns solution
         """
-        num = self.graph.adja_m.shape[0]
+        num = self.aug_adja_m.shape[0]
 
         t = np.arange(0, runs, 1)
         x0 = npr.sample(num)
@@ -149,7 +156,7 @@ class ODEModel(Model):
                 """
                 sigma = 0
                 for j in range(num):
-                    e = self.graph.adja_m[i, j]
+                    e = self.aug_adja_m[i, j]
                     sigma += 0.5 * (abs(e) + fac * e) * fun(X[j])
                 return sigma
             terms = []
