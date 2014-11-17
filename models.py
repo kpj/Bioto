@@ -65,6 +65,12 @@ class BooleanModel(Model):
 
     def generate_binary_time_series(self, runs=10):
         """ Applies rule a couple of times and returns system evolution as binary ON/OFF states
+            Returns:
+            [
+                [g1, g2, g3, ...], # at t0
+                [g1, g2, g3, ...], # at t1
+                ...
+            ]
         """
         def rule(x):
             """ Apply rule
@@ -99,8 +105,15 @@ class BooleanModel(Model):
 
         return np.array(data)
 
-    def generate(self, runs=10):
+    def generate_continues_evolution(self, runs=10, norm_time=True):
         """ Generates continuous data from binary evolution
+            Either norms along gene- or time-axis
+            Returns:
+            [
+                [g1, g2, g3, ...], # at t0
+                [g1, g2, g3, ...], # at t1
+                ...
+            ] # also format of "data", "concs"
         """
         time_window = 30
         model_runs = 300 # how many times to run the simulation
@@ -121,15 +134,37 @@ class BooleanModel(Model):
                 concs[-1].append(window.mean())
         concs = np.array(concs)
 
-        # normalize of genes (vs nrmlz over time)
+        # normalize along genes/time
         out = []
-        for gene_expr in concs.T:
-            norm = npl.norm(gene_expr, 1)
-            gene_expr /= norm if norm != 0 else 1
-            out.append(gene_expr)
-        out = np.array(out).T
+        if norm_time:
+            for time in concs.T:
+                norm = npl.norm(time, 1)
+                time /= norm if norm != 0 else 1
+                out.append(time)
+            out = np.array(out).T
+        else:
+            for genes in concs:
+                norm = npl.norm(genes, 1)
+                genes /= norm if norm != 0 else 1
+                out.append(genes)
+            out = np.array(out)
 
         return out
+
+    def generate(self, runs=10):
+        """ Averages many runs and returns result
+        """
+        avg_runs = 10
+
+        tmp = None
+        for i in range(avg_runs):
+            cur = self.generate_continues_evolution(runs)
+            if not tmp is None:
+                tmp += cur
+            else:
+                tmp = cur
+
+        return tmp / avg_runs
 
 class ODEModel(Model):
     """ General model of ODEs to generate data
