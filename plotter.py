@@ -5,7 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import gridspec
+from matplotlib import rc
 
+
+# enable LaTeX
+rc('font',**{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
+rc('text', usetex=True)
 
 class Plotter(object):
     plot_save_directory = 'plot_dir'
