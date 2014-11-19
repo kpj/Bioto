@@ -34,7 +34,7 @@ class Model(object):
             if s == 0:
                 aug_adja_m[x,x] = -1
 
-        return aug_adja_m
+        return aug_adja_m.T
 
 class MultiplicatorModel(Model):
     """ Simulates network evolution by adjacency matrix multiplication
