@@ -2,6 +2,8 @@ import sys, os
 
 import numpy as np
 import numpy.linalg as npl
+import numpy.testing as npt
+import numpy.random as npr
 
 import sympy as sp
 
@@ -80,30 +82,66 @@ class Math(object):
     def __init__(self, graph):
         self.graph = graph
 
-    def get_perron_frobenius(self):
+    def apply_power_iteration(self, eival, precision=1e-20, maxruns=10000):
+        """ Alternative algorithm to find eigenvector of largest eigenvalue
+            Useful on sparse matrices, but may converge slowly.
+            As the norm converges to the eigenvalue of greatest magnitude, we stop when we're close enough
+        """
+        b = npr.sample(self.graph.adja_m.shape[0])
+
+        while True:
+            step = self.graph.adja_m.dot(b)
+            norm = npl.norm(step)
+
+            b = step / norm
+            b = b.tolist()[0]
+
+            if abs(norm - eival) < precision:
+                break
+
+            maxruns -= 1
+            if maxruns == 0:
+                print('Power Iteration Method did not converge, aborting...')
+
+        return np.array(b)
+
+    def get_perron_frobenius(self, test_significance=True):
         """ Returns characteristic (normalized) Perron-Frobenius eigenvector
         """
-        val, vec = npl.eig(self.graph.adja_m) # returns already normalized eigenvectors
-        max_eigenvalue_index = np.argmax(np.real(val))
-        perron_frobenius = np.array(np.transpose(np.real(vec[:, max_eigenvalue_index])).tolist()[0])
-
-        #from sympy import pprint
-        #import scipy.io
-        #mat = sp.Matrix(self.graph.adja_m.tolist())
-        #scipy.io.savemat('test.mat', dict(x=self.graph.adja_m))
-        #eigs = mat.eigenvects()
-        #perron_frobenius = np.array(max(eigs, key=lambda e: e[0])[2][0]).T[0]
+        vals, vecs = npl.eig(self.graph.adja_m) # returns already normalized eigenvectors
+        max_eigenvalue_index = np.argmax(np.real(vals))
+        perron_frobenius = np.array(np.transpose(np.real(vecs[:, max_eigenvalue_index])).tolist()[0])
 
         if all(i <= 0 for i in perron_frobenius):
-            print("Rescaled pf-eigenvector by -1")
             perron_frobenius *= -1
         elif any(i < 0 for i in perron_frobenius):
             print("Error, pf-eigenvector is malformed")
-            print(perron_frobenius)
-            #sys.exit(1)
-            return None
+
+        # check significance of result
+        if test_significance:
+            eival = vals[max_eigenvalue_index]
+            if not self.test_significance(eival, perron_frobenius):
+                print("pf-ev not sigificant, trying power iteration method")
+                perron_frobenius = self.apply_power_iteration(eival)
+
+            if not self.test_significance(eival, perron_frobenius):
+                print("It didn't help, sorry")
 
         return perron_frobenius
+
+    def test_significance(self, val, vec):
+        """ Tests significance of eigenvaule/vector pair by checking Av=lv
+            Return true if equality (approximatelly) holds
+        """
+        av = self.graph.adja_m.dot(vec).tolist()[0]
+        lv = val * vec
+
+        try:
+            for i, j in zip(av, lv):
+                npt.assert_approx_equal(i, np.real(j))
+        except AssertionError:
+            return False
+        return True
 
     def get_pagerank(self):
         """ Computes normalized page rank of current graph
