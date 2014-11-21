@@ -122,12 +122,17 @@ class Math(object):
         if test_significance:
             eival = vals[max_eigenvalue_index]
             if not self.test_significance(eival, perron_frobenius):
-                print("pf-ev not significant, trying power iteration method")
-                perron_frobenius = self.apply_power_iteration(eival)
+                print("pf-ev not significant, trying averaged power iteration method")
+
+                pfs = []
+                for i in range(50):
+                    pfs.append(self.apply_power_iteration(eival))
+                perron_frobenius = sum(pfs)/len(pfs)
 
             if not self.test_significance(eival, perron_frobenius):
                 print("It didn't help, sorry")
 
+        perron_frobenius /= npl.norm(perron_frobenius) # just to be sure...
         return perron_frobenius
 
     def test_significance(self, val, vec):
