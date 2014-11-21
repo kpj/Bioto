@@ -82,7 +82,7 @@ class Math(object):
     def __init__(self, graph):
         self.graph = graph
 
-    def apply_power_iteration(self, eival, precision=1e-20, maxruns=10000):
+    def apply_power_iteration(self, eival, precision=1e-20, maxruns=1000):
         """ Alternative algorithm to find eigenvector of largest eigenvalue
             Useful on sparse matrices, but may converge slowly.
             As the norm converges to the eigenvalue of greatest magnitude, we stop when we're close enough
@@ -102,6 +102,7 @@ class Math(object):
             maxruns -= 1
             if maxruns == 0:
                 print('Power Iteration Method did not converge, aborting...')
+                break
 
         return np.array(b)
 

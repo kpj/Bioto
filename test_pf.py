@@ -31,15 +31,10 @@ for i in range(runs - len(mat)):
     # pf
     val, vec = npl.eig(g.adja_m) # returns already normalized eigenvectors
     max_eigenvalue_index = np.argmax(np.real(val))
-    perron_frobenius = np.array(np.transpose(np.real(vec[:, max_eigenvalue_index])).tolist()[0])
 
-    if all(i <= 0 for i in perron_frobenius):
-        print("Rescaled pf-eigenvector by -1")
-        perron_frobenius *= -1
-    elif any(i < 0 for i in perron_frobenius):
-        print("Error, pf-eigenvector is malformed")
-
-    perron_frobenius /= npl.norm(perron_frobenius, 1)
+    perron_frobenius = g.math.apply_power_iteration(val[max_eigenvalue_index])
+    if perron_frobenius is None:
+        break
 
     # error
     diff = []
