@@ -122,7 +122,7 @@ class Math(object):
         if test_significance:
             eival = vals[max_eigenvalue_index]
             if not self.test_significance(eival, perron_frobenius):
-                print("pf-ev not sigificant, trying power iteration method")
+                print("pf-ev not significant, trying power iteration method")
                 perron_frobenius = self.apply_power_iteration(eival)
 
             if not self.test_significance(eival, perron_frobenius):
