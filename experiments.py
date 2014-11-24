@@ -9,19 +9,13 @@ import utils, models, plotter
 # Helper functions #
 ####################
 
-def loglog(graph, concentrations, title, xlabel, ylabel):
-    # get data
-    perron_frobenius = graph.math.get_perron_frobenius()
-    if perron_frobenius is None:
-        print('Could not determine pf ev, aborting...')
-        sys.exit(1)
-
+def loglog(concentrations, comparator, title, xlabel, ylabel):
     # normalize data
     #concentrations /= npl.norm(concentrations)
 
     # plot data
     plotter.Plotter.loglog(
-        concentrations, perron_frobenius,
+        concentrations, comparator,
         title, xlabel, ylabel
     )
 
@@ -84,8 +78,10 @@ def real_life_single(file):
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
     c = g.io.load_concentrations('../data/concentrations/%s' % file)
 
+    pf = g.math.get_perron_frobenius()
+
     loglog(
-        g, c,
+        c, pf,
         'Real-Life Data', 'gene concentration', 'perron-frobenius eigenvector'
     )
 
@@ -93,8 +89,10 @@ def real_life_average():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
     c = g.io.load_averaged_concentrations('../data/concentrations/')
 
+    pf = g.math.get_perron_frobenius()
+
     loglog(
-        g, c,
+        c, pf,
         'Real-Life Data (averaged)', 'averaged gene concentration', 'perron-frobenius eigenvector'
     )
 
@@ -107,9 +105,14 @@ def simulate_model(Model, n=100, e=0.3, runs=20):
     g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
     sim = g.system.simulate(Model, runs)
 
+    perron_frobenius = g.math.get_perron_frobenius()
+    if perron_frobenius is None:
+        print('Could not determine pf ev, aborting...')
+        sys.exit(1)
+
     show_evolution(g, sim, runs)
     loglog(
-        g, sim[-1,:],
+        sim[-1,:], perron_frobenius,
         Model.name, 'gene concentration', 'perron-frobenius eigenvector'
     )
 
@@ -124,9 +127,9 @@ if __name__ == '__main__':
     #real_life_single('GDS3597.soft')
     #real_life_average()
 
-    #simulate_model(models.MultiplicatorModel)
+    simulate_model(models.MultiplicatorModel)
     #simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel)
     #simulate_model(models.NonlinearModel)
 
-    analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.BooleanModel)
+    #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.BooleanModel)
