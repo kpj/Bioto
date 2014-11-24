@@ -4,29 +4,31 @@ import numpy.random as npr
 
 from scipy.integrate import odeint
 
+import sympy as sp
+from sympy.utilities.lambdify import lambdify
 
-class Model(object):
-    def __init__(self, graph):
-        self.graph = graph
-        self.setup()
 
-    def setup(self):
-        pass
-
-    def generate(self):
-        Exception('This model lacks any generating function')
+class Math(object):
+    def __init__(self, model):
+        self.model = model
 
     def get_augmented_adja_m(self):
-        aug_adja_m = np.copy(self.graph.adja_m)
+        """ Return augmented adjacency matrix, i.e.
+            1: activating, -1: inhibiting
+        """
+        if not self.model.aug_adja_m is None:
+            return self.model.aug_adja_m
+
+        aug_adja_m = np.copy(self.model.graph.adja_m)
 
         # randomly inhibit or activate
-        for y in range(aug_adja_m.shape[0]):
-            for x in range(aug_adja_m.shape[1]):
+        for y in range(len(self.model.graph)):
+            for x in range(len(self.model.graph)):
                 if aug_adja_m[x,y] == 1:
                     aug_adja_m[x,y] = npr.choice([-1, 1])
 
         # add self-inhibitory links for all nodes without incoming inhibitory links
-        for x in range(aug_adja_m.shape[1]):
+        for x in range(len(self.model.graph)):
             col = np.copy(aug_adja_m[:,x])
             col[col==1] = 0
             s = sum(abs(col))
@@ -35,6 +37,38 @@ class Model(object):
                 aug_adja_m[x,x] = -1
 
         return aug_adja_m.T
+
+    def get_jacobian_ev(self, point):
+        """ Return eigenvector of highest eigenvalue of jacobian
+        """
+        syms = [sp.Symbol('x'+str(i)) for i in range(len(self.model.graph))]
+        terms = self.model.get_terms(syms)
+
+        # generate/evaluate jacobian
+        mat = []
+        for t in terms:
+            mat.append([])
+            for s in syms:
+                f = lambdify(syms, t.diff(s), 'numpy')
+                mat[-1].append(f(*point))
+        mat = np.matrix(mat)
+
+        # do eigenanalysis
+        ev = self.model.graph.math.get_perron_frobenius(mat=mat, test_significance=False, real_eva_only=True, rescale=False)
+        return ev
+
+class Model(object):
+    def __init__(self, graph):
+        self.graph = graph
+        self.math = Math(self)
+
+        self.setup()
+
+    def setup(self):
+        self.aug_adja_m = None
+
+    def generate(self):
+        Exception('This model lacks any generating function')
 
 class MultiplicatorModel(Model):
     """ Simulates network evolution by adjacency matrix multiplication
@@ -61,7 +95,7 @@ class BooleanModel(Model):
     def setup(self):
         """ Declare activating and inhibiting links and further constants
         """
-        self.aug_adja_m = self.get_augmented_adja_m()
+        self.aug_adja_m = self.math.get_augmented_adja_m()
 
     def generate_binary_time_series(self, runs=10):
         """ Applies rule a couple of times and returns system evolution as binary ON/OFF states
@@ -170,36 +204,43 @@ class ODEModel(Model):
     """ General model of ODEs to generate data
     """
     def setup(self):
-        """ Setup needed constants
+        """ Setup needed constants,
+            this method needs to be called by all children
         """
-        self.e1 = 0.2
-        self.e2 = 0.2
+        Model.setup(self)
 
-        self.aug_adja_m = self.get_augmented_adja_m()
+        self.e1 = 0.1
+        self.e2 = 0.9
+
+        self.aug_adja_m = self.math.get_augmented_adja_m()
+
+    def get_terms(self, X):
+        """ Return individual terms of ODE.
+            This function may be overwritten in order to change the systems behaviour
+        """
+        def iter(fun, i, fac):
+            """ Generates term using given specified functions
+            """
+            sigma = 0
+            for j in range(len(self.graph)):
+                e = self.aug_adja_m[i, j]
+                sigma += 0.5 * (abs(e) + fac * e) * fun(X[j])
+            return sigma
+        terms = []
+
+        for i in range(len(self.graph)):
+            terms.append(self.e1 * iter(self.f1, i, -1) + self.e2 * iter(self.f2, i, 1))
+
+        return np.array(terms)
 
     def generate(self, runs=10):
         """ Solves nonlinear system and returns solution
         """
-        num = self.aug_adja_m.shape[0]
-
         t = np.arange(0, runs, 1)
-        x0 = npr.sample(num)
+        x0 = npr.sample(len(self.graph))
 
         def func(X, t=0):
-            def iter(fun, i, fac):
-                """ Generates term using given specified functions
-                """
-                sigma = 0
-                for j in range(num):
-                    e = self.aug_adja_m[i, j]
-                    sigma += 0.5 * (abs(e) + fac * e) * fun(X[j])
-                return sigma
-            terms = []
-
-            for i in range(num):
-                terms.append(self.e1 * iter(self.f1, i, -1) + self.e1 * iter(self.f2, i, 1))
-
-            return np.array(terms)
+            return self.get_terms(X)
 
         res = odeint(func, x0, t)
         return res

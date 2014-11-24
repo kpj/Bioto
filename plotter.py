@@ -9,7 +9,7 @@ from matplotlib import rc
 
 
 # enable LaTeX
-rc('font',**{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
+rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
 rc('text', usetex=True)
 
 class Plotter(object):
@@ -69,6 +69,20 @@ class Plotter(object):
             ax.yaxis.set_major_locator(plt.NullLocator())
 
         Plotter.show('overview')
+
+    @staticmethod
+    def plot(x, y, title, xlabel='', ylabel=''):
+        plt.plot(
+            x, y,
+            linestyle='None',
+            marker='.', markeredgecolor='blue'
+        )
+
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+
+        Plotter.show(title)
 
     @staticmethod
     def multi_plot(title, data):

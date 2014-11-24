@@ -1,5 +1,6 @@
 import sys
 
+import numpy as np
 import numpy.linalg as npl
 
 import utils, models, plotter
@@ -8,16 +9,6 @@ import utils, models, plotter
 ####################
 # Helper functions #
 ####################
-
-def loglog(concentrations, comparator, title, xlabel, ylabel):
-    # normalize data
-    #concentrations /= npl.norm(concentrations)
-
-    # plot data
-    plotter.Plotter.loglog(
-        concentrations, comparator,
-        title, xlabel, ylabel
-    )
 
 def show_evolution(graph, sim, t_window, genes=range(5)):
     """ Plots evolution of individual genes over time interval
@@ -80,7 +71,7 @@ def real_life_single(file):
 
     pf = g.math.get_perron_frobenius()
 
-    loglog(
+    plotter.Plotter.loglog(
         c, pf,
         'Real-Life Data', 'gene concentration', 'perron-frobenius eigenvector'
     )
@@ -91,7 +82,7 @@ def real_life_average():
 
     pf = g.math.get_perron_frobenius()
 
-    loglog(
+    plotter.Plotter.loglog(
         c, pf,
         'Real-Life Data (averaged)', 'averaged gene concentration', 'perron-frobenius eigenvector'
     )
@@ -101,20 +92,23 @@ def real_life_average():
 # Generated data #
 ##################
 
-def simulate_model(Model, n=100, e=0.3, runs=20):
+def simulate_model(Model, n=100, e=0.3, runs=20, plot_jc_ev=False):
     g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
-    sim = g.system.simulate(Model, runs)
 
-    perron_frobenius = g.math.get_perron_frobenius()
-    if perron_frobenius is None:
-        print('Could not determine pf ev, aborting...')
-        sys.exit(1)
+    sim = g.system.simulate(Model, runs)
+    pf = g.math.get_perron_frobenius()
+    if plot_jc_ev: ev = g.system.used_model.math.get_jacobian_ev(sim[-1,:])
 
     show_evolution(g, sim, runs)
-    loglog(
-        sim[-1,:], perron_frobenius,
-        Model.name, 'gene concentration', 'perron-frobenius eigenvector'
+    plotter.Plotter.loglog(
+        sim[-1,:], pf,
+        '%s with PF of A' % Model.name, 'gene concentration', 'perron-frobenius eigenvector'
     )
+    if plot_jc_ev:
+        plotter.Plotter.plot(
+            sim[-1,:], ev,
+            '%s with EV of J' % Model.name, 'gene concentration', 'jacobian eigenvector of highest eigenvalue'
+        )
 
 
 ##################
@@ -122,14 +116,14 @@ def simulate_model(Model, n=100, e=0.3, runs=20):
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = True
+    plotter.Plotter.show_plots = False
 
     #real_life_single('GDS3597.soft')
     #real_life_average()
 
-    simulate_model(models.MultiplicatorModel)
-    #simulate_model(models.BooleanModel)
+    #simulate_model(models.MultiplicatorModel)
+    #simulate_model(models.BooleanModel, 10)
     #simulate_model(models.LinearModel)
-    #simulate_model(models.NonlinearModel)
+    simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.BooleanModel)

@@ -67,15 +67,17 @@ class DynamicalSystem(object):
         self.graph = graph
         self.used_model = None
 
-    def simulate(self, Model, runs=10):
+    def simulate(self, Model, runs=10, aug_adja=None):
         """ Simulates network evolution by using given model
             Model is passed as class, not as object
         """
-        self.used_model = Model
-
         model = Model(self.graph)
-        res = model.generate(runs)
+        if not aug_adja is None:
+            model.aug_adja_m = aug_adja
 
+        self.used_model = model
+
+        res = model.generate(runs)
         return res
 
 class Math(object):
@@ -106,17 +108,29 @@ class Math(object):
 
         return np.array(b)
 
-    def get_perron_frobenius(self, test_significance=True):
+    def get_perron_frobenius(self, mat=None, test_significance=True, real_eva_only=False, rescale=True):
         """ Returns characteristic (normalized) Perron-Frobenius eigenvector
         """
-        vals, vecs = npl.eig(self.graph.adja_m) # returns already normalized eigenvectors
-        max_eigenvalue_index = np.argmax(np.real(vals))
+        if mat is None:
+            mat = self.graph.adja_m
+
+        vals, vecs = npl.eig(mat) # returns already normalized eigenvectors
+        if real_eva_only:
+            lv = -float('inf')
+            for i, v in enumerate(vals):
+                if np.isreal(v):
+                    if v > lv:
+                        max_eigenvalue_index = i
+                        lv = v
+        else:
+            max_eigenvalue_index = np.argmax(np.real(vals))
         perron_frobenius = np.array(np.transpose(np.real(vecs[:, max_eigenvalue_index])).tolist()[0])
 
-        if all(i <= 0 for i in perron_frobenius):
-            perron_frobenius *= -1
-        elif any(i < 0 for i in perron_frobenius):
-            print("Error, pf-eigenvector is malformed")
+        if rescale:
+            if all(i <= 0 for i in perron_frobenius):
+                perron_frobenius *= -1
+            elif any(i < 0 for i in perron_frobenius):
+                print("Error, pf-eigenvector is malformed")
 
         # check significance of result
         if test_significance:
@@ -135,11 +149,14 @@ class Math(object):
         perron_frobenius /= npl.norm(perron_frobenius) # just to be sure...
         return perron_frobenius
 
-    def test_significance(self, val, vec):
+    def test_significance(self, val, vec, mat=None):
         """ Tests significance of eigenvaule/vector pair by checking Av=lv
             Return true if equality (approximatelly) holds
         """
-        av = self.graph.adja_m.dot(vec).tolist()[0]
+        if mat is None:
+            mat = self.graph.adja_m
+
+        av = mat.dot(vec).tolist()[0]
         lv = val * vec
 
         try:
