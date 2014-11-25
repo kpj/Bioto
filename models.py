@@ -95,6 +95,7 @@ class BooleanModel(Model):
     def setup(self):
         """ Declare activating and inhibiting links and further constants
         """
+        Model.setup(self)
         self.aug_adja_m = self.math.get_augmented_adja_m()
 
     def generate_binary_time_series(self, runs=10):
