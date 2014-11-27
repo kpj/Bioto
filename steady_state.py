@@ -4,7 +4,7 @@ from matplotlib import gridspec
 
 import numpy as np
 
-import utils, models
+import utils, models, plotter
 
 
 # config
@@ -16,7 +16,7 @@ runs = 11
 graph_handler = utils.GraphGenerator.get_random_graph(node_num, edge_prob)
 
 # generate data
-data = graph_handler.system.simulate(models.NonlinearModel, runs)
+data = graph_handler.system.simulate(models.MultiplicatorModel, runs)
 
 # get perron frobenius eigenvector/page rank
 perron_frobenius = graph_handler.math.get_perron_frobenius()
@@ -29,4 +29,4 @@ print("pf/conc corr", r)
 print("Bands:", min_b, max_b)
 
 # plot it
-utils.Plotter.present_graph(data, perron_frobenius, page_rank, degree_distribution)
+plotter.Plotter.present_graph(data, perron_frobenius, page_rank, degree_distribution)
