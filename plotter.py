@@ -125,7 +125,7 @@ class Plotter(object):
         ys = []
         for i, j in zip(x, y):
             # remove 0-pairs
-            if not (i == 0 or j == 0):
+            if not (i < 1e-15 or j < 1e-15):
                 xs.append(i)
                 ys.append(j)
 
