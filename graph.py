@@ -212,5 +212,5 @@ class Graph(object):
     def __iter__(self):
         """ Returns node names in lowercase
         """
-        for e in [str(n).lower() for n in nx.nodes_iter(self.graph)]:
+        for e in sorted([str(n).lower() for n in nx.nodes_iter(self.graph)]):
             yield e
