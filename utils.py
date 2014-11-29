@@ -56,7 +56,7 @@ class DataHandler(object):
             concentrations = np.load('%s.npy' % bak_fname)
         else:
             print('Parsing data file', file)
-            names = list(graph)
+            names = sorted(list(graph))
             concentrations, fail = parser.parse_concentration(
                 names,
                 file
