@@ -87,11 +87,8 @@ def parse_concentration(names, file, conc_range=[0]):
     with open(file, 'r') as fd:
         content = fd.read()
 
-    concs = []
-    no_match = []
     data = {}
     header = None
-
     for line in content.split('\n'):
         parts = line.split()
         if len(line) == 0 or line[0] in '#^!':
@@ -117,6 +114,8 @@ def parse_concentration(names, file, conc_range=[0]):
 
         data[gene.lower()] = conc
 
+    concs = []
+    no_match = []
     for name in names:
         n = name.lower()
         try:
