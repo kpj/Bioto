@@ -1,4 +1,4 @@
-import sys
+import sys, os
 
 import numpy as np
 import numpy.linalg as npl
@@ -73,7 +73,7 @@ def real_life_single(file):
 
     plotter.Plotter.loglog(
         c, pf,
-        'Real-Life Data', 'gene concentration', 'perron-frobenius eigenvector'
+        'Real-Life Data of %s' % file, 'gene concentration', 'perron-frobenius eigenvector'
     )
 
 def real_life_average():
@@ -116,14 +116,14 @@ def simulate_model(Model, n=100, e=0.3, runs=20, plot_jc_ev=False):
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = False
+    plotter.Plotter.show_plots = True
 
-    #real_life_single('GDS3597.soft')
+    for f in os.listdir('../data/concentrations/'): real_life_single(f)
     #real_life_average()
 
     #simulate_model(models.MultiplicatorModel)
-    #simulate_model(models.BooleanModel, 10)
-    #simulate_model(models.LinearModel)
-    simulate_model(models.NonlinearModel, plot_jc_ev=True)
+    #simulate_model(models.BooleanModel)
+    #simulate_model(models.LinearModel, plot_jc_ev=True)
+    #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.BooleanModel)
