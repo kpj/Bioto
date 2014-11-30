@@ -10,7 +10,7 @@ import utils, models, plotter
 # config
 node_num = 10
 edge_prob = 0.3
-runs = 11
+runs = 12
 
 # init
 graph_handler = utils.GraphGenerator.get_random_graph(node_num, edge_prob)
