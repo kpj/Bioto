@@ -7,6 +7,8 @@ import matplotlib.cm as cm
 from matplotlib import gridspec
 from matplotlib import rc
 
+import utils
+
 
 # enable LaTeX
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
@@ -85,18 +87,23 @@ class Plotter(object):
         Plotter.show('overview')
 
     @staticmethod
-    def plot(x, y, title, xlabel='', ylabel=''):
+    def plot(x, y, title, xlabel='', ylabel='', show_corr=True):
         plt.plot(
             x, y,
             linestyle='None',
             marker='.', markeredgecolor='blue'
         )
 
+        orig_title = title
+        if show_corr:
+            corr, p_val, = utils.StatsHandler.correlate(x, y)
+            title += ' (corr: %.2f, p-value: %.2f)' % (round(corr, 2), round(p_val, 2))
+
         plt.title(title)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
 
-        Plotter.show(title)
+        Plotter.show(orig_title)
 
     @staticmethod
     def multi_plot(title, data):
@@ -132,7 +139,7 @@ class Plotter(object):
         Plotter.show('%s.png' % title)
 
     @staticmethod
-    def set_loglog(ax, x, y, title='', xlabel='', ylabel=''):
+    def set_loglog(ax, x, y, title='', xlabel='', ylabel='', show_corr=True):
         """ Returns loglog plot (axis) of given data and removes 0-pairs beforehand
         """
         xs = []
@@ -148,6 +155,10 @@ class Plotter(object):
             linestyle='None',
             marker='.', markeredgecolor='blue'
         )
+
+        if show_corr:
+            corr, p_val, = utils.StatsHandler.correlate(x, y)
+            title += ' (corr: %.2f, p-value: %.2f)' % (round(corr, 2), round(p_val, 2))
 
         ax.set_title(title)
         ax.set_xlabel(xlabel)

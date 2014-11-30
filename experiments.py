@@ -74,7 +74,7 @@ def real_life_single(file):
 
     plotter.Plotter.loglog(
         c, pf,
-        'Real-Life Data of %s (corr: %.2f, p-value: %.2f)' % (file, round(corr, 2), round(p_val, 2)), 'gene concentration', 'perron-frobenius eigenvector'
+        'Real-Life Data of %s' % file, 'gene concentration', 'perron-frobenius eigenvector'
     )
 
 def real_life_average():
@@ -86,7 +86,7 @@ def real_life_average():
 
     plotter.Plotter.loglog(
         c, pf,
-        'Real-Life Data (averaged) (corr: %.2f, p-value: %.2f)' % (round(corr, 2), round(p_val, 2)), 'averaged gene concentration', 'perron-frobenius eigenvector'
+        'Real-Life Data (averaged)', 'averaged gene concentration', 'perron-frobenius eigenvector'
     )
 
 
