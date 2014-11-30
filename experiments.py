@@ -70,10 +70,11 @@ def real_life_single(file):
     c = g.io.load_concentrations('../data/concentrations/%s' % file)
 
     pf = g.math.get_perron_frobenius()
+    corr, p_val, = utils.StatsHandler.correlate(c, pf)
 
     plotter.Plotter.loglog(
         c, pf,
-        'Real-Life Data of %s' % file, 'gene concentration', 'perron-frobenius eigenvector'
+        'Real-Life Data of %s (corr: %.2f, p-value: %.2f)' % (file, round(corr, 2), round(p_val, 2)), 'gene concentration', 'perron-frobenius eigenvector'
     )
 
 def real_life_average():
@@ -81,10 +82,11 @@ def real_life_average():
     c = g.io.load_averaged_concentrations('../data/concentrations/')
 
     pf = g.math.get_perron_frobenius()
+    corr, p_val = utils.StatsHandler.correlate(c, pf)
 
     plotter.Plotter.loglog(
         c, pf,
-        'Real-Life Data (averaged)', 'averaged gene concentration', 'perron-frobenius eigenvector'
+        'Real-Life Data (averaged) (corr: %.2f, p-value: %.2f)' % (round(corr, 2), round(p_val, 2)), 'averaged gene concentration', 'perron-frobenius eigenvector'
     )
 
 

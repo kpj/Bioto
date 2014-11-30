@@ -34,10 +34,13 @@ class GraphGenerator(object):
 
 class StatsHandler(object):
     @staticmethod
-    def correlate(x, y):
+    def correlate(x, y, compute_bands=False):
         """ Computes Pearson coefficient of x, y and compares it to the correlation of shuffled forms of x, y
         """
-        (corr, null_hypo) = scits.pearsonr(x, y) # correlation r [-1,1], prob. that null-hypothesis (i.e. x,y uncorrelated) holds [0,1]
+        (corr, p_val) = scits.pearsonr(x, y) # correlation r [-1,1], prob. that null-hypothesis (i.e. x,y uncorrelated) holds [0,1]
+
+        if not compute_bands:
+            return corr, p_val
 
         xs = np.copy(x)
         ys = np.copy(y)
@@ -51,7 +54,7 @@ class StatsHandler(object):
             rs.append(r)
 
         mi, ma = min(rs), max(rs)
-        return corr, mi, ma
+        return corr, p_val, mi, ma
 
 class DataHandler(object):
     backup_dir = 'conc_baks'
