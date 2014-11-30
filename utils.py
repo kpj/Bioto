@@ -21,6 +21,17 @@ class GraphGenerator(object):
     def get_regulatory_graph(file):
         return graph.Graph(parser.generate_tf_gene_regulation(file), largest=True)
 
+    @staticmethod
+    def get_minimal_graph():
+        g = nx.DiGraph()
+
+        g.add_edge(0,2)
+        g.add_edge(1,0)
+        g.add_edge(1,2)
+        g.add_edge(2,1)
+
+        return graph.Graph(g)
+
 class StatsHandler(object):
     @staticmethod
     def correlate(x, y):
