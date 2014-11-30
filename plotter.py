@@ -45,28 +45,42 @@ class Plotter(object):
                 'data': np.array([perron_frobenius]),
                 'title': 'Perron-Frobenius Eigenvector',
                 'rel_height': 1
-            },
-            {
-                'data': np.array([page_rank]),
-                'title': 'Pagerank',
-                'rel_height': 1
-            },
-            {
-                'data': np.array([degree_distribution]),
-                'title': 'Degree Distribution',
-                'rel_height': 1
-            }
+            }#,
+#            {
+#                'data': np.array([page_rank]),
+#                'title': 'Pagerank',
+#                'rel_height': 1
+#            },
+#            {
+#                'data': np.array([degree_distribution]),
+#                'title': 'Degree Distribution',
+#                'rel_height': 1
+#            }
         ]
 
-        gs = gridspec.GridSpec(len(info), 1, height_ratios=[e['rel_height'] for e in info])
-        for entry, g in zip(info, gs):
-            ax = plt.subplot(g)
+        dimen = 20
 
-            ax.pcolor(entry['data'], cmap=cm.gray, vmin=-0.1, vmax=1)
+        hm = plt.subplot2grid((dimen,dimen), (0,0), rowspan=17, colspan=19)
+        pf = plt.subplot2grid((dimen,dimen), (18,0), rowspan=5, colspan=19)
+        cb = plt.subplot2grid((dimen,dimen), (0,19), rowspan=20)
 
-            ax.set_title(entry['title'])
+        for entry, ax in zip(info, [hm, pf]):
+            hm = ax.pcolor(entry['data'], cmap=cm.gray, vmin=0, vmax=1)
+
+            ax.set_title(entry['title'], fontsize=23)
             ax.xaxis.set_major_locator(plt.NullLocator())
             ax.yaxis.set_major_locator(plt.NullLocator())
+
+        pcb = plt.colorbar(hm, cax=cb)
+        pcb.ax.tick_params(labelsize=20)
+
+        """hm = plt.subplot2grid((3,3), (0,0), rowspan=2, colspan=2)
+        pf = plt.subplot2grid((3,3), (2,0), colspan=2)
+        cb = plt.subplot2grid((3,3), (0, 2), rowspan=3)
+
+        h = hm.pcolor(data[::-1], cmap=cm.gray, vmin=-0.1, vmax=1)
+        pf.pcolor(np.array([perron_frobenius]), cmap=cm.gray, vmin=-0.1, vmax=1)
+        plt.colorbar(h, cax=cb)"""
 
         Plotter.show('overview')
 
