@@ -10,14 +10,9 @@ import utils, models, plotter
 # Helper functions #
 ####################
 
-def show_evolution(graph, sim, t_window, genes=range(5)):
+def show_evolution(graph, sim, t_window, genes=range(5), pf=None):
     """ Plots evolution of individual genes over time interval
     """
-    pf = graph.math.get_perron_frobenius()
-    if pf is None:
-        print('Could not determine pf ev, aborting...')
-        sys.exit(1)
-
     data = []
     for ge in genes:
         evolution_data = sim.T[ge]
@@ -28,16 +23,21 @@ def show_evolution(graph, sim, t_window, genes=range(5)):
             'y': evolution_data,
             'label': 'gene %i' % ge
         }
-        pf_ev = {
-            'x': range(evolen),
-            'y': [pf[ge]]*evolen,
-            'label': 'pf comp for gene %i' % ge
-        }
-
         data.append(gene_evolution)
-        data.append(pf_ev)
 
-    plotter.Plotter.multi_plot('System Evolution of %s' % graph.system.used_model.name, data)
+        if not pf is None:
+            pf_ev = {
+                'x': range(evolen),
+                'y': [pf[ge]]*evolen,
+                'label': 'pf comp for gene %i' % ge
+            }
+            data.append(pf_ev)
+
+    plotter.Plotter.multi_plot(
+        data,
+        'System Evolution of %s' % graph.system.used_model.name,
+        'time', 'simulated gene expression level'
+    )
 
 def analysis(graph, Model, runs=10):
     """ Examines different concentration components vs pf-ev
@@ -48,7 +48,7 @@ def analysis(graph, Model, runs=10):
 
     # gather data
     data = []
-    for i in range(runs):
+    for i in range(0, runs, 2):
         cur = {
             'x': pf,
             'y': sim[i,:],
@@ -98,10 +98,10 @@ def simulate_model(Model, n=100, e=0.3, runs=20, plot_jc_ev=False):
     g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
 
     sim = g.system.simulate(Model, runs)
-    pf = g.math.get_perron_frobenius()
+    pf = g.math.get_perron_frobenius(remove_self_links=True)
     if plot_jc_ev: ev = g.system.used_model.math.get_jacobian_ev(sim[-1,:])
 
-    show_evolution(g, sim, runs)
+    show_evolution(g, sim, runs)#, pf=pf)
     plotter.Plotter.loglog(
         sim[-1,:], pf,
         '%s with PF of A' % Model.name, 'gene concentration', 'perron-frobenius eigenvector'
@@ -120,11 +120,11 @@ def simulate_model(Model, n=100, e=0.3, runs=20, plot_jc_ev=False):
 if __name__ == '__main__':
     plotter.Plotter.show_plots = True
 
-    for f in os.listdir('../data/concentrations/'): real_life_single(f)
+    #for f in os.listdir('../data/concentrations/'): real_life_single(f)
     #real_life_average()
 
     #simulate_model(models.MultiplicatorModel)
-    #simulate_model(models.BooleanModel)
+    simulate_model(models.BooleanModel, n=50, e=0.9)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 

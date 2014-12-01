@@ -106,14 +106,17 @@ class Plotter(object):
         Plotter.show(orig_title)
 
     @staticmethod
-    def multi_plot(title, data):
+    def multi_plot(data, title='', xlabel='', ylabel=''):
         """ Plots multiple graphs into same coordinate system
         """
         for entry in data:
             plt.plot(entry['x'], entry['y'], label=entry['label'])
 
         plt.title(title)
-        plt.legend(loc='best')
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        
+        #plt.legend(loc='best')
 
         Plotter.show(title)
 
