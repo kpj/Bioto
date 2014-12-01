@@ -173,13 +173,13 @@ class BooleanModel(Model):
         out = []
         if norm_time:
             for time in concs.T:
-                norm = npl.norm(time, 1)
+                norm = npl.norm(time)
                 time /= norm if norm != 0 else 1
                 out.append(time)
             out = np.array(out).T
         else:
             for genes in concs:
-                norm = npl.norm(genes, 1)
+                norm = npl.norm(genes)
                 genes /= norm if norm != 0 else 1
                 out.append(genes)
             out = np.array(out)
