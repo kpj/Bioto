@@ -108,11 +108,14 @@ class Math(object):
 
         return np.array(b)
 
-    def get_perron_frobenius(self, mat=None, test_significance=True, real_eva_only=False, rescale=True):
+    def get_perron_frobenius(self, mat=None, test_significance=True, real_eva_only=False, rescale=True, remove_self_links=False):
         """ Returns characteristic (normalized) Perron-Frobenius eigenvector
         """
         if mat is None:
             mat = self.graph.adja_m
+
+        if remove_self_links:
+            np.fill_diagonal(mat, 0)
 
         vals, vecs = npl.eig(mat) # returns already normalized eigenvectors
         if real_eva_only:
