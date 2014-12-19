@@ -150,14 +150,15 @@ class BooleanModel(Model):
                 ...
             ] # also format of "data", "concs"
         """
-        time_window = 30
-        model_runs = 300 # how many times to run the simulation
+        time_window = 60
+        model_runs = 600 # how many times to run the simulation
+        sim_runs = runs
 
         data = np.array([])
 
         # concatenate time series
         for i in range(model_runs):
-            res = self.generate_binary_time_series(runs)
+            res = self.generate_binary_time_series(sim_runs)
             data = np.vstack((data, res)) if len(data) > 0 else res
 
         # average gene activations over time window
