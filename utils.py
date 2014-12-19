@@ -75,7 +75,13 @@ class DataHandler(object):
                 names,
                 file
             )
-            concentrations = np.array(concentrations) / np.linalg.norm(concentrations)
+            if concentrations is None:
+                return None
+
+            try:
+                concentrations = np.array(concentrations) / np.linalg.norm(concentrations)
+            except ValueError:
+                return None
 
             print('> coverage:', round(1 - len(fail)/len(names), 3))
 
@@ -95,7 +101,10 @@ class DataHandler(object):
             if not file.endswith('.soft'): continue
 
             f = os.path.join(directory, file)
-            concs.append(DataHandler.load_concentrations(graph, f))
+            c = DataHandler.load_concentrations(graph, f)
+
+            if not c is None:
+                concs.append(c)
 
         res = []
         for col in np.array(concs).T:

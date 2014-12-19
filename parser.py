@@ -85,7 +85,10 @@ def parse_concentration(names, file, conc_range=[0]):
     """ Returns concentrations (at specified point in time) of given entries and list of unprocessable entries
     """
     with open(file, 'r') as fd:
-        content = fd.read()
+        try:
+            content = fd.read()
+        except UnicodeDecodeError:
+            return None, None
 
     data = {}
     header = None
@@ -98,13 +101,19 @@ def parse_concentration(names, file, conc_range=[0]):
             header = parts
             continue
 
-        gene = parts[1]
         conc = []
+        cont = False
+
+        try:
+            gene = parts[1]
+        except IndexError:
+            continue
+
         cont = False
         for i in conc_range:
             try:
                 conc.append(float(parts[2+i]))
-            except ValueError:
+            except (ValueError, IndexError) as e:
                 cont = True
                 break
         if cont:
