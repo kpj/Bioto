@@ -94,7 +94,7 @@ def real_life_average():
 # Generated data #
 ##################
 
-def simulate_model(Model, n=100, e=0.3, runs=20, plot_jc_ev=False):
+def simulate_model(Model, n=100, e=0.3, runs=15, plot_jc_ev=False):
     g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
 
     sim = g.system.simulate(Model, runs)
@@ -118,13 +118,13 @@ def simulate_model(Model, n=100, e=0.3, runs=20, plot_jc_ev=False):
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = True
+    plotter.Plotter.show_plots = False
 
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)
     #real_life_average()
 
     #simulate_model(models.MultiplicatorModel)
-    simulate_model(models.BooleanModel, n=50, e=0.9)
+    #simulate_model(models.BooleanModel, n=50, e=0.9)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
