@@ -106,6 +106,10 @@ def simulate_model(Model, n=100, e=0.3, runs=15, plot_jc_ev=False):
         sim[-1,:], pf,
         '%s with PF of A' % Model.name, 'gene concentration', 'perron-frobenius eigenvector'
     )
+    plotter.Plotter.loglog(
+        sim[-1,:]-sim[-10,:], pf,
+        '%s with PF of A (delta)' % Model.name, 'gene concentration', 'perron-frobenius eigenvector'
+    )
     if plot_jc_ev:
         plotter.Plotter.plot(
             sim[-1,:], ev,
