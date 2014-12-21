@@ -10,56 +10,15 @@ import utils, models, plotter
 # Helper functions #
 ####################
 
-def show_evolution(graph, sim, t_window, genes=range(5), pf=None):
-    """ Plots evolution of individual genes over time interval
+def present(title, func, *args):
+    """ Save and (if needed) plot data
     """
-    data = []
-    for ge in genes:
-        evolution_data = sim.T[ge]
-        evolen = len(evolution_data)
+    # store data for later use
+    dic = utils.CacheHandler.store_plot_data(title, func, *args)
 
-        gene_evolution = {
-            'x': range(evolen),
-            'y': evolution_data,
-            'label': 'gene %i' % ge
-        }
-        data.append(gene_evolution)
-
-        if not pf is None:
-            pf_ev = {
-                'x': range(evolen),
-                'y': [pf[ge]]*evolen,
-                'label': 'pf comp for gene %i' % ge
-            }
-            data.append(pf_ev)
-
-    plotter.Plotter.multi_plot(
-        data,
-        'System Evolution of %s' % graph.system.used_model.name,
-        'time', 'simulated gene expression level'
-    )
-
-def analysis(graph, Model, runs=10):
-    """ Examines different concentration components vs pf-ev
-    """
-    # generate data
-    pf = graph.math.get_perron_frobenius()
-    sim = graph.system.simulate(Model, runs)
-
-    # gather data
-    data = []
-    for i in range(0, runs, 2):
-        cur = {
-            'x': pf,
-            'y': sim[i,:],
-            'ylabel': 't: %i' % i
-        }
-
-        data.append(cur)
-
-    # plot result
-    plotter.Plotter.multi_loglog('Analysis of %s' % Model.name, 'perron-frobenius eigenvector', data)
-
+    # also plot if wanted
+    if plotter.Plotter.show_plots:
+        func(dic)
 
 ##################
 # Real-life data #
@@ -72,9 +31,10 @@ def real_life_single(file):
     pf = g.math.get_perron_frobenius()
     corr, p_val, = utils.StatsHandler.correlate(c, pf)
 
-    plotter.Plotter.loglog(
-        c, pf,
-        'Real-Life Data of %s' % file, 'gene concentration', 'perron-frobenius eigenvector'
+    present(
+        'Real-Life Data of %s' % file, plotter.Plotter.loglog,
+        'gene concentration', c,
+        'perron-frobenius eigenvector', pf
     )
 
 def real_life_average():
@@ -84,9 +44,10 @@ def real_life_average():
     pf = g.math.get_perron_frobenius()
     corr, p_val = utils.StatsHandler.correlate(c, pf)
 
-    plotter.Plotter.loglog(
-        c, pf,
-        'Real-Life Data (averaged)', 'averaged gene concentration', 'perron-frobenius eigenvector'
+    present(
+        'Real-Life Data (averaged)', plotter.Plotter.loglog,
+        'averaged gene concentration', c,
+        'perron-frobenius eigenvector', pf
     )
 
 
@@ -101,19 +62,22 @@ def simulate_model(Model, n=100, e=0.3, runs=15, plot_jc_ev=False):
     pf = g.math.get_perron_frobenius(remove_self_links=True)
     if plot_jc_ev: ev = g.system.used_model.math.get_jacobian_ev(sim[-1,:])
 
-    show_evolution(g, sim, runs)#, pf=pf)
-    plotter.Plotter.loglog(
-        sim[-1,:], pf,
-        '%s with PF of A' % Model.name, 'gene concentration', 'perron-frobenius eigenvector'
+    show_evolution(g, sim, runs, genes=[0,1])#, pf=pf)
+    present(
+        '%s with PF of A' % Model.name, plotter.Plotter.loglog,
+        'gene concentration', sim[-1,:],
+        'perron-frobenius eigenvector', pf
     )
-    plotter.Plotter.loglog(
-        sim[-1,:]-sim[-10,:], pf,
-        '%s with PF of A (delta)' % Model.name, 'gene concentration', 'perron-frobenius eigenvector'
+    present(
+        '%s with PF of A (delta)' % Model.name, plotter.Plotter.loglog,
+        'difference in gene concentration', sim[-1,:]-sim[-10,:],
+        'perron-frobenius eigenvector', pf
     )
     if plot_jc_ev:
-        plotter.Plotter.plot(
-            sim[-1,:], ev,
-            '%s with EV of J' % Model.name, 'gene concentration', 'jacobian eigenvector of highest eigenvalue'
+        present(
+            '%s with EV of J' % Model.name, plotter.Plotter.loglog,
+            'gene concentration', sim[-1,:],
+            'jacobian eigenvector of highest eigenvalue', ev
         )
 
 def investigate_active_edge_count_influence(Model, n=100, e=0.3, repeats=5):
@@ -160,7 +124,65 @@ def investigate_active_edge_count_influence(Model, n=100, e=0.3, repeats=5):
 
         one_num -= 1
 
-    plotter.Plotter.errorbar_plot(x_range, correlations, 'Correlation development for increasing number of activating links', 'number of activating links', 'correlation coefficient')
+    present(
+        'Correlation development for increasing number of activating links', plotter.Plotter.errorbar_plot,
+        'number of activating links', x_range,
+        'correlation coefficient', correlations
+    )
+
+def show_evolution(graph, sim, t_window, genes=range(5), pf=None):
+    """ Plots evolution of individual genes over time interval
+    """
+    data = []
+    for ge in genes:
+        evolution_data = sim.T[ge]
+        evolen = len(evolution_data)
+
+        gene_evolution = {
+            'x': range(evolen),
+            'y': evolution_data,
+            'label': 'gene %i' % ge
+        }
+        data.append(gene_evolution)
+
+        if not pf is None:
+            pf_ev = {
+                'x': range(evolen),
+                'y': [pf[ge]]*evolen,
+                'label': 'pf comp for gene %i' % ge
+            }
+            data.append(pf_ev)
+
+    present(
+        'System Evolution of %s' % graph.system.used_model.name, plotter.Plotter.multi_plot,
+        'time', 'simulated gene expression level',
+        data
+    )
+
+def analysis(graph, Model, runs=10):
+    """ Examines different concentration components vs pf-ev
+    """
+    # generate data
+    pf = graph.math.get_perron_frobenius()
+    sim = graph.system.simulate(Model, runs)
+
+    # gather data
+    data = []
+    for i in range(0, runs, 2):
+        cur = {
+            'x': pf,
+            'y': sim[i,:],
+            'ylabel': 't: %i' % i
+        }
+
+        data.append(cur)
+
+    # plot result
+    present(
+        'Analysis of %s' % Model.name, plotter.Plotter.multi_loglog,
+        'perron-frobenius eigenvector',
+        data
+    )
 
 
 ##################
@@ -168,16 +190,16 @@ def investigate_active_edge_count_influence(Model, n=100, e=0.3, repeats=5):
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = False
+    plotter.Plotter.show_plots = True
 
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)
     #real_life_average()
 
-    #simulate_model(models.MultiplicatorModel)
-    simulate_model(models.BooleanModel)
+    simulate_model(models.MultiplicatorModel)
+    #simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
-    #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.BooleanModel)
+    #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
 
     #investigate_active_edge_count_influence(models.BooleanModel, n=10, repeats=2)

@@ -1,4 +1,5 @@
 import os, os.path
+import json
 
 import numpy as np
 import numpy.random as npr
@@ -112,3 +113,73 @@ class DataHandler(object):
             res.append(sum(col)/len(col))
 
         return np.array(res)
+
+class CacheHandler(object):
+    cache_directory = 'plot_data'
+
+    @staticmethod
+    def store_plot_data(title, func, *args): #x_data, y_data, title, x_label, y_label):
+        """ Store plot data and return sanitized data dict
+        """
+        if len(args) == 2:
+            """ args = (x_label, data)
+            """
+            dic = {
+                'data': args[1],
+                'title': title,
+                'x_label': args[0],
+            }
+        elif len(args) == 3:
+            """ args = (x_label, y_label, data)
+            """
+            dic = {
+                'data': args[2],
+                'title': title,
+                'x_label': args[0],
+                'y_label': args[1]
+            }
+        elif len(args) == 4:
+            """ args = (x_label, x_data, y_label, y_data)
+            """
+            dic = {
+                'x_data': args[1],
+                'y_data': args[3],
+                'title': title,
+                'x_label': args[0],
+                'y_label': args[2]
+            }
+
+        if not os.path.exists(CacheHandler.cache_directory):
+            os.makedirs(CacheHandler.cache_directory)
+        CacheHandler.dump('%s.dat' % os.path.join(CacheHandler.cache_directory, clean_string(title)), dic)
+
+        return dic
+
+    @staticmethod
+    def dump(fname, dic):
+        """ Save dictionary to file (convert numpy arrays to python lists)
+        """
+        def clean(foo):
+            t = type(foo)
+
+            if t == type({}):
+                return {k: clean(v) for (k,v) in foo.items()}
+            elif t == type([]):
+                return [clean(e) for e in foo]
+            elif t == type(np.array([])):
+                return foo.tolist()
+            elif t == type(range(0)):
+                return list(foo)
+            return foo
+
+        json.dump(clean(dic), open(fname, 'w'))
+
+    @staticmethod
+    def load(fname):
+        return json.load(open(fname, 'r'))
+
+
+def clean_string(s):
+    """ Make string useble as filename
+    """
+    return s.replace(' ', '_')

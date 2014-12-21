@@ -31,7 +31,7 @@ class Plotter(object):
 
         if not os.path.exists(Plotter.plot_save_directory):
             os.makedirs(Plotter.plot_save_directory)
-        fig.savefig(os.path.join(Plotter.plot_save_directory, name.replace(' ', '_')), dpi=150)
+        fig.savefig(os.path.join(Plotter.plot_save_directory, utils.clean_string(name)), dpi=150)
 
     @staticmethod
     def present_graph(data, perron_frobenius, page_rank, degree_distribution):
@@ -106,62 +106,62 @@ class Plotter(object):
         Plotter.show(orig_title)
 
     @staticmethod
-    def errorbar_plot(x, y, title='', xlabel='', ylabel=''):
+    def errorbar_plot(data):
         """ This function assumes that y is a list of lists and automatically computes the error margin
         """
         y_mean = []
         y_err = []
-        for e in y:
+        for e in data['y_data']:
             y_mean.append(np.mean(e))
             y_err.append(np.std(e))
 
-        plt.errorbar(x, y_mean, yerr=y_err, fmt='o')
+        plt.errorbar(data['x_data'], y_mean, yerr=y_err, fmt='o')
 
-        plt.title(title)
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
+        plt.title(data['title'])
+        plt.xlabel(data['x_label'])
+        plt.ylabel(data['y_label'])
 
-        Plotter.show(title)
+        Plotter.show(data['title'])
 
     @staticmethod
-    def multi_plot(data, title='', xlabel='', ylabel=''):
-        """ Plots multiple graphs into same coordinate system
+    def multi_plot(data):
+        """ Plot multiple graphs into same coordinate system
         """
-        for entry in data:
+        for entry in data['data']:
             plt.plot(entry['x'], entry['y'], label=entry['label'])
 
-        plt.title(title)
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
+        plt.title(data['title'])
+        plt.xlabel(data['x_label'])
+        plt.ylabel(data['y_label'])
 
         #plt.legend(loc='best')
 
-        Plotter.show(title)
+        Plotter.show(data['title'])
 
     @staticmethod
-    def loglog(x, y, title, xlabel='', ylabel=''):
-        """ Yields loglog plot
+    def loglog(data):
+        """ Yield loglog plot
         """
-        ax = Plotter.set_loglog(plt.gca(), x, y, title, xlabel, ylabel)
-        Plotter.show('%s.png' % title)
+        ax = Plotter.set_loglog(plt.gca(), data['x_data'], data['y_data'], data['title'], data['x_label'], data['y_label'])
+        Plotter.show('%s.png' % data['title'])
 
     @staticmethod
-    def multi_loglog(title, xlabel, data):
-        """ Creates subplot of loglog, where data is of the form [{x: <x>, y: <y>, ylabel: <yl>}]
+    def multi_loglog(data):
+        """ Create subplot of loglog, where data['data'] is of the form [{x: <x>, y: <y>, ylabel: <yl>}]
         """
-        fig, axarr = plt.subplots(len(data), sharex=True)
-        fig.suptitle(title)
+        fig, axarr = plt.subplots(len(data['data']), sharex=True)
+        fig.suptitle(data['title'])
 
         for i, ax in enumerate(axarr):
-            e = data[i]
+            e = data['data'][i]
             Plotter.set_loglog(ax, e['x'], e['y'], ylabel=e['ylabel'])
-        axarr[-1].set_xlabel(xlabel)
+        axarr[-1].set_xlabel(data['x_label'])
 
-        Plotter.show('%s.png' % title)
+        Plotter.show('%s.png' % data['title'])
 
     @staticmethod
     def set_loglog(ax, x, y, title='', xlabel='', ylabel='', show_corr=True):
-        """ Returns loglog plot (axis) of given data and removes 0-pairs beforehand
+        """ Return loglog plot (axis) of given data and removes 0-pairs beforehand
         """
         xs = []
         ys = []
@@ -186,3 +186,17 @@ class Plotter(object):
         ax.set_ylabel(ylabel)
 
         return ax
+
+
+if __name__ == '__main__':
+    """ Interactive plotting
+    """
+    # choose data
+    fname = input('Enter path to data\n-> ')
+    data = utils.CacheHandler.load(fname)
+
+    # choose plot type
+    plotname = input('Enter plot-type (function name)\n-> ')
+
+    # do it
+    getattr(Plotter, plotname)(data)
