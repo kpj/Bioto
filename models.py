@@ -150,8 +150,8 @@ class BooleanModel(Model):
                 ...
             ] # also format of "data", "concs"
         """
-        time_window = 60
-        model_runs = 600 # how many times to run the simulation
+        time_window = 30
+        model_runs = 300 # how many times to run the simulation
         sim_runs = runs
 
         data = np.array([])

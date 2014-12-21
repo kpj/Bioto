@@ -156,7 +156,7 @@ def investigate_active_edge_count_influence(Model, n=100, e=0.3, repeats=5):
 
         one_num -= 1
 
-    plotter.Plotter.errorbar_plot(x_range, correlations, 'foo', 'number of activating links', 'correlation coefficient')
+    plotter.Plotter.errorbar_plot(x_range, correlations, 'Correlation development for increasing number of activating links', 'number of activating links', 'correlation coefficient')
 
 
 ##################
@@ -164,16 +164,16 @@ def investigate_active_edge_count_influence(Model, n=100, e=0.3, repeats=5):
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = True
+    plotter.Plotter.show_plots = False
 
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)
     #real_life_average()
 
     #simulate_model(models.MultiplicatorModel)
-    #simulate_model(models.BooleanModel, n=50, e=0.9)
+    simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.BooleanModel)
 
-    investigate_active_edge_count_influence(models.BooleanModel, n=10, repeats=2)
+    #investigate_active_edge_count_influence(models.BooleanModel, n=10, repeats=2)
