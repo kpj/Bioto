@@ -214,6 +214,10 @@ class ODEModel(Model):
         self.e1 = 0.1
         self.e2 = 0.9
 
+        # some defaults, should be overwritten later on
+        self.f1 = lambda x: 1
+        self.f2 = lambda x: 1
+
         self.aug_adja_m = self.math.get_augmented_adja_m()
 
     def get_terms(self, X):
