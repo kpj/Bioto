@@ -106,6 +106,24 @@ class Plotter(object):
         Plotter.show(orig_title)
 
     @staticmethod
+    def errorbar_plot(x, y, title='', xlabel='', ylabel=''):
+        """ This function assumes that y is a list of lists and automatically computes the error margin
+        """
+        y_mean = []
+        y_err = []
+        for e in y:
+            y_mean.append(np.mean(e))
+            y_err.append(np.std(e))
+
+        plt.errorbar(x, y_mean, yerr=y_err, fmt='o')
+
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+
+        Plotter.show(title)
+
+    @staticmethod
     def multi_plot(data, title='', xlabel='', ylabel=''):
         """ Plots multiple graphs into same coordinate system
         """
@@ -115,7 +133,7 @@ class Plotter(object):
         plt.title(title)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
-        
+
         #plt.legend(loc='best')
 
         Plotter.show(title)

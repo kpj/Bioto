@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, random
 
 import numpy as np
 import numpy.linalg as npl
@@ -112,13 +112,59 @@ def simulate_model(Model, n=100, e=0.3, runs=15, plot_jc_ev=False):
             '%s with EV of J' % Model.name, 'gene concentration', 'jacobian eigenvector of highest eigenvalue'
         )
 
+def investigate_active_edge_count_influence(Model, n=100, e=0.3, repeats=5):
+    """ Compute correlation between pf and gene concentrations for varying numbers of activating links in network.
+        repeats specifies how many runs are average for one specific number of activating links
+    """
+    g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
+    pf = g.math.get_perron_frobenius(remove_self_links=True)
+
+    aug_adja_m = np.copy(g.adja_m).T
+    one_num = int(aug_adja_m.sum())
+    x_range = list(range(one_num+1))
+
+    # save indices of ones (for easier access later on)
+    indices = []
+    for i in range(aug_adja_m.shape[0]):
+        for j in range(aug_adja_m.shape[1]):
+            if aug_adja_m[i,j] == 1:
+                indices.append((i,j))
+
+    # make audgmented adja_m inhibitory only
+    aug_adja_m[aug_adja_m == 1] = -1
+
+    correlations = []
+    while True:
+        tmp = []
+        for i in range(repeats):
+            # extract some entry from simulation
+            sim = g.system.simulate(Model, 5, aug_adja=aug_adja_m)
+            exprs = sim[-1,:]
+
+            # do statistics
+            corr, p_val = utils.StatsHandler.correlate(pf, exprs)
+            tmp.append(corr)
+        correlations.append(tmp)
+
+        if one_num == 0:
+            break
+
+        # randomly activate some edge
+        ind = random.choice(indices)
+        indices.remove(ind)
+        aug_adja_m[ind] = 1
+
+        one_num -= 1
+
+    plotter.Plotter.errorbar_plot(x_range, correlations, 'foo', 'number of activating links', 'correlation coefficient')
+
 
 ##################
 # Command Center #
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = False
+    plotter.Plotter.show_plots = True
 
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)
     #real_life_average()
@@ -129,3 +175,5 @@ if __name__ == '__main__':
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.BooleanModel)
+
+    investigate_active_edge_count_influence(models.BooleanModel, n=10, repeats=2)
