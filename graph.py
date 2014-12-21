@@ -52,15 +52,15 @@ class IOComponent(object):
             plt.savefig(file, dpi=150)
             plt.close()
 
-    def load_concentrations(self, file):
+    def load_concentrations(self, file, conc_range=[0]):
         """ Delegates to utils.DataHandler
         """
-        return utils.DataHandler.load_concentrations(self.graph, file)
+        return utils.DataHandler.load_concentrations(self.graph, file, conc_range)
 
-    def load_averaged_concentrations(self, directory):
+    def load_averaged_concentrations(self, directory, conc_range=[0]):
         """ Delegates to utils.DataHandler
         """
-        return utils.DataHandler.load_averaged_concentrations(self.graph, directory)
+        return utils.DataHandler.load_averaged_concentrations(self.graph, directory, conc_range)
 
 class DynamicalSystem(object):
     def __init__(self, graph):

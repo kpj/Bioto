@@ -60,7 +60,7 @@ class DataHandler(object):
     backup_dir = 'conc_baks'
 
     @staticmethod
-    def load_concentrations(graph, file):
+    def load_concentrations(graph, file, conc_range=[0]):
         """ Loads concentrations for given graph from given file and caches results for later reuse
         """
         bak_fname = os.path.join(DataHandler.backup_dir, 'conc_%s.bak' % os.path.basename(file))
@@ -73,7 +73,8 @@ class DataHandler(object):
             names = list(graph)
             concentrations, fail = parser.parse_concentration(
                 names,
-                file
+                file,
+                conc_range
             )
             if concentrations is None:
                 return None
@@ -93,7 +94,7 @@ class DataHandler(object):
         return concentrations
 
     @staticmethod
-    def load_averaged_concentrations(graph, directory):
+    def load_averaged_concentrations(graph, directory, conc_range=[0]):
         """ Loads concentration files in given directory and averages them
         """
         concs = []
@@ -101,7 +102,7 @@ class DataHandler(object):
             if not file.endswith('.soft'): continue
 
             f = os.path.join(directory, file)
-            c = DataHandler.load_concentrations(graph, f)
+            c = DataHandler.load_concentrations(graph, f, conc_range)
 
             if not c is None:
                 concs.append(c)
