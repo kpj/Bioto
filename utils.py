@@ -6,6 +6,8 @@ import numpy.random as npr
 
 import scipy.stats as scits
 
+import pandas as pd
+
 import networkx as nx
 
 import parser, graph
@@ -183,3 +185,9 @@ def clean_string(s):
     """ Make string useble as filename
     """
     return s.replace(' ', '_')
+
+def df(**kwargs):
+    """ Convert given args to proper dataframe
+    """
+    dic = {k: pd.Series(v, dtype='category') for (k,v) in kwargs.items()} # TODO: handle category properly
+    return pd.DataFrame(dic)

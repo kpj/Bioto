@@ -3,6 +3,7 @@ import argparse
 
 import numpy as np
 
+from ggplot import *
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import gridspec
@@ -18,21 +19,30 @@ rc('text', usetex=True)
 class Plotter(object):
     plot_save_directory = 'plot_dir'
     show_plots = True
+    use_ggplot = False # use ggplot is possible
 
     @staticmethod
-    def show(name):
+    def show(name, plot=None):
         """ Shows plot and automatically saves after closing preview
         """
-        fig = plt.gcf()
+        if plot is None:
+            fig = plt.gcf()
 
-        if Plotter.show_plots:
-            plt.show()
+            if Plotter.show_plots:
+                plt.show()
+            else:
+                plt.close()
+
+            if not os.path.exists(Plotter.plot_save_directory):
+                os.makedirs(Plotter.plot_save_directory)
+            fig.savefig(os.path.join(Plotter.plot_save_directory, utils.clean_string(name)), dpi=150)
         else:
-            plt.close()
+            if Plotter.show_plots:
+                print(plot)
 
-        if not os.path.exists(Plotter.plot_save_directory):
-            os.makedirs(Plotter.plot_save_directory)
-        fig.savefig(os.path.join(Plotter.plot_save_directory, utils.clean_string(name)), dpi=150)
+            if not os.path.exists(Plotter.plot_save_directory):
+                os.makedirs(Plotter.plot_save_directory)
+            ggsave(os.path.join(Plotter.plot_save_directory, utils.clean_string(name)), plot)
 
     @staticmethod
     def present_graph(data, perron_frobenius, page_rank, degree_distribution):
@@ -128,23 +138,59 @@ class Plotter(object):
     def multi_plot(data):
         """ Plot multiple graphs into same coordinate system
         """
-        for entry in data['data']:
-            plt.plot(entry['x'], entry['y'], label=entry['label'])
+        if Plotter.use_ggplot:
+            tmp = {'x': [],'y': [], 'id': []}
+            for i, entry in enumerate(data['data']):
+                tmp['x'].extend(entry['x'])
+                tmp['y'].extend(entry['y'])
+                tmp['id'].extend([i] * len(entry['x']))
 
-        plt.title(data['title'])
-        plt.xlabel(data['x_label'])
-        plt.ylabel(data['y_label'])
+            p = ggplot(aes(x='x', y='y', group='id', color='id'), data=utils.df(x=tmp['x'], y=tmp['y'], id=tmp['id']))
 
-        #plt.legend(loc='best')
+            p += geom_line()
+            p += scale_color_brewer(type='qual', palette='Set1')
 
-        Plotter.show(data['title'])
+            p += ggtitle(data['title'])
+            p += xlab(data['x_label'])
+            p += ylab(data['y_label'])
+
+            Plotter.show(data['title'], p)
+        else:
+            for entry in data['data']:
+                plt.plot(entry['x'], entry['y'], label=entry['label'])
+
+            plt.title(data['title'])
+            plt.xlabel(data['x_label'])
+            plt.ylabel(data['y_label'])
+
+            #plt.legend(loc='best')
+
+            Plotter.show(data['title'])
 
     @staticmethod
-    def loglog(data):
+    def loglog(data, show_corr=True):
         """ Yield loglog plot
         """
-        ax = Plotter.set_loglog(plt.gca(), data['x_data'], data['y_data'], data['title'], data['x_label'], data['y_label'])
-        Plotter.show('%s.png' % data['title'])
+        if Plotter.use_ggplot:
+            if show_corr:
+                corr, p_val, = utils.StatsHandler.correlate(data['x_data'], data['y_data'])
+                data['title'] += ' (corr: %.2f, p-value: %.2f)' % (round(corr, 2), round(p_val, 2))
+
+            p = ggplot(aes(x='x', y='y', color='x'), data=utils.df(x=data['x_data'], y=data['y_data']))
+            p += geom_point()
+
+            p += scale_x_log()
+            p += scale_y_log()
+            p += scale_colour_gradient(low='black', high='red')
+
+            p += ggtitle(data['title'])
+            p += xlab(data['x_label'])
+            p += ylab(data['y_label'])
+
+            Plotter.show('%s.png' % data['title'], p)
+        else:
+            ax = Plotter.set_loglog(plt.gca(), data['x_data'], data['y_data'], data['title'], data['x_label'], data['y_label'])
+            Plotter.show('%s.png' % data['title'])
 
     @staticmethod
     def multi_loglog(data):
@@ -209,6 +255,6 @@ if __name__ == '__main__':
         required=True,
         metavar="<plot type>"
     )
-    
+
     args = vars(parser.parse_args())
     getattr(Plotter, args['plot'])(utils.CacheHandler.load(args['file']))
