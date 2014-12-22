@@ -190,7 +190,7 @@ def analysis(graph, Model, runs=10):
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = True
+    plotter.Plotter.show_plots = False
 
     #simulate_model(models.MultiplicatorModel)
     simulate_model(models.BooleanModel)

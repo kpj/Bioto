@@ -98,7 +98,7 @@ class BooleanModel(Model):
     """
     info = {
         'name': 'Boolean Model',
-        'norm_time': False, # norm along time or gene axis
+        'norm_time': True, # norm along time or gene axis
         'bin_mod_runs': 10, # how often to run the binary simulation (ON/OFF genes)
         'time_window': 30, # time window to average binary runs
         'cont_evo_runs': 300, # how many binary runs to generate
@@ -183,13 +183,13 @@ class BooleanModel(Model):
         out = []
         if norm_time:
             for time in concs.T:
-                norm = npl.norm(time)
+                norm = npl.norm(time, 1)
                 time /= norm if norm != 0 else 1
                 out.append(time)
             out = np.array(out).T
         else:
             for genes in concs:
-                norm = npl.norm(genes)
+                norm = npl.norm(genes, 1)
                 genes /= norm if norm != 0 else 1
                 out.append(genes)
             out = np.array(out)
