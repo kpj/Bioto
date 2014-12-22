@@ -263,6 +263,13 @@ if __name__ == '__main__':
     )
 
     args = vars(parser.parse_args())
-
     Plotter.show_plots = args['save_only']
-    getattr(Plotter, args['plot'])(utils.CacheHandler.load(args['file']))
+
+    func = getattr(Plotter, args['plot'])
+    if os.path.isfile(args['file']):
+        func(utils.CacheHandler.load(args['file']))
+    elif os.path.isdir(args['file']):
+        for f in os.listdir(args['file']):
+            func(utils.CacheHandler.load(os.path.join(args['file'], f)))
+    else:
+        print('Could not find file, aborting')
