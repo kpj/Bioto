@@ -255,6 +255,14 @@ if __name__ == '__main__':
         required=True,
         metavar="<plot type>"
     )
+    parser.add_argument(
+    	"-s",
+    	"--save_only",
+    	help="Only save and don't show result",
+    	action="store_false"
+    )
 
     args = vars(parser.parse_args())
+
+    Plotter.show_plots = args['save_only']
     getattr(Plotter, args['plot'])(utils.CacheHandler.load(args['file']))
