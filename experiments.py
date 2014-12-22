@@ -194,7 +194,7 @@ if __name__ == '__main__':
 
     #simulate_model(models.MultiplicatorModel)
     #simulate_model(models.BooleanModel)
-    simulate_model(models.LinearModel, n=10, plot_jc_ev=True)
+    simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
