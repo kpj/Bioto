@@ -1,4 +1,5 @@
 import os, os.path
+import argparse
 
 import numpy as np
 
@@ -191,12 +192,23 @@ class Plotter(object):
 if __name__ == '__main__':
     """ Interactive plotting
     """
-    # choose data
-    fname = input('Enter path to data\n-> ')
-    data = utils.CacheHandler.load(fname)
-
-    # choose plot type
-    plotname = input('Enter plot-type (function name)\n-> ')
-
-    # do it
-    getattr(Plotter, plotname)(data)
+    parser = argparse.ArgumentParser(description="Interactive plotting of generated data")
+    parser.add_argument(
+        "-f",
+        "--file",
+        help="data file",
+        type=str,
+        required=True,
+        metavar="<file>"
+    )
+    parser.add_argument(
+        "-p",
+        "--plot",
+        help="plot type",
+        type=str,
+        required=True,
+        metavar="<plot type>"
+    )
+    
+    args = vars(parser.parse_args())
+    getattr(Plotter, args['plot'])(utils.CacheHandler.load(args['file']))
