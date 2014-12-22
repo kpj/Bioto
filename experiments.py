@@ -97,26 +97,37 @@ def investigate_active_edge_count_influence(Model, n=100, e=0.3, repeats=5):
             if aug_adja_m[i,j] == 1:
                 indices.append((i,j))
 
-    # make audgmented adja_m inhibitory only
+    # make augmented adja_m inhibitory only
     aug_adja_m[aug_adja_m == 1] = -1
 
     correlations = []
     while True:
-        tmp = []
+        tmp_rep = []
         for i in range(repeats):
-            # extract some entry from simulation
-            sim = g.system.simulate(Model, aug_adja=aug_adja_m)
-            exprs = sim[-1,:]
+            if len(indices) == 0:
+                indices.append((-1,-1))
 
-            # do statistics
-            corr, p_val = utils.StatsHandler.correlate(pf, exprs)
-            tmp.append(corr)
-        correlations.append(tmp)
+            tmp_ind = []
+            for ind in indices:
+                tmp_aam = np.copy(aug_adja_m)
+                if ind != (-1,-1):
+                    tmp_aam[ind] = 1
+
+                # extract some entry from simulation
+                sim = g.system.simulate(Model, aug_adja=tmp_aam)
+                exprs = sim[-1,:]
+
+                # do statistics
+                corr, p_val = utils.StatsHandler.correlate(pf, exprs)
+                tmp_ind.append(corr)
+
+            tmp_rep.extend(tmp_ind)
+        correlations.append(tmp_rep)
 
         if one_num == 0:
             break
 
-        # randomly activate some edge
+        # randomly activate some edge for next stage
         ind = random.choice(indices)
         indices.remove(ind)
         aug_adja_m[ind] = 1
@@ -124,7 +135,7 @@ def investigate_active_edge_count_influence(Model, n=100, e=0.3, repeats=5):
         one_num -= 1
 
     present(
-        'Correlation development for increasing number of activating links', plotter.Plotter.errorbar_plot,
+        'Correlation development for increasing number of activating links (%s)' % Model.info['name'], plotter.Plotter.errorbar_plot,
         'number of activating links', x_range,
         'correlation coefficient', correlations
     )
@@ -190,16 +201,16 @@ def analysis(graph, Model, runs=10):
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = False
+    plotter.Plotter.show_plots = True
 
     #simulate_model(models.MultiplicatorModel)
-    simulate_model(models.BooleanModel)
+    #simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
 
-    #investigate_active_edge_count_influence(models.BooleanModel, n=10, repeats=2)
+    investigate_active_edge_count_influence(models.BooleanModel, n=10, repeats=2)
 
     #real_life_average()
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)
