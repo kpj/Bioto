@@ -252,8 +252,8 @@ if __name__ == '__main__':
         "--plot",
         help="plot type",
         type=str,
-        required=True,
-        metavar="<plot type>"
+        metavar="<plot type>",
+        default=None
     )
     parser.add_argument(
     	"-s",
@@ -265,11 +265,15 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
     Plotter.show_plots = args['save_only']
 
-    func = getattr(Plotter, args['plot'])
+    def handle_file(f):
+        dic = utils.CacheHandler.load(f)
+        func = getattr(Plotter, dic['info']['function'] if args['plot'] is None else args['plot'])
+        func(dic)
+
     if os.path.isfile(args['file']):
-        func(utils.CacheHandler.load(args['file']))
+        handle_file(args['file'])
     elif os.path.isdir(args['file']):
         for f in os.listdir(args['file']):
-            func(utils.CacheHandler.load(os.path.join(args['file'], f)))
+            handle_file(os.path.join(args['file'], f))
     else:
         print('Could not find file, aborting')

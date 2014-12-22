@@ -206,11 +206,11 @@ if __name__ == '__main__':
     #simulate_model(models.MultiplicatorModel)
     #simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
-    #simulate_model(models.NonlinearModel, plot_jc_ev=True)
+    simulate_model(models.NonlinearModel, n=20, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
 
-    investigate_active_edge_count_influence(models.BooleanModel, n=10, repeats=2)
+    #investigate_active_edge_count_influence(models.BooleanModel, n=10, repeats=2)
 
     #real_life_average()
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)

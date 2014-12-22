@@ -153,9 +153,11 @@ class CacheHandler(object):
             }
 
         model_id = 'raw'
+        dic['info'] = {}
         if not model is None:
             dic['info'] = model.info
             model_id = md5(repr(sorted(model.info.items())))
+        dic['info']['function'] = func.__name__
 
         if not os.path.exists(CacheHandler.cache_directory):
             os.makedirs(CacheHandler.cache_directory)
