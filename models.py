@@ -58,6 +58,10 @@ class Math(object):
         return ev
 
 class Model(object):
+    info = {
+        'name': 'vanilla'
+    }
+
     def __init__(self, graph):
         self.graph = graph
         self.math = Math(self)
@@ -73,7 +77,9 @@ class Model(object):
 class MultiplicatorModel(Model):
     """ Simulates network evolution by adjacency matrix multiplication
     """
-    name = 'Multiplicator Model'
+    info = {
+        'name': 'Multiplicator Model'
+    }
 
     def generate(self, runs=10):
         initial = np.array([npr.random() for i in range(len(self.graph))])
@@ -90,7 +96,14 @@ class MultiplicatorModel(Model):
 class BooleanModel(Model):
     """ Simple model to generate gene expression data
     """
-    name = 'Boolean Model'
+    info = {
+        'name': 'Boolean Model',
+        'norm_time': False, # norm along time or gene axis
+        'bin_mod_runs': 10, # how often to run the binary simulation (ON/OFF genes)
+        'time_window': 30, # time window to average binary runs
+        'cont_evo_runs': 300, # how many binary runs to generate
+        'avg_runs': 10 # how many averaged binary runs to average in the end
+    }
 
     def setup(self):
         """ Declare activating and inhibiting links and further constants
@@ -98,7 +111,7 @@ class BooleanModel(Model):
         Model.setup(self)
         self.aug_adja_m = self.math.get_augmented_adja_m()
 
-    def generate_binary_time_series(self, runs=10):
+    def generate_binary_time_series(self):
         """ Applies rule a couple of times and returns system evolution as binary ON/OFF states
             Returns:
             [
@@ -134,13 +147,13 @@ class BooleanModel(Model):
         x0 = npr.randint(2, size=num)
 
         data = np.matrix(x0)
-        for t in range(runs-1):
+        for t in range(BooleanModel.info['bin_mod_runs']-1):
             cur = rule(data[-1])
             data = np.vstack((data, cur))
 
         return np.array(data)
 
-    def generate_continues_evolution(self, runs=10, norm_time=True):
+    def generate_continues_evolution(self, norm_time):
         """ Generates continuous data from binary evolution
             Either norms along gene- or time-axis
             Returns:
@@ -150,23 +163,19 @@ class BooleanModel(Model):
                 ...
             ] # also format of "data", "concs"
         """
-        time_window = 30
-        model_runs = 300 # how many times to run the simulation
-        sim_runs = runs
-
         data = np.array([])
 
         # concatenate time series
-        for i in range(model_runs):
+        for i in range(BooleanModel.info['cont_evo_runs']):
             res = self.generate_binary_time_series(sim_runs)
             data = np.vstack((data, res)) if len(data) > 0 else res
 
         # average gene activations over time window
         concs = []
-        for i in range(0, len(data), time_window):
+        for i in range(0, len(data), BooleanModel.info['time_window']):
             concs.append([])
             for n in range(len(self.graph)):
-                window = data.T[n,i:i+time_window]
+                window = data.T[n,i:i+BooleanModel.info['time_window']]
                 concs[-1].append(window.mean())
         concs = np.array(concs)
 
@@ -187,14 +196,12 @@ class BooleanModel(Model):
 
         return out
 
-    def generate(self, runs=10):
+    def generate(self):
         """ Averages many runs and returns result
         """
-        avg_runs = 10
-
         tmp = None
-        for i in range(avg_runs):
-            cur = self.generate_continues_evolution(runs)
+        for i in range(BooleanModel.info['avg_runs']):
+            cur = self.generate_continues_evolution(norm_time=BooleanModel.info['norm_time'])
             if not tmp is None:
                 tmp += cur
             else:
@@ -252,7 +259,9 @@ class ODEModel(Model):
         return res
 
 class LinearModel(ODEModel):
-    name = 'Linear Model'
+    info = {
+        'name': 'Linear Model'
+    }
 
     def setup(self):
         super(LinearModel, self).setup()
@@ -261,7 +270,9 @@ class LinearModel(ODEModel):
         self.f2 = lambda x: -x
 
 class NonlinearModel(ODEModel):
-    name = 'Nonlinear Model'
+    info = {
+        'name': 'Nonlinear Model'
+    }
 
     def setup(self):
         super(NonlinearModel, self).setup()

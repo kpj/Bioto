@@ -1,5 +1,6 @@
 import os, os.path
 import json
+import hashlib
 
 import numpy as np
 import numpy.random as npr
@@ -120,7 +121,7 @@ class CacheHandler(object):
     cache_directory = 'plot_data'
 
     @staticmethod
-    def store_plot_data(title, func, *args): #x_data, y_data, title, x_label, y_label):
+    def store_plot_data(title, func, *args, model=None): #x_data, y_data, title, x_label, y_label):
         """ Store plot data and return sanitized data dict
         """
         if len(args) == 2:
@@ -151,9 +152,14 @@ class CacheHandler(object):
                 'y_label': args[2]
             }
 
+        model_id = 'raw'
+        if not model is None:
+            dic['info'] = model.info
+            model_id = md5(repr(sorted(model.info.items())))
+
         if not os.path.exists(CacheHandler.cache_directory):
             os.makedirs(CacheHandler.cache_directory)
-        CacheHandler.dump('%s.dat' % os.path.join(CacheHandler.cache_directory, clean_string(title)), dic)
+        CacheHandler.dump('%s__%s.dat' % (os.path.join(CacheHandler.cache_directory, clean_string(title)), model_id), dic)
 
         return dic
 
@@ -191,3 +197,8 @@ def df(**kwargs):
     """
     dic = {k: pd.Series(v, dtype='category') for (k,v) in kwargs.items()} # TODO: handle category properly
     return pd.DataFrame(dic)
+
+def md5(s):
+    m = hashlib.md5()
+    m.update(s.encode(encoding='utf-8'))
+    return m.hexdigest()
