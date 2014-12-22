@@ -167,7 +167,7 @@ class BooleanModel(Model):
 
         # concatenate time series
         for i in range(BooleanModel.info['cont_evo_runs']):
-            res = self.generate_binary_time_series(sim_runs)
+            res = self.generate_binary_time_series()
             data = np.vstack((data, res)) if len(data) > 0 else res
 
         # average gene activations over time window
@@ -207,7 +207,7 @@ class BooleanModel(Model):
             else:
                 tmp = cur
 
-        return tmp / avg_runs
+        return tmp / BooleanModel.info['avg_runs']
 
 class ODEModel(Model):
     """ General model of ODEs to generate data

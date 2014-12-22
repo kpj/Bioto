@@ -67,7 +67,7 @@ class DynamicalSystem(object):
         self.graph = graph
         self.used_model = None
 
-    def simulate(self, Model, runs=10, aug_adja=None):
+    def simulate(self, Model, aug_adja=None):
         """ Simulates network evolution by using given model
             Model is passed as class, not as object
         """
@@ -77,7 +77,7 @@ class DynamicalSystem(object):
 
         self.used_model = model
 
-        res = model.generate(runs)
+        res = model.generate()
         return res
 
 class Math(object):

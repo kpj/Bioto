@@ -51,14 +51,14 @@ def real_life_average():
 # Generated data #
 ##################
 
-def simulate_model(Model, n=100, e=0.3, runs=15, plot_jc_ev=False):
+def simulate_model(Model, n=100, e=0.3, plot_jc_ev=False):
     g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
 
-    sim = g.system.simulate(Model, runs)
+    sim = g.system.simulate(Model)
     pf = g.math.get_perron_frobenius(remove_self_links=True)
     if plot_jc_ev: ev = g.system.used_model.math.get_jacobian_ev(sim[-1,:])
 
-    show_evolution(g, sim, runs)#, pf=pf)
+    show_evolution(g, sim)#, pf=pf)
     present(
         '%s with PF of A' % Model.info['name'], plotter.Plotter.loglog,
         'gene concentration', sim[-1,:],
@@ -105,7 +105,7 @@ def investigate_active_edge_count_influence(Model, n=100, e=0.3, repeats=5):
         tmp = []
         for i in range(repeats):
             # extract some entry from simulation
-            sim = g.system.simulate(Model, 5, aug_adja=aug_adja_m)
+            sim = g.system.simulate(Model, aug_adja=aug_adja_m)
             exprs = sim[-1,:]
 
             # do statistics
@@ -129,7 +129,7 @@ def investigate_active_edge_count_influence(Model, n=100, e=0.3, repeats=5):
         'correlation coefficient', correlations
     )
 
-def show_evolution(graph, sim, t_window, genes=range(5), pf=None):
+def show_evolution(graph, sim, genes=range(5), pf=None):
     """ Plots evolution of individual genes over time interval
     """
     data = []
@@ -163,7 +163,7 @@ def analysis(graph, Model, runs=10):
     """
     # generate data
     pf = graph.math.get_perron_frobenius()
-    sim = graph.system.simulate(Model, runs)
+    sim = graph.system.simulate(Model)
 
     # gather data
     data = []
@@ -193,8 +193,8 @@ if __name__ == '__main__':
     plotter.Plotter.show_plots = True
 
     #simulate_model(models.MultiplicatorModel)
-    #simulate_model(models.BooleanModel)
-    simulate_model(models.LinearModel, plot_jc_ev=True)
+    simulate_model(models.BooleanModel)
+    #simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
