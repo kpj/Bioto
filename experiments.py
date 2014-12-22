@@ -13,12 +13,8 @@ import utils, models, plotter
 def present(title, func, *args):
     """ Save and (if needed) plot data
     """
-    # store data for later use
-    dic = utils.CacheHandler.store_plot_data(title, func, *args)
-
-    # also plot if wanted
-    if plotter.Plotter.show_plots:
-        func(dic)
+    dic = utils.CacheHandler.store_plot_data(title, func, *args) # store data for later use
+    func(dic) # also plot if wanted
 
 ##################
 # Real-life data #
@@ -62,7 +58,7 @@ def simulate_model(Model, n=100, e=0.3, runs=15, plot_jc_ev=False):
     pf = g.math.get_perron_frobenius(remove_self_links=True)
     if plot_jc_ev: ev = g.system.used_model.math.get_jacobian_ev(sim[-1,:])
 
-    show_evolution(g, sim, runs, genes=[0,1])#, pf=pf)
+    show_evolution(g, sim, runs)#, pf=pf)
     present(
         '%s with PF of A' % Model.name, plotter.Plotter.loglog,
         'gene concentration', sim[-1,:],
@@ -190,16 +186,16 @@ def analysis(graph, Model, runs=10):
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = True
-
-    #for f in os.listdir('../data/concentrations/'): real_life_single(f)
-    #real_life_average()
+    plotter.Plotter.show_plots = False
 
     simulate_model(models.MultiplicatorModel)
-    #simulate_model(models.BooleanModel)
-    #simulate_model(models.LinearModel, plot_jc_ev=True)
-    #simulate_model(models.NonlinearModel, plot_jc_ev=True)
+    simulate_model(models.BooleanModel)
+    simulate_model(models.LinearModel, plot_jc_ev=True)
+    simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
-    #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
+    analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
 
-    #investigate_active_edge_count_influence(models.BooleanModel, n=10, repeats=2)
+    investigate_active_edge_count_influence(models.BooleanModel, n=10, repeats=2)
+
+    real_life_average()
+    for f in os.listdir('../data/concentrations/'): real_life_single(f)
