@@ -47,7 +47,7 @@ def real_life_average():
         'perron-frobenius eigenvector', pf
     )
 
-def gene_overview(per_gene=True):
+def gene_overview(per_gene=False):
     graph = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
 
     names = list(graph)
@@ -103,8 +103,9 @@ def gene_overview(per_gene=True):
 # Generated data #
 ##################
 
-def simulate_model(Model, n=100, e=0.3, plot_jc_ev=False):
+def simulate_model(Model, n=100, e=0.3, plot_jc_ev=False, info={}):
     g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
+    Model.info.update(info)
 
     sim = g.system.simulate(Model)
     pf = g.math.get_perron_frobenius(remove_self_links=True)
@@ -256,14 +257,14 @@ if __name__ == '__main__':
     plotter.Plotter.show_plots = True
 
     #simulate_model(models.MultiplicatorModel)
-    #simulate_model(models.BooleanModel)
+    simulate_model(models.BooleanModel, n=20)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
-    #investigate_active_edge_count_influence(models.BooleanModel, n=20, repeats=2)
+    #investigate_active_edge_count_influence(models.MultiplicatorModel, n=10, repeats=2)
 
-    gene_overview()
+    #gene_overview()
 
     #real_life_average()
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)
