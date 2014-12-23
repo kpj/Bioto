@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import gridspec
 from matplotlib import rc
+from matplotlib import ticker as ptk
 
 import utils
 
@@ -27,6 +28,10 @@ class Plotter(object):
         """
         if plot is None:
             fig = plt.gcf()
+
+            # fix axis confusing offset
+            y_formatter = ptk.ScalarFormatter(useOffset=False)
+            plt.gca().yaxis.set_major_formatter(y_formatter)
 
             if Plotter.show_plots:
                 plt.show()
