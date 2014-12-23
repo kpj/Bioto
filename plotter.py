@@ -34,8 +34,9 @@ class Plotter(object):
 
         if plot is None:
             # fix confusing axis offset
-            y_formatter = ptk.ScalarFormatter(useOffset=False)
-            plt.gca().yaxis.set_major_formatter(y_formatter)
+            formatter = ptk.ScalarFormatter(useOffset=False)
+            plt.gca().xaxis.set_major_formatter(formatter)
+            plt.gca().yaxis.set_major_formatter(formatter)
 
             fig = plt.gcf()
 
