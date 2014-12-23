@@ -1,5 +1,5 @@
 import os, os.path
-import argparse
+import argparse, pprint
 
 import numpy as np
 
@@ -245,15 +245,26 @@ class Plotter(object):
 if __name__ == '__main__':
     """ Interactive plotting
     """
+    # call `complete -r` to use path autocompletion
     parser = argparse.ArgumentParser(description='Interactive plotting of generated data')
-    parser.add_argument(
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         '-f',
         '--file',
-        help='Data file to parse',
+        help='Use this data file to plot',
         type=str,
-        required=True,
         metavar='<data file>'
     )
+    group.add_argument(
+        '-i',
+        '--info',
+        help='Show info of data file',
+        type=str,
+        metavar='<data file>',
+        default=None
+    )
+
     parser.add_argument(
         '-p',
         '--plot',
@@ -278,17 +289,22 @@ if __name__ == '__main__':
     )
 
     args = vars(parser.parse_args())
-    Plotter.show_plots = args['save_only']
 
-    def handle_file(f):
-        dic = utils.CacheHandler.load(f)
-        func = getattr(Plotter, dic['info']['function'] if args['plot'] is None else args['plot'])
-        func(dic, fname=args['output'])
+    if args['info'] is None:
+        Plotter.show_plots = args['save_only']
 
-    if os.path.isfile(args['file']):
-        handle_file(args['file'])
-    elif os.path.isdir(args['file']):
-        for f in os.listdir(args['file']):
-            handle_file(os.path.join(args['file'], f))
+        def handle_file(f):
+            dic = utils.CacheHandler.load(f)
+            func = getattr(Plotter, dic['info']['function'] if args['plot'] is None else args['plot'])
+            func(dic, fname=args['output'])
+
+        if os.path.isfile(args['file']):
+            handle_file(args['file'])
+        elif os.path.isdir(args['file']):
+            for f in os.listdir(args['file']):
+                handle_file(os.path.join(args['file'], f))
+        else:
+            print('Could not find file, aborting')
     else:
-        print('Could not find file, aborting')
+        dic = utils.CacheHandler.load(args['info'])
+        pprint.pprint(dic['info'])
