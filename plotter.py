@@ -308,7 +308,10 @@ if __name__ == '__main__':
             handle_file(args['file'])
         elif os.path.isdir(args['file']):
             for f in os.listdir(args['file']):
-                handle_file(os.path.join(args['file'], f))
+                fn = os.path.join(args['file'], f)
+                if os.path.isfile(fn):
+                    handle_file(fn)
+                # don't recurse
         else:
             print('Could not find file, aborting')
     else:
