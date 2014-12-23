@@ -29,7 +29,7 @@ class Plotter(object):
         if plot is None:
             fig = plt.gcf()
 
-            # fix axis confusing offset
+            # fix confusing axis offset
             y_formatter = ptk.ScalarFormatter(useOffset=False)
             plt.gca().yaxis.set_major_formatter(y_formatter)
 
