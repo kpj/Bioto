@@ -68,6 +68,11 @@ class Model(object):
 
         self.setup()
 
+    def __str__(self):
+        """ Give unique, consistent hash of this model configuration
+        """
+        return utils.md5(repr(sorted(info.items())))
+
     def setup(self):
         self.aug_adja_m = None
 
