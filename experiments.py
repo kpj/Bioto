@@ -1,4 +1,5 @@
-import sys, os, random
+import sys, random, collections
+import os, os.path
 
 import numpy as np
 import numpy.linalg as npl
@@ -45,6 +46,57 @@ def real_life_average():
         'averaged gene concentration', c,
         'perron-frobenius eigenvector', pf
     )
+
+def gene_overview(per_gene=True):
+    graph = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
+
+    names = list(graph)
+    dire = '../data/concentrations/'
+    files = os.listdir(dire)
+
+    # gather data
+    data = collections.defaultdict(list)
+    for f in files:
+        c = graph.io.load_concentrations(os.path.join(dire, f))
+        for i, name in enumerate(names):
+            data[name].append(c[i])
+
+    # plot data
+    if per_gene:
+        num = len(files)
+        plots = []
+        for i in range(num):
+            tmp = []
+            for name in names:
+                tmp.append(data[name][i])
+
+            e = {
+                'x': range(len(names)),
+                'y': tmp,
+                'label': files[i]
+            }
+            plots.append(e)
+
+        present(
+            'Gene expression overview in GDS files', plotter.Plotter.multi_plot,
+            'gene', 'gene expression level',
+            plots
+        )
+    else:
+        plots = []
+        for name, concs in data.items():
+            e = {
+                'x': range(len(concs)),
+                'y': concs,
+                'label': name
+            }
+            plots.append(e)
+
+        present(
+            'Gene expression overview in GDS files', plotter.Plotter.multi_plot,
+            'GDSxxx.soft file', 'gene expression level',
+            plots
+        )
 
 
 ##################
@@ -206,11 +258,12 @@ if __name__ == '__main__':
     #simulate_model(models.MultiplicatorModel)
     #simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
-    simulate_model(models.NonlinearModel, n=20, plot_jc_ev=True)
+    #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
+    #investigate_active_edge_count_influence(models.BooleanModel, n=20, repeats=2)
 
-    #investigate_active_edge_count_influence(models.BooleanModel, n=10, repeats=2)
+    gene_overview()
 
     #real_life_average()
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)
