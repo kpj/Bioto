@@ -156,7 +156,7 @@ class CacheHandler(object):
         dic['info'] = {}
         if not model is None:
             dic['info'] = model.info
-            model_id = str(model)
+            model_id = model.hash()
         dic['info']['function'] = func.__name__
 
         if not os.path.exists(CacheHandler.cache_directory):

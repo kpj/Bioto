@@ -7,6 +7,8 @@ from scipy.integrate import odeint
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 
+import utils
+
 
 class Math(object):
     def __init__(self, model):
@@ -62,16 +64,17 @@ class Model(object):
         'name': 'vanilla'
     }
 
+    @classmethod
+    def hash(cls):
+        """ Give unique, consistent hash of this model configuration
+        """
+        return utils.md5(repr(sorted(cls.info.items())))
+
     def __init__(self, graph):
         self.graph = graph
         self.math = Math(self)
 
         self.setup()
-
-    def __str__(self):
-        """ Give unique, consistent hash of this model configuration
-        """
-        return utils.md5(repr(sorted(info.items())))
 
     def setup(self):
         self.aug_adja_m = None
