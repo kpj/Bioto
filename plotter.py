@@ -23,31 +23,33 @@ class Plotter(object):
     use_ggplot = False # use ggplot is possible
 
     @staticmethod
-    def show(name, plot=None):
+    def show(name, fname=None, plot=None):
         """ Shows plot and automatically saves after closing preview
         """
-        if plot is None:
-            fig = plt.gcf()
+        fname = os.path.join(Plotter.plot_save_directory, utils.clean_string(name)) if fname is None else fname
 
+        dire = os.path.dirname(fname)
+        if len(dire) > 0 and not os.path.exists(dire):
+            os.makedirs(dire)
+
+        if plot is None:
             # fix confusing axis offset
             y_formatter = ptk.ScalarFormatter(useOffset=False)
             plt.gca().yaxis.set_major_formatter(y_formatter)
+
+            fig = plt.gcf()
 
             if Plotter.show_plots:
                 plt.show()
             else:
                 plt.close()
 
-            if not os.path.exists(Plotter.plot_save_directory):
-                os.makedirs(Plotter.plot_save_directory)
-            fig.savefig(os.path.join(Plotter.plot_save_directory, utils.clean_string(name)), dpi=150)
+            fig.savefig(fname, dpi=150)
         else:
             if Plotter.show_plots:
                 print(plot)
 
-            if not os.path.exists(Plotter.plot_save_directory):
-                os.makedirs(Plotter.plot_save_directory)
-            ggsave(os.path.join(Plotter.plot_save_directory, utils.clean_string(name)), plot)
+            ggsave(fname, plot)
 
     @staticmethod
     def present_graph(data, perron_frobenius, page_rank, degree_distribution):
@@ -122,7 +124,7 @@ class Plotter(object):
         Plotter.show(orig_title)
 
     @staticmethod
-    def errorbar_plot(data):
+    def errorbar_plot(data, fname=None):
         """ This function assumes that y is a list of lists and automatically computes the error margin
         """
         y_mean = []
@@ -137,10 +139,10 @@ class Plotter(object):
         plt.xlabel(data['x_label'])
         plt.ylabel(data['y_label'])
 
-        Plotter.show(data['title'])
+        Plotter.show(data['title'], fname=fname)
 
     @staticmethod
-    def multi_plot(data):
+    def multi_plot(data, fname=None):
         """ Plot multiple graphs into same coordinate system
         """
         if Plotter.use_ggplot:
@@ -159,7 +161,7 @@ class Plotter(object):
             p += xlab(data['x_label'])
             p += ylab(data['y_label'])
 
-            Plotter.show(data['title'], p)
+            Plotter.show(data['title'], fname=fname, plot=p)
         else:
             for entry in data['data']:
                 plt.plot(entry['x'], entry['y'], label=entry['label'])
@@ -170,10 +172,10 @@ class Plotter(object):
 
             #plt.legend(loc='best')
 
-            Plotter.show(data['title'])
+            Plotter.show(data['title'], fname=fname)
 
     @staticmethod
-    def loglog(data, show_corr=True):
+    def loglog(data, show_corr=True, fname=None):
         """ Yield loglog plot
         """
         if Plotter.use_ggplot:
@@ -192,13 +194,13 @@ class Plotter(object):
             p += xlab(data['x_label'])
             p += ylab(data['y_label'])
 
-            Plotter.show('%s.png' % data['title'], p)
+            Plotter.show('%s.png' % data['title'], fname=fname, plot=p)
         else:
             ax = Plotter.set_loglog(plt.gca(), data['x_data'], data['y_data'], data['title'], data['x_label'], data['y_label'])
-            Plotter.show('%s.png' % data['title'])
+            Plotter.show('%s.png' % data['title'], fname=fname)
 
     @staticmethod
-    def multi_loglog(data):
+    def multi_loglog(data, fname=None):
         """ Create subplot of loglog, where data['data'] is of the form [{x: <x>, y: <y>, ylabel: <yl>}]
         """
         fig, axarr = plt.subplots(len(data['data']), sharex=True)
@@ -209,7 +211,7 @@ class Plotter(object):
             Plotter.set_loglog(ax, e['x'], e['y'], ylabel=e['ylabel'])
         axarr[-1].set_xlabel(data['x_label'])
 
-        Plotter.show('%s.png' % data['title'])
+        Plotter.show('%s.png' % data['title'], fname=fname)
 
     @staticmethod
     def set_loglog(ax, x, y, title='', xlabel='', ylabel='', show_corr=True):
@@ -243,28 +245,36 @@ class Plotter(object):
 if __name__ == '__main__':
     """ Interactive plotting
     """
-    parser = argparse.ArgumentParser(description="Interactive plotting of generated data")
+    parser = argparse.ArgumentParser(description='Interactive plotting of generated data')
     parser.add_argument(
-        "-f",
-        "--file",
-        help="data file",
+        '-f',
+        '--file',
+        help='Data file to parse',
         type=str,
         required=True,
-        metavar="<file>"
+        metavar='<data file>'
     )
     parser.add_argument(
-        "-p",
-        "--plot",
-        help="plot type",
+        '-p',
+        '--plot',
+        help='Plot type to use instead of prefered one',
         type=str,
-        metavar="<plot type>",
+        metavar='<plot type>',
         default=None
     )
     parser.add_argument(
-    	"-s",
-    	"--save_only",
-    	help="Only save and don't show result",
-    	action="store_false"
+    	'-s',
+    	'--save_only',
+    	help='Only save and don\'t show result',
+    	action='store_false'
+    )
+    parser.add_argument(
+        '-o',
+        '--output',
+        help='File to save output to',
+        type=str,
+        metavar='<img file>',
+        default=None
     )
 
     args = vars(parser.parse_args())
@@ -273,7 +283,7 @@ if __name__ == '__main__':
     def handle_file(f):
         dic = utils.CacheHandler.load(f)
         func = getattr(Plotter, dic['info']['function'] if args['plot'] is None else args['plot'])
-        func(dic)
+        func(dic, fname=args['output'])
 
     if os.path.isfile(args['file']):
         handle_file(args['file'])
