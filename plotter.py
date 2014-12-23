@@ -294,7 +294,10 @@ if __name__ == '__main__':
         Plotter.show_plots = args['save_only']
 
         def get_name(info):
-            return '%(name)s_%(norm_time)s_%(cont_evo_runs)i_%(time_window)i' % info
+            if 'name' in info:
+                if info['name'] == 'Boolean Model':
+                    return '%(name)s_%(norm_time)s_%(cont_evo_runs)i_%(time_window)i' % info
+            return None
         def handle_file(f):
             dic = utils.CacheHandler.load(f)
             func = getattr(Plotter, dic['info']['function'] if args['plot'] is None else args['plot'])
