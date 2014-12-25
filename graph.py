@@ -57,27 +57,27 @@ class IOComponent(object):
         """
         return utils.DataHandler.load_concentrations(self.graph, file, conc_range)
 
-    def load_averaged_concentrations(self, directory, conc_range=[0]):
+    def load_averaged_concentrations(self, directory, conc_range=[0], cache=False):
         """ Delegates to utils.DataHandler
         """
-        return utils.DataHandler.load_averaged_concentrations(self.graph, directory, conc_range)
+        return utils.DataHandler.load_averaged_concentrations(self.graph, directory, conc_range, cache)
 
 class DynamicalSystem(object):
     def __init__(self, graph):
         self.graph = graph
         self.used_model = None
 
-    def simulate(self, Model, aug_adja=None):
+    def simulate(self, Model, **kwargs):
         """ Simulates network evolution by using given model
             Model is passed as class, not as object
         """
         model = Model(self.graph)
-        if not aug_adja is None:
-            model.aug_adja_m = aug_adja
+        if 'aug_adja' in kwargs:
+            model.aug_adja_m = kwargs['aug_adja']
 
         self.used_model = model
 
-        res = model.generate()
+        res = model.generate(**kwargs)
         return res
 
 class Math(object):

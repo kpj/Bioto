@@ -1,5 +1,5 @@
 import os, os.path
-import json
+import json, csv
 import hashlib
 
 import numpy as np
@@ -98,7 +98,7 @@ class DataHandler(object):
         return concentrations
 
     @staticmethod
-    def load_averaged_concentrations(graph, directory, conc_range=[0]):
+    def load_averaged_concentrations(graph, directory, conc_range=[0], cache=False):
         """ Loads concentration files in given directory and averages them
         """
         concs = []
@@ -107,6 +107,11 @@ class DataHandler(object):
 
             f = os.path.join(directory, file)
             c = DataHandler.load_concentrations(graph, f, conc_range)
+
+            if cache:
+                with open('RL_av_data.txt', 'a') as fd:
+                    writer = csv.writer(fd)
+                    writer.writerow(c)
 
             if not c is None:
                 concs.append(c)

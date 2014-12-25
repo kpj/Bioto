@@ -1,3 +1,6 @@
+import os, os.path
+import csv
+
 import numpy as np
 import numpy.linalg as npl
 import numpy.random as npr
@@ -79,7 +82,7 @@ class Model(object):
     def setup(self):
         self.aug_adja_m = None
 
-    def generate(self):
+    def generate(self, **kwargs):
         Exception('This model lacks any generating function')
 
 class MultiplicatorModel(Model):
@@ -89,11 +92,11 @@ class MultiplicatorModel(Model):
         'name': 'Multiplicator Model'
     }
 
-    def generate(self, runs=10):
+    def generate(self, **kwargs):
         initial = np.array([npr.random() for i in range(len(self.graph))])
 
         data = [initial]
-        for i in range(runs-1):
+        for i in range(kwargs['runs']-1):
             cur = [self.graph.adja_m.dot(data[-1])[0, i] for i in range(len(self.graph))]
             cur /= npl.norm(cur)
 
@@ -104,6 +107,7 @@ class MultiplicatorModel(Model):
 class BooleanModel(Model):
     """ Simple model to generate gene expression data
     """
+    data_dir = 'BM_data'
     info = {
         'name': 'Boolean Model',
         'norm_time': True, # norm along time or gene axis
@@ -204,9 +208,23 @@ class BooleanModel(Model):
 
         return out
 
-    def generate(self):
+    def generate(self, **kwargs):
         """ Averages many runs and returns result
+
+            Parameters:
+                **kwargs - Possible keys: 'cache'
+            Returns:
+                Averaged Boolean model data of the form
+                [
+                    [g1, g2, g3, ...], # at t0
+                    [g1, g2, g3, ...], # at t1
+                    ...
+                ]
         """
+        if 'cache' in kwargs and kwargs['cache']:
+            if not os.path.exists(BooleanModel.data_dir):
+                os.makedirs(BooleanModel.data_dir)
+
         tmp = None
         for i in range(BooleanModel.info['avg_runs']):
             cur = self.generate_continues_evolution(norm_time=BooleanModel.info['norm_time'])
@@ -214,6 +232,11 @@ class BooleanModel(Model):
                 tmp += cur
             else:
                 tmp = cur
+
+            if 'cache' in kwargs and kwargs['cache']:
+                with open('BM_data/BM_data_%02d.csv' % i, 'a') as fd:
+                    writer = csv.writer(fd)
+                    writer.writerows(cur)
 
         return tmp / BooleanModel.info['avg_runs']
 
@@ -254,10 +277,10 @@ class ODEModel(Model):
 
         return np.array(terms)
 
-    def generate(self, runs=10):
+    def generate(self, **kwargs):
         """ Solves nonlinear system and returns solution
         """
-        t = np.arange(0, runs, 1)
+        t = np.arange(0, kwargs['runs'], 1)
         x0 = npr.sample(len(self.graph))
 
         def func(X, t=0):
