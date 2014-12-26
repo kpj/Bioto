@@ -136,12 +136,12 @@ class BooleanModel(Model):
             """ Apply rule
             """
             xnext = []
+            x = x.tolist()[0]
 
-            for i in x.T:
+            for i in range(len(x)):
                 sigma = 0
-                for j in x.T:
-                    sigma += self.aug_adja_m[i,j] * j
-                sigma = sigma.tolist()[0][0]
+                for j in range(len(x)):
+                    sigma += self.aug_adja_m[i,j] * x[j]
 
                 res = -1
                 if sigma > 0:
@@ -149,7 +149,7 @@ class BooleanModel(Model):
                 elif sigma < 0:
                     res = 0
                 else:
-                    res = i.tolist()[0][0]
+                    res = x[i]
 
                 xnext.append(res)
 
