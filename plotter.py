@@ -53,6 +53,20 @@ class Plotter(object):
             ggsave(fname, plot)
 
     @staticmethod
+    def plot_heatmap(data, title, xlabel, ylabel):
+        """ Plot 2D array as heatmap
+        """
+        hm = plt.pcolor(data, cmap=cm.gray_r, vmin=0, vmax=1)
+
+        plt.tick_params(labelsize=20)
+
+        plt.title(title, fontsize=33)
+        plt.xlabel(xlabel, fontsize=30)
+        plt.ylabel(ylabel, fontsize=30)
+
+        Plotter.show(title)
+
+    @staticmethod
     def present_graph(data, perron_frobenius, page_rank, degree_distribution):
         """ Shows a nice representation of the graphs features after evolution
         """

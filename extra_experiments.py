@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 import networkx as nx
 
-import plotter, utils
+import plotter, utils, models
 
 
 def plot_BM_runs(dire):
@@ -80,10 +80,17 @@ def investigate_ER_edge_probs(node_num):
 
 	print(p)
 
+def visualize_discrete_bm_run(n=100, e=0.3):
+	""" Visualize one discrete BM run
+	"""
+	graph = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
+	data = models.BooleanModel(graph).generate_binary_time_series().T
+	plotter.Plotter.plot_heatmap(data, 'Characteristic evolution of discrete Boolean model', 'time', 'node')
+
 
 if __name__ == '__main__':
 	plotter.Plotter.show_plots = True
 
 	#plot_BM_runs('./BM_data')
-
-	investigate_ER_edge_probs(100)
+	#investigate_ER_edge_probs(100)
+	visualize_discrete_bm_run(n=50)
