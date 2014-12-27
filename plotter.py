@@ -59,6 +59,7 @@ class Plotter(object):
         hm = plt.pcolor(data, cmap=cm.gray_r, vmin=0, vmax=1)
 
         plt.tick_params(labelsize=20)
+        plt.axes().set_aspect('equal')
 
         plt.title(title, fontsize=33)
         plt.xlabel(xlabel, fontsize=30)
