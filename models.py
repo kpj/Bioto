@@ -10,7 +10,7 @@ from scipy.integrate import odeint
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 
-import utils
+import utils, stats
 
 
 class Math(object):
@@ -81,6 +81,7 @@ class Model(object):
 
     def setup(self):
         self.aug_adja_m = None
+        self.stats = None
 
     def generate(self, **kwargs):
         Exception('This model lacks any generating function')
@@ -111,10 +112,10 @@ class BooleanModel(Model):
     info = {
         'name': 'Boolean Model',
         'norm_time': True, # norm along time or gene axis
-        'bin_mod_runs': 10, # how often to run the binary simulation (ON/OFF genes)
-        'time_window': 30, # time window to average binary runs
-        'cont_evo_runs': 300, # how many binary runs to generate
-        'avg_runs': 10 # how many averaged binary runs to average in the end
+        'max_bin_mod_runs': 50, # how often to run the binary simulation (ON/OFF genes)
+        'time_window': 60, # time window to average binary runs
+        'cont_evo_runs': 600, # how many binary runs to generate
+        'avg_runs': 1 # how many averaged binary runs to average in the end
     }
 
     def setup(self):
@@ -122,6 +123,7 @@ class BooleanModel(Model):
         """
         Model.setup(self)
         self.aug_adja_m = self.math.get_augmented_adja_m()
+        self.stats = stats.BMStatsMan()
 
     def generate_binary_time_series(self):
         """ Applies rule a couple of times and returns system evolution as binary ON/OFF states
@@ -159,9 +161,13 @@ class BooleanModel(Model):
         x0 = npr.randint(2, size=num)
 
         data = np.matrix(x0)
-        for t in range(BooleanModel.info['bin_mod_runs']-1):
+        for t in range(BooleanModel.info['max_bin_mod_runs']-1):
             cur = rule(data[-1])
             data = np.vstack((data, cur))
+
+            if (cur == data[-2]).all():
+                self.stats.early_stops += 1
+                break
 
         return np.array(data)
 
@@ -179,6 +185,8 @@ class BooleanModel(Model):
 
         # concatenate time series
         for i in range(BooleanModel.info['cont_evo_runs']):
+            self.stats.discrete_runs += 1
+
             res = self.generate_binary_time_series()
             data = np.vstack((data, res)) if len(data) > 0 else res
 
@@ -238,6 +246,7 @@ class BooleanModel(Model):
                     writer = csv.writer(fd)
                     writer.writerows(cur)
 
+        self.stats.info()
         return tmp / BooleanModel.info['avg_runs']
 
 class ODEModel(Model):
