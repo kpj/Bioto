@@ -24,7 +24,7 @@ plotg <- function(net, fname, value=NULL) {
     geom_text(aes(x=X1, y=X2, label=elements), data=plotcord) +
     scale_x_continuous(breaks=NULL) +
     scale_y_continuous(breaks=NULL) +
-    theme(legend.position="NONE") +
+    theme(legend.position="NONE", panel.border=element_blank(), panel.background=element_blank(), axis.title.x=element_blank(), axis.title.y=element_blank()) +
     ggsave(filename=fname, scale=5)
   return(print(pnet))
 }
