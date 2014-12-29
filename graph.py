@@ -48,7 +48,7 @@ class IOComponent(object):
                 with_labels=True,
                 linewidths=1,
                 width=0.1,
-                node_color='blue'
+                node_color='#AAFFBB'
             )
             plt.savefig(file, dpi=150)
             plt.close()
