@@ -86,6 +86,8 @@ class Plotter(object):
 
         plt.tick_params(labelsize=20)
 
+        plt.xlim(-border, border)
+
         plt.title(title, fontsize=33)
         plt.xlabel(xlabel, fontsize=30)
         plt.ylabel(ylabel, fontsize=30)
