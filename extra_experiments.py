@@ -26,7 +26,7 @@ def plot_BM_runs(dire):
 
 			for row in reader:
 				runs[-1].append(row)
-	
+
 	# refactor data
 	tmp = []
 	for t in range(len(runs[0])):
@@ -87,10 +87,32 @@ def visualize_discrete_bm_run(n=100, e=0.3):
 	data = models.BooleanModel(graph).generate_binary_time_series().T
 	plotter.Plotter.plot_heatmap(data, 'Characteristic evolution of discrete Boolean model', 'time', 'node')
 
+def simple_plot():
+	""" Plot 1/(1+x) and x/(1+x) [functions used in nonlinear model]
+	"""
+	x = np.arange(0, 5.1, 0.1)
+	plt.tick_params(labelsize=20)
+
+	f1 = lambda x: 1/(1+x)
+	f2 = lambda x: x/(1+x)
+
+	plt.plot(x, f1(x), label=r'$\frac{1}{1+x}$')
+	plt.plot(x, f2(x), label=r'$\frac{x}{1+x}$')
+
+	plt.title(r'Plot of $f^*_i$ used in Nonlinear model', fontsize=33)
+	plt.xlabel('x', fontsize=30)
+	plt.ylabel('y', fontsize=30)
+
+	plt.legend(loc='best')
+
+	fig = plt.gcf()
+	fig.savefig('f.png', dpi=150)
+
 
 if __name__ == '__main__':
 	plotter.Plotter.show_plots = True
 
 	#plot_BM_runs('./BM_data')
 	#investigate_ER_edge_probs(100)
-	visualize_discrete_bm_run(n=50)
+	#visualize_discrete_bm_run(n=50)
+	simple_plot()
