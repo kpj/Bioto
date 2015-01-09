@@ -170,10 +170,10 @@ class Math(object):
             return False
         return True
 
-    def get_pagerank(self):
+    def get_pagerank(self, damping_factor=0.85):
         """ Computes normalized page rank of current graph
         """
-        pagerank = np.array(nx.pagerank(self.graph.graph)).tolist()
+        pagerank = np.array(nx.pagerank(self.graph.graph, alpha=damping_factor)).tolist()
 
         vals = [v for v in pagerank.values()]
         vals /= npl.norm(vals)
