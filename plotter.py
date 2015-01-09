@@ -121,6 +121,20 @@ class Plotter(object):
         Plotter.show('overview')
 
     @staticmethod
+    def plot_histogram(data, title, xlabel, ylabel, bin_num=200):
+        plt.hist(data, bins=np.logspace(-4, -1, bin_num))
+
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.tick_params(labelsize=20)
+
+        plt.title(title, fontsize=33)
+        plt.xlabel(xlabel, fontsize=30)
+        plt.ylabel(ylabel, fontsize=30)
+
+        Plotter.show(title)
+
+    @staticmethod
     def plot(x, y, title, xlabel='', ylabel='', show_corr=True):
         plt.plot(
             x, y,
