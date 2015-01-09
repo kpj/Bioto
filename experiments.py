@@ -47,7 +47,7 @@ def real_life_average():
         'perron-frobenius eigenvector', pf
     )
 
-def gene_overview(per_gene=False):
+def gene_overview(density_plot=True):
     graph = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
 
     names = list(graph)
@@ -62,7 +62,17 @@ def gene_overview(per_gene=False):
             data[name].append(c[i])
 
     # plot data
-    if per_gene:
+    if density_plot:
+        tmp = []
+        for gene in names:
+            cur = data[gene]
+            tmp.append({
+                'name': gene,
+                'data': cur
+            })
+
+        plotter.Plotter.multi_density_plot(tmp, 'Overview over gene expression level distributions', 'gene expression level', 'number of occurences')
+    else:
         num = len(files)
         plots = []
         for i in range(num):
@@ -80,21 +90,6 @@ def gene_overview(per_gene=False):
         present(
             'Gene expression overview in GDS files', plotter.Plotter.multi_plot,
             'gene', 'gene expression level',
-            plots
-        )
-    else:
-        plots = []
-        for name, concs in data.items():
-            e = {
-                'x': range(len(concs)),
-                'y': concs,
-                'label': name
-            }
-            plots.append(e)
-
-        present(
-            'Gene expression overview in GDS files', plotter.Plotter.multi_plot,
-            'GDSxxx.soft file', 'gene expression level',
             plots
         )
 
@@ -257,14 +252,14 @@ if __name__ == '__main__':
     plotter.Plotter.show_plots = True
 
     #simulate_model(models.MultiplicatorModel)
-    simulate_model(models.BooleanModel, n=20)
+    #simulate_model(models.BooleanModel, n=20)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
     #investigate_active_edge_count_influence(models.MultiplicatorModel, n=10, repeats=2)
 
-    #gene_overview()
+    gene_overview()
 
     #real_life_average()
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)

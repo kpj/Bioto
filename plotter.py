@@ -10,6 +10,8 @@ from matplotlib import gridspec
 from matplotlib import rc
 from matplotlib import ticker as ptk
 
+from scipy.stats import gaussian_kde
+
 import utils
 
 
@@ -64,6 +66,33 @@ class Plotter(object):
         plt.title(title, fontsize=33)
         plt.xlabel(xlabel, fontsize=30)
         plt.ylabel(ylabel, fontsize=30)
+
+        Plotter.show(title)
+
+    @staticmethod
+    def multi_density_plot(data, title, xlabel, ylabel, border=0.2):
+        """ Create density plot of given data
+        """
+        for e in data:
+            cur = e['data']
+            name = e['name']
+
+            if (np.array(cur) == 0).all():
+                continue
+
+            density = gaussian_kde(cur)
+            x = np.linspace(-border, border, len(cur))
+            plt.plot(x, density(x), label=name)
+
+        plt.tick_params(labelsize=20)
+
+        plt.xlim(-border, border)
+
+        plt.title(title, fontsize=33)
+        plt.xlabel(xlabel, fontsize=30)
+        plt.ylabel(ylabel, fontsize=30)
+
+        #plt.legend(loc='best')
 
         Plotter.show(title)
 
