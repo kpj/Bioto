@@ -6,9 +6,11 @@ import numpy as np
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 
+import pandas as pd
+
 import networkx as nx
 
-import plotter, utils, models
+import plotter, utils, models, soft_parser
 
 
 def plot_BM_runs(dire):
@@ -108,6 +110,29 @@ def simple_plot():
 	fig = plt.gcf()
 	fig.savefig('f.png', dpi=150)
 
+def list_data(dir):
+	data = []
+	for f in os.listdir(dir):
+		fname = os.path.join(dir, f)
+		parser = soft_parser.SOFTParser(fname)
+
+		parser.parse()
+		head = parser.header
+
+		if len(head) == 0:
+			continue
+
+		sample_name = head['dataset']['name']
+		subsets = ', '.join([x['subset_description'] for x in head['dataset']['subsets']])
+
+		data.append([sample_name, subsets])
+
+	xlabels = ['name', 'subset content']
+	ylabels = ['' for i in range(len(data))]
+
+	df = pd.DataFrame(data, ylabels, xlabels)
+	print(df)
+
 
 if __name__ == '__main__':
 	plotter.Plotter.show_plots = True
@@ -115,4 +140,5 @@ if __name__ == '__main__':
 	#plot_BM_runs('./BM_data')
 	#investigate_ER_edge_probs(100)
 	#visualize_discrete_bm_run(n=50)
-	simple_plot()
+	#simple_plot()
+	list_data('../data/concentrations/')
