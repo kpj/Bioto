@@ -6,7 +6,7 @@ import numpy as np
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 
-import pandas as pd
+from prettytable import PrettyTable
 
 import networkx as nx
 
@@ -110,8 +110,11 @@ def simple_plot():
 	fig = plt.gcf()
 	fig.savefig('f.png', dpi=150)
 
-def list_data(dir):
-	data = []
+def list_data(dir, table_fname=None):
+	col_names = ['name', 'origin', 'method', 'entry type', 'subset number', 'is timeseries?']
+	table = PrettyTable(col_names)
+	for n in col_names: table.align[n] = 'l'
+
 	for f in os.listdir(dir):
 		fname = os.path.join(dir, f)
 		parser = soft_parser.SOFTParser(fname)
@@ -123,15 +126,17 @@ def list_data(dir):
 			continue
 
 		sample_name = head['dataset']['name']
+		origin = head['database']['Database_name']
+		data_type = head['dataset']['dataset_type']
 		subsets = ', '.join([x['subset_description'] for x in head['dataset']['subsets']])
+		is_time_series = 'min' in subsets
 
-		data.append([sample_name, subsets])
+		table.add_row([sample_name, origin, data_type, subsets, len(head['dataset']['subsets']), is_time_series])
 
-	xlabels = ['name', 'subset content']
-	ylabels = ['' for i in range(len(data))]
-
-	df = pd.DataFrame(data, ylabels, xlabels)
-	print(df)
+	print(table)
+	if not table_fname is None:
+		with open(table_fname, 'w') as fd:
+			fd.write(str(table))
 
 
 if __name__ == '__main__':
@@ -141,4 +146,4 @@ if __name__ == '__main__':
 	#investigate_ER_edge_probs(100)
 	#visualize_discrete_bm_run(n=50)
 	#simple_plot()
-	list_data('../data/concentrations/')
+	list_data('../data/concentrations/', 'data_summary.txt')
