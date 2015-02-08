@@ -10,7 +10,9 @@ from prettytable import PrettyTable
 
 import networkx as nx
 
-import plotter, utils, models, soft_parser
+import pysoft
+
+import plotter, utils, models
 
 
 def plot_BM_runs(dire):
@@ -117,16 +119,14 @@ def list_data(dir, table_fname=None):
 
 	for f in os.listdir(dir):
 		fname = os.path.join(dir, f)
-		parser = soft_parser.SOFTParser(fname)
-
-		parser.parse()
-		head = parser.header
+		soft = pysoft.SOFTFile(fname)
+		head = soft.header
 
 		if len(head) == 0:
 			continue
 
 		sample_name = head['dataset']['name']
-		origin = head['database']['Database_name']
+		origin = head['database']['database_name']
 		data_type = head['dataset']['dataset_type']
 		subsets = ', '.join([x['subset_description'] for x in head['dataset']['subsets']])
 		is_time_series = 'min' in subsets
