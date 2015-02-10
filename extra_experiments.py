@@ -113,6 +113,8 @@ def simple_plot():
 	fig.savefig('f.png', dpi=150)
 
 def list_data(dir, table_fname=None):
+	""" Generate overview over all SOFT files present in given directory
+	"""
 	col_names = ['name', 'origin', 'method', 'entry type', 'subset number', 'is timeseries?']
 	table = PrettyTable(col_names)
 	for n in col_names: table.align[n] = 'l'
