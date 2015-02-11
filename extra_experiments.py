@@ -150,6 +150,11 @@ def search_database(dbname, save_dir=None, stats_file=None):
 	walker = list(os.walk(dbname))
 	pbar = ProgressBar(maxval=len(walker))
 	stats_dict = collections.defaultdict(list)
+	used_gds = set()
+
+	if not save_dir is None:
+		if not os.path.exists(save_dir):
+			os.makedirs(save_dir)
 
 	pbar.start()
 	for i, (root, dirs, files) in enumerate(walker):
@@ -159,11 +164,15 @@ def search_database(dbname, save_dir=None, stats_file=None):
 				soft = pysoft.SOFTFile(fn, skip_data=True)
 				org = soft.header['dataset']['dataset_platform_organism'].lower()
 
+				# don't handle duplicate entries (e.g. '_full')
+				gds = soft.header['dataset']['name']
+				if gds in used_gds: continue
+				used_gds.add(gds)
+
 				stats_dict[org].append(fname)
 
 				if save_dir is None: continue
 				if 'coli' in org:
-					#if not '_full' in fname:
 					try:
 						shutil.copy(fn, save_dir)
 					except shutil.SameFileError:
@@ -179,20 +188,11 @@ def search_database(dbname, save_dir=None, stats_file=None):
 def dbstats2csv(fname, fout):
 	""" Parse stats file created by database crawler to get absolute counts
 	"""
-	def get_len(ls):
-		""" Filter '_full' entries
-		"""
-		l = 0
-		for e in ls:
-			if not '_full' in e:
-				l += 1
-		return l
-
 	dat = json.load(open(fname, 'r'))
 
 	with open(fout, 'w') as fd:
 		for organism, gds_files in sorted(dat.items()):
-			fd.write('%s,%s\n' % (organism, get_len(gds_files)))
+			fd.write('%s,%s\n' % (organism, len(gds_files)))
 
 
 if __name__ == '__main__':
@@ -203,5 +203,5 @@ if __name__ == '__main__':
 	#visualize_discrete_bm_run(n=50)
 	#simple_plot()
 	#list_data('../data/concentrations/', 'data_summary.txt')
-	#search_database('/home/kpj/GEO/ftp.ncbi.nlm.nih.gov', save_dir='/home/kpj/GEO/ecoli_all', stats_file='GDS_stats.json')
+	#search_database('/home/kpj/GEO/ftp.ncbi.nlm.nih.gov', save_dir='/home/kpj/GEO/ecoli', stats_file='GDS_stats.json')
 	dbstats2csv('GDS_stats.json', 'geo_db_organism_distribution.csv')
