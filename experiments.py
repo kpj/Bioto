@@ -17,6 +17,7 @@ def present(title, func, *args, model=None):
     dic = utils.CacheHandler.store_plot_data(title, func, *args, model=model) # store data for later use
     func(dic) # also plot if wanted
 
+
 ##################
 # Real-life data #
 ##################
