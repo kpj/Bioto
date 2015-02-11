@@ -92,7 +92,11 @@ def visualize_discrete_bm_run(n=100, e=0.3):
 	""" Visualize one discrete BM run
 	"""
 	graph = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
-	data = models.BooleanModel(graph).generate_binary_time_series().T
+
+	model = models.BooleanModel(graph)
+	#model.aug_adja_m = np.array([[-1,1,0,1,0,0,0,0,0,0],[0,-1,0,0,0,0,0,0,0,0],[0,-1,0,0,0,0,0,0,-1,0],[-1,0,0,0,0,0,-1,0,0,0],[0,0,0,0,-1,0,0,0,0,1],[-1,0,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,-1,0,0,0],[0,0,0,0,0,0,0,-1,0,0],[1,0,0,-1,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,-1]])
+	data = model.generate_binary_time_series().T #initial_state=[0,1,0,0,1,0,0,1,1,0]
+
 	plotter.Plotter.plot_heatmap(data, 'Characteristic evolution of discrete Boolean model', 'time', 'node')
 
 def simple_plot():
@@ -203,8 +207,8 @@ if __name__ == '__main__':
 
 	#plot_BM_runs('./BM_data')
 	#investigate_ER_edge_probs(100)
-	#visualize_discrete_bm_run(n=50)
+	visualize_discrete_bm_run(n=10)
 	#simple_plot()
 	#list_data('../data/concentrations/', 'data_summary.txt')
 	#search_database('/home/kpj/GEO/ftp.ncbi.nlm.nih.gov', save_dir='/home/kpj/GEO/ecoli', stats_file='GDS_stats.json')
-	plot_orga_distri('GDS_stats.json', 'geo_db_organism_distribution.png')
+	#plot_orga_distri('GDS_stats.json', 'geo_db_organism_distribution.png')

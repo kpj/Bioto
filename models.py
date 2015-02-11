@@ -125,7 +125,7 @@ class BooleanModel(Model):
         self.aug_adja_m = self.math.get_augmented_adja_m()
         self.stats = stats.BMStatsMan()
 
-    def generate_binary_time_series(self):
+    def generate_binary_time_series(self, initial_state=None):
         """ Applies rule a couple of times and returns system evolution as binary ON/OFF states
             Returns:
             [
@@ -158,7 +158,7 @@ class BooleanModel(Model):
             return xnext
 
         num = self.aug_adja_m.shape[0]
-        x0 = npr.randint(2, size=num)
+        x0 = npr.randint(2, size=num) if initial_state is None else initial_state
 
         data = np.matrix(x0)
         for t in range(BooleanModel.info['max_bin_mod_runs']-1):
