@@ -185,14 +185,17 @@ def search_database(dbname, save_dir=None, stats_file=None):
 	if not stats_file is None:
 		json.dump(stats_dict, open(stats_file, 'w'))
 
-def dbstats2csv(fname, fout):
-	""" Parse stats file created by database crawler to get absolute counts
+def plot_orga_distri(distr_file, fout):
+	""" Parse stats file created by database crawler to get absolute counts in csv format
 	"""
-	dat = json.load(open(fname, 'r'))
+	dat = json.load(open(distr_file, 'r'))
+	csv_file = 'geo_org_distr.csv'
 
-	with open(fout, 'w') as fd:
+	with open(csv_file, 'w') as fd:
 		for organism, gds_files in sorted(dat.items()):
 			fd.write('%s,%s\n' % (organism, len(gds_files)))
+
+	os.system('Rscript org_distr_plot.R "%s"' % fout)
 
 
 if __name__ == '__main__':
@@ -204,4 +207,4 @@ if __name__ == '__main__':
 	#simple_plot()
 	#list_data('../data/concentrations/', 'data_summary.txt')
 	#search_database('/home/kpj/GEO/ftp.ncbi.nlm.nih.gov', save_dir='/home/kpj/GEO/ecoli', stats_file='GDS_stats.json')
-	dbstats2csv('GDS_stats.json', 'geo_db_organism_distribution.csv')
+	plot_orga_distri('GDS_stats.json', 'geo_db_organism_distribution.png')
