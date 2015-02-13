@@ -195,7 +195,7 @@ class CacheHandler(object):
 
 
 def clean_string(s):
-    """ Make string useble as filename
+    """ Make string useable as filename
     """
     return s.replace(' ', '_')
 
