@@ -33,7 +33,7 @@ def generate_tf_gene_regulation(file):
 
     # create graph
     graph = nx.DiGraph()
-    for tf in data:
+    for tf in sorted(data.keys()):
         source = tf.lower()
 
         for entry in data[tf]:
