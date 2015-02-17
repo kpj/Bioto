@@ -1,4 +1,4 @@
-import sys, os
+import sys, subprocess
 
 import numpy as np
 import numpy.linalg as npl
@@ -33,14 +33,14 @@ class IOComponent(object):
             for node in self.graph:
                 fd.write('%s\n' % node)
 
-    def visualize(self, file, use_R=True):
+    def visualize(self, file, use_R=True, verbose=False):
         """ Visualize current graph and saves resulting image to specified file
         """
         if use_R:
             self.dump_adjacency_matrix('adja_m.txt')
             self.dump_node_names('node_names.txt')
 
-            os.system('Rscript network_plotter.R "%s"' % file)
+            subprocess.check_call(['Rscript', 'network_plotter.R', file], stdout=None if verbose else subprocess.DEVNULL, stderr=None if verbose else subprocess.DEVNULL)
         else:
             pos = nx.random_layout(self.graph.graph)
             nx.draw(
