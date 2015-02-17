@@ -115,6 +115,8 @@ class Math(object):
         if mat is None:
             mat = self.graph.adja_m
 
+        mat = np.array(mat) # deal with all those formats which might arrive here
+
         if remove_self_links:
             np.fill_diagonal(mat, 0)
 
@@ -128,7 +130,8 @@ class Math(object):
                         lv = v
         else:
             max_eigenvalue_index = np.argmax(np.real(vals))
-        perron_frobenius = np.array(np.transpose(np.real(vecs[:, max_eigenvalue_index])).tolist()[0])
+
+        perron_frobenius = np.real(vecs[:, max_eigenvalue_index])
 
         if rescale:
             if all(i <= 0 for i in perron_frobenius):
@@ -139,7 +142,7 @@ class Math(object):
         # check significance of result
         if test_significance:
             eival = vals[max_eigenvalue_index]
-            if not self.test_significance(eival, perron_frobenius):
+            if not self.test_significance(eival, perron_frobenius, mat=mat):
                 print("pf-ev not significant, trying averaged power iteration method")
 
                 pfs = []
@@ -147,10 +150,9 @@ class Math(object):
                     pfs.append(self.apply_power_iteration(eival))
                 perron_frobenius = sum(pfs)/len(pfs)
 
-            if not self.test_significance(eival, perron_frobenius):
+            if not self.test_significance(eival, perron_frobenius, mat=mat):
                 print("It didn't help, sorry")
 
-        perron_frobenius /= npl.norm(perron_frobenius) # just to be sure...
         return perron_frobenius
 
     def test_significance(self, val, vec, mat=None):
@@ -160,7 +162,7 @@ class Math(object):
         if mat is None:
             mat = self.graph.adja_m
 
-        av = mat.dot(vec).tolist()[0]
+        av = mat.dot(vec)
         lv = val * vec
 
         try:
