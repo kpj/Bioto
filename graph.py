@@ -202,7 +202,7 @@ class Graph(object):
         if largest:
             self.graph = max(nx.weakly_connected_component_subgraphs(self.graph), key=len)
 
-        self.adja_m = nx.to_numpy_matrix(self.graph)
+        self.adja_m = nx.to_numpy_matrix(self.graph, nodelist=sorted(self.graph.nodes()))
 
         self.io = IOComponent(self)
         self.system = DynamicalSystem(self)
