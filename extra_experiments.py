@@ -16,7 +16,7 @@ import networkx as nx
 
 import pysoft
 
-import plotter, utils, models
+import plotter, utils, models, graph, parser
 
 
 def plot_BM_runs(dire):
@@ -201,14 +201,36 @@ def plot_orga_distri(distr_file, fout):
 
 	os.system('Rscript org_distr_plot.R "%s"' % fout)
 
+def investigate_trn_eigensystem():
+	g = graph.Graph(parser.generate_tf_gene_regulation('../data/architecture/network_tf_gene.txt'), largest=True)
+
+	f = 816
+	mat_valid = g.adja_m[:f, :f].copy()
+	np.savetxt('valid.txt', mat_valid)
+
+	s = 817
+	mat_invalid = g.adja_m[:s, :s].copy()
+	np.savetxt('invalid.txt', mat_invalid)
+
+	print(np.array_equal(mat_valid, mat_invalid[:-1,:-1]))
+
+	g_valid = graph.Graph(nx.from_numpy_matrix(np.loadtxt('valid.txt'), create_using=nx.DiGraph()), largest=True)
+	g_invalid = graph.Graph(nx.from_numpy_matrix(np.loadtxt('invalid.txt'), create_using=nx.DiGraph()), largest=True)
+
+	#pf_valid = g_valid.math.get_perron_frobenius()
+	#pf_invalid = g_invalid.math.get_perron_frobenius()
+
+	#g_valid.io.visualize('valid.png')
+	#g_invalid.io.visualize('invalid.png', verbose=True)
 
 if __name__ == '__main__':
 	plotter.Plotter.show_plots = True
 
 	#plot_BM_runs('./BM_data')
 	#investigate_ER_edge_probs(100)
-	visualize_discrete_bm_run(n=10)
+	#visualize_discrete_bm_run(n=10)
 	#simple_plot()
 	#list_data('../data/concentrations/', 'data_summary.txt')
 	#search_database('/home/kpj/GEO/ftp.ncbi.nlm.nih.gov', save_dir='/home/kpj/GEO/ecoli', stats_file='GDS_stats.json')
 	#plot_orga_distri('GDS_stats.json', 'geo_db_organism_distribution.png')
+	investigate_trn_eigensystem()
