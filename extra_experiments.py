@@ -4,8 +4,10 @@ import itertools
 import json
 import collections
 import sys
+import operator
 
 import numpy as np
+import numpy.random as npr
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 
@@ -223,6 +225,113 @@ def investigate_trn_eigensystem():
 	#g_valid.io.visualize('valid.png')
 	#g_invalid.io.visualize('invalid.png', verbose=True)
 
+def variance_of_gene_expression(data_dir):
+	""" Analyze the composition of real-life GEO data
+	"""
+	save_file = 'gene_variance.dat'
+	if not os.path.isfile(save_file):
+		experis = []
+
+		# find genes available in all files
+		genes = []
+		for root, dirs, files in os.walk(data_dir):
+			for fname in files:
+				genes.append(set())
+				soft = pysoft.SOFTFile(os.path.join(root, fname))
+
+				for row in soft.data:
+					gene = row['IDENTIFIER']
+
+					#if gene in genes[-1]:
+					#	print('u wot m8', gene, os.path.join(root, fname))
+
+					genes[-1].add(gene)
+
+		common_genes = set.intersection(*genes)
+		gene_num = len(common_genes)
+
+		# extract data
+		for root, dirs, files in os.walk(data_dir):
+			for fname in files:
+				data = {}
+				soft = pysoft.SOFTFile(os.path.join(root, fname))
+
+				for row in soft.data:
+					gene = row['IDENTIFIER']
+					if not gene in common_genes: continue
+
+					conc = row[2]
+
+					if conc == 'null':
+						conc = row[3]
+
+					if conc == 'null':
+						conc = 0 # what to do now?
+
+					data[gene] = conc
+
+				experis.append(data)
+
+		# transform data
+		x = [] # x_i contains gene expression data for experiment i
+		for exp in experis:
+			tmp = [t[1] for t in sorted(exp.items(), key=operator.itemgetter(0))]
+			x.append(tmp)
+
+		# create shuffled version to check importance of signal in actual data
+		x_shuffled = []
+		for e in x:
+			x_shuffled.append(npr.permutation(e))
+
+
+		# spicy it up
+		npr.shuffle(x)
+		npr.shuffle(x_shuffled)
+
+
+		# generate gene vector
+		def gen_y(m, gene_data):
+			foo = [] # average gene expression over experiments
+			for g in range(gene_num):
+				# tmp contains average gene expression (for one gene) over m experiments
+				tmp = 1/m * sum([float(gene_data[i][g]) for i in range(m)])
+				foo.append(tmp)
+			return foo
+
+		y = [] # vector of average gene expressions
+		y_shuffled = []
+		for m in range(1, len(experis)):
+			y.append(gen_y(m + 1, x))
+			y_shuffled.append(gen_y(m + 1, x_shuffled))
+
+		# cache
+		foo = {'actual': y, 'shuffled': y_shuffled}
+		#np.savetxt(save_file, foo)
+	else:
+		print('Using cached data')
+		#foo = np.loadtxt(save_file)
+
+	# compute variances
+	varis = []
+	varis_shuffled = []
+	for e, e_shuffled in zip(foo['actual'], foo['shuffled']):
+		varis.append(np.var(e))
+		varis_shuffled.append(np.var(e_shuffled))
+
+	# make plot
+	t = range(len(varis))
+
+	plt.plot(t, varis, label='actual data')
+	plt.plot(t, varis_shuffled, label='shuffled gene expression vector')
+
+	plt.title('Variance overview of gene expression data')
+	plt.xlabel('number of considered data sets')
+	plt.ylabel('variance')
+	plt.legend(loc='best')
+
+	plt.show()
+
+
 if __name__ == '__main__':
 	plotter.Plotter.show_plots = True
 
@@ -233,4 +342,5 @@ if __name__ == '__main__':
 	#list_data('../data/concentrations/', 'data_summary.txt')
 	#search_database('/home/kpj/GEO/ftp.ncbi.nlm.nih.gov', save_dir='/home/kpj/GEO/ecoli', stats_file='GDS_stats.json')
 	#plot_orga_distri('GDS_stats.json', 'geo_db_organism_distribution.png')
-	investigate_trn_eigensystem()
+	#investigate_trn_eigensystem()
+	variance_of_gene_expression('/home/kpj/GEO/ecoli')
