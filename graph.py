@@ -85,15 +85,18 @@ class Math(object):
     def __init__(self, graph):
         self.graph = graph
 
-    def apply_power_iteration(self, eival, precision=1e-20, maxruns=1000):
+    def apply_power_iteration(self, eival, mat=None, precision=1e-20, maxruns=1000):
         """ Alternative algorithm to find eigenvector of largest eigenvalue
             Useful on sparse matrices, but may converge slowly.
             As the norm converges to the eigenvalue of greatest magnitude, we stop when we're close enough
         """
-        b = npr.sample(self.graph.adja_m.shape[0])
+        if mat is None:
+            mat = self.graph.adja_m
+
+        b = npr.sample(mat.shape[0])
 
         while True:
-            step = self.graph.adja_m.dot(b)
+            step = mat.dot(b)
             norm = npl.norm(step)
 
             b = step / norm
@@ -166,8 +169,7 @@ class Math(object):
         lv = val * vec
 
         try:
-            for i, j in zip(av, lv):
-                npt.assert_approx_equal(i, np.real(j))
+            npt.assert_allclose(av, lv)
         except AssertionError:
             return False
         return True
