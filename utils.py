@@ -1,6 +1,7 @@
 import os, os.path
 import json, csv
 import hashlib
+import operator
 
 import numpy as np
 import numpy.random as npr
@@ -71,56 +72,84 @@ class DataHandler(object):
 
         if os.path.isfile('%s.npy' % bak_fname):
             print('Recovering data from', bak_fname)
-            concentrations = np.load('%s.npy' % bak_fname)
+            foo = np.load('%s.npy' % bak_fname).item()
         else:
             print('Parsing data file', file)
-            names = list(graph)
-            concentrations, fail = parser.parse_concentration(
-                names,
+            data = parser.parse_concentration(
                 file,
                 conc_range
             )
+
+            concentrations = [t[1] for t in sorted(data.items(), key=operator.itemgetter(0))]
             if concentrations is None:
                 return None
-
             try:
                 concentrations = np.array(concentrations) / np.linalg.norm(concentrations)
             except ValueError:
                 return None
 
-            print('> coverage:', round(1 - len(fail)/len(names), 3))
+            names = list(graph)
+            #matched = set(names).intersection(set(data.keys()))
+            no_match = set(names).difference(set(data.keys()))
+
+            print('> coverage:', round(1 - len(no_match)/len(names), 3))
+
+            foo = {
+                'concentrations': concentrations,
+                'map': data
+            }
 
             # save for faster reuse
             if not os.path.exists(DataHandler.backup_dir):
                 os.makedirs(DataHandler.backup_dir)
-            np.save(bak_fname, concentrations)
+            np.save(bak_fname, foo)
 
-        return concentrations
+        return foo['concentrations'], foo['map']
 
     @staticmethod
     def load_averaged_concentrations(graph, directory, conc_range=[0], cache=False):
         """ Loads concentration files in given directory and averages them
+            In order to account for genes which appear in the graph but not in any dataset, this function will also return a vector of indices of the genes of the graph which were found in at least on dataset
         """
-        concs = []
+        # gather all data
+        data = []
+        genes = []
         for file in os.listdir(directory):
             if not file.endswith('.soft'): continue
 
             f = os.path.join(directory, file)
-            c = DataHandler.load_concentrations(graph, f, conc_range)
+            c, m = DataHandler.load_concentrations(graph, f, conc_range)
+
+            data.append(m)
+            genes.append(set(m.keys()))
+
+        # extract genes which are common to all data sets
+        common_genes = sorted(set.intersection(*genes)) # genes which appear in all datasets
+        all_genes = sorted(set.union(*genes).intersection(set(graph))) # genes which appear in at least one dataset
+        print('-> Found', len(common_genes), 'common genes (%i covered in total)' % len(all_genes))
+
+        # accumulate data
+        res = []
+        for gene in all_genes:
+            gene_concs = []
+            for exp in data:
+                if gene in exp:
+                    gene_concs.append(exp[gene])
 
             if cache:
-                with open('RL_av_data.txt', 'a') as fd:
+                with open('RL_av_data.csv', 'a') as fd:
                     writer = csv.writer(fd)
-                    writer.writerow(c)
+                    writer.writerow(gene_concs)
 
-            if not c is None:
-                concs.append(c)
+            res.append(np.mean(gene_concs))
 
-        res = []
-        for col in np.array(concs).T:
-            res.append(sum(col)/len(col))
+        # find used genes
+        used_gene_indices = []
+        for i, gene in enumerate(graph):
+            if gene in all_genes:
+                used_gene_indices.append(i)
 
-        return np.array(res)
+        return np.array(res), used_gene_indices
 
 class CacheHandler(object):
     cache_directory = 'plot_data'

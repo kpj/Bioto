@@ -1,6 +1,7 @@
 import numpy as np
-
 import networkx as nx
+
+import pysoft
 
 
 def parse_regulation_file(file):
@@ -81,62 +82,27 @@ def get_advanced_adjacency_matrix(file):
 
     return np.array(mat)
 
-def parse_concentration(names, file, conc_range=[0]):
-    """ Returns concentrations (at specified point in time) of given entries and list of unprocessable entries
+def parse_concentration(fname, conc_range=[0]):
+    """ Return all concentrations (at specified point in time) of given entries and list of unprocessable entries
     """
-    with open(file, 'r') as fd:
-        try:
-            content = fd.read()
-        except UnicodeDecodeError:
-            return None, None
+    soft = pysoft.SOFTFile(fname)
 
     data = {}
-    header = None
-    for line in content.split('\n'):
-        parts = line.split()
-        if len(line) == 0 or line[0] in '#^!':
-            continue
-        if not header:
-            # assume first non-comment row to be header
-            header = parts
-            continue
+    for row in soft.data:
+        gene = row['IDENTIFIER'].lower()
 
         conc = []
         cont = False
-
-        try:
-            gene = parts[1]
-        except IndexError:
-            continue
-
-        cont = False
         for i in conc_range:
             try:
-                conc.append(float(parts[2+i]))
+                conc.append(float(row[2+i]))
             except (ValueError, IndexError) as e:
                 cont = True
                 break
         if cont:
             continue
 
-        if len(conc) == 1: conc = conc[0] # small fix for compatibility and stuff
+        if len(conc) == 1: conc = conc[0] # fix for compatibility and stuff
+        data[gene] = conc
 
-        data[gene.lower()] = conc
-
-    concs = []
-    no_match = []
-    for name in names:
-        n = name.lower()
-        try:
-            concs.append(data[n])
-        except KeyError:
-            #print("Nothing found for", n)
-            concs.append(0 if len(conc_range) == 1 else [0]*len(conc_range))
-            no_match.append(n)
-
-    return concs, no_match
-
-
-if __name__ == '__main__':
-    #generate_tf_gene_regulation('../data/network_tf_gene.txt')
-    parse_concentration(['cyoB'], '../data/GDS4815_full.soft')
+    return data

@@ -24,7 +24,7 @@ def present(title, func, *args, model=None):
 
 def real_life_single(file):
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
-    c = g.io.load_concentrations('../data/concentrations/%s' % file)
+    c, m = g.io.load_concentrations('../data/concentrations/%s' % file)
 
     pf = g.math.get_perron_frobenius()
     corr, p_val, = utils.StatsHandler.correlate(c, pf)
@@ -37,15 +37,25 @@ def real_life_single(file):
 
 def real_life_average():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
-    c = g.io.load_averaged_concentrations('../data/concentrations/')
+    c, used_gene_indices = g.io.load_averaged_concentrations('../data/concentrations/')
 
-    pf = g.math.get_perron_frobenius()
+    """pf_tmp = g.math.get_perron_frobenius()
+    pf = [pf_tmp[i] for i in used_gene_indices]
     corr, p_val = utils.StatsHandler.correlate(c, pf)
-
     present(
         'Real-Life Data (averaged)', plotter.Plotter.loglog,
         'averaged gene concentration', c,
         'perron-frobenius eigenvector', pf
+    )"""
+
+    pr_tmp = g.math.get_pagerank()
+    pr = [pr_tmp[i] for i in used_gene_indices]
+
+    corr, p_val = utils.StatsHandler.correlate(c, pr)
+    present(
+        'Real-Life Data (averaged)', plotter.Plotter.loglog,
+        'averaged gene concentration', c,
+        'page rank', pr
     )
 
 def gene_overview(density_plot=True):
@@ -58,7 +68,7 @@ def gene_overview(density_plot=True):
     # gather data
     data = collections.defaultdict(list)
     for f in files:
-        c = graph.io.load_concentrations(os.path.join(dire, f))
+        c, m = graph.io.load_concentrations(os.path.join(dire, f))
         for i, name in enumerate(names):
             data[name].append(c[i])
 
@@ -260,7 +270,7 @@ if __name__ == '__main__':
     #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
     #investigate_active_edge_count_influence(models.MultiplicatorModel, n=10, repeats=2)
 
-    gene_overview()
+    #gene_overview()
 
-    #real_life_average()
+    real_life_average()
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)
