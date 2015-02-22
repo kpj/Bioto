@@ -17,12 +17,19 @@ class Math(object):
     def __init__(self, model):
         self.model = model
 
-    def get_augmented_adja_m(self):
+    def get_augmented_adja_m(self, edge_type=None):
         """ Return augmented adjacency matrix, i.e.
             1: activating, -1: inhibiting
         """
+        # only create one unique augmented adjacency matrix
         if not self.model.aug_adja_m is None:
+            print('Augmented adjacency matrix already computed, using old one.')
             return self.model.aug_adja_m
+
+        # only create new one, if graph has not been assigned a specific one
+        if not self.model.graph.aug_adja_m is None:
+            print('Graph has been assigned an augmented adjacency matrix. Model uses that one.')
+            return self.model.graph.aug_adja_m
 
         aug_adja_m = np.copy(self.model.graph.adja_m)
 
@@ -30,7 +37,7 @@ class Math(object):
         for y in range(len(self.model.graph)):
             for x in range(len(self.model.graph)):
                 if aug_adja_m[x,y] == 1:
-                    aug_adja_m[x,y] = npr.choice([-1, 1])
+                    aug_adja_m[x,y] = npr.choice([-1, 1]) if edge_type is None else edge_type
 
         # add self-inhibitory links for all nodes without incoming inhibitory links
         for x in range(len(self.model.graph)):
@@ -112,9 +119,9 @@ class BooleanModel(Model):
     info = {
         'name': 'Boolean Model',
         'norm_time': True, # norm along time or gene axis
-        'max_bin_mod_runs': 50, # how often to run the binary simulation (ON/OFF genes)
-        'time_window': 60, # time window to average binary runs
-        'cont_evo_runs': 600, # how many binary runs to generate
+        'max_bin_mod_runs': 15, # how often to run the binary simulation (ON/OFF genes)
+        'time_window': 30, # time window to average binary runs
+        'cont_evo_runs': 300, # how many binary runs to generate
         'avg_runs': 1 # how many averaged binary runs to average in the end
     }
 
@@ -161,13 +168,13 @@ class BooleanModel(Model):
         x0 = npr.randint(2, size=num) if initial_state is None else initial_state
 
         data = np.matrix(x0)
-        for t in range(BooleanModel.info['max_bin_mod_runs']-1):
+        for t in range(BooleanModel.info['max_bin_mod_runs']):
             cur = rule(data[-1])
             data = np.vstack((data, cur))
 
-            if (cur == data[-2]).all():
-                self.stats.early_stops += 1
-                break
+            #if (cur == data[-2]).all():
+            #    self.stats.early_stops += 1
+            #    break
 
         return np.array(data)
 
@@ -203,14 +210,14 @@ class BooleanModel(Model):
         out = []
         if norm_time:
             for time in concs.T:
-                norm = npl.norm(time, 1)
-                time /= norm if norm != 0 else 1
+                norm = npl.norm(time)
+                time /= norm
                 out.append(time)
             out = np.array(out).T
         else:
             for genes in concs:
-                norm = npl.norm(genes, 1)
-                genes /= norm if norm != 0 else 1
+                norm = npl.norm(genes)
+                genes /= norm
                 out.append(genes)
             out = np.array(out)
 
@@ -246,7 +253,7 @@ class BooleanModel(Model):
                     writer = csv.writer(fd)
                     writer.writerows(cur)
 
-        self.stats.info()
+        #self.stats.info()
         return tmp / BooleanModel.info['avg_runs']
 
 class ODEModel(Model):

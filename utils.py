@@ -1,6 +1,7 @@
 import os, os.path
 import json, csv
 import hashlib
+import random
 
 import numpy as np
 import numpy.random as npr
@@ -18,8 +19,26 @@ class GraphGenerator(object):
     """ Returns different types of network configurations (i.e. topologies, etc)
     """
     @staticmethod
-    def get_random_graph(node_num=20, edge_prob=0.3):
+    def get_er_graph(node_num=20, edge_prob=0.3):
         return graph.Graph(nx.erdos_renyi_graph(node_num, edge_prob, directed=True))
+
+    @staticmethod
+    def get_random_graph(node_num=20, activating_edges=0, inhibiting_edges=50):
+        """ Create random graph by subsetting complete graph
+        """
+        g = nx.complete_graph(node_num, create_using=nx.DiGraph())
+        edges = random.sample(g.edges(), activating_edges + inhibiting_edges)
+        a_edges = edges[:activating_edges]
+        i_edges = edges[-inhibiting_edges:]
+
+        amat = np.zeros((node_num, node_num))
+        for source, sink in a_edges: amat[source, sink] = 1
+        for source, sink in i_edges: amat[source, sink] = -1
+
+        gg = graph.Graph(nx.from_numpy_matrix(abs(amat), create_using=nx.DiGraph()))
+        gg.aug_adja_m = amat
+
+        return gg
 
     @staticmethod
     def get_regulatory_graph(file):

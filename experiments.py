@@ -99,31 +99,34 @@ def gene_overview(density_plot=True):
 # Generated data #
 ##################
 
-def simulate_model(Model, n=100, e=0.3, plot_jc_ev=False, info={}):
-    g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
+def simulate_model(Model, n=20, ae=0, ie=50, plot_jc_ev=False, info={}):
+    g = utils.GraphGenerator.get_random_graph(node_num=n, activating_edges=ae, inhibiting_edges=ie)
+    #g.io.visualize('random.png', use_R=False); sys.exit()
     Model.info.update(info)
 
     sim = g.system.simulate(Model)
-    pf = g.math.get_perron_frobenius(remove_self_links=True)
-    if plot_jc_ev: ev = g.system.used_model.math.get_jacobian_ev(sim[-1,:])
+    bm_data = [np.mean(time_unit) for time_unit in sim.T]
 
-    show_evolution(g, sim)#, pf=pf)
+    pf = g.math.get_perron_frobenius(remove_self_links=True)
+    if plot_jc_ev: ev = g.system.used_model.math.get_jacobian_ev(bm_data)
+
+    #show_evolution(g, sim)#, pf=pf)
     present(
         '%s with PF of A' % Model.info['name'], plotter.Plotter.loglog,
-        'gene concentration', sim[-1,:],
+        'gene concentration', bm_data,
         'perron-frobenius eigenvector', pf,
         model=Model
     )
-    present(
-        '%s with PF of A (delta)' % Model.info['name'], plotter.Plotter.loglog,
-        'difference in gene concentration', sim[-1,:]-sim[-10,:],
-        'perron-frobenius eigenvector', pf,
-        model=Model
-    )
+    #present(
+    #    '%s with PF of A (delta)' % Model.info['name'], plotter.Plotter.loglog,
+    #    'difference in gene concentration', sim[-1,:]-sim[-10,:],
+    #    'perron-frobenius eigenvector', pf,
+    #    model=Model
+    #)
     if plot_jc_ev:
         present(
             '%s with EV of J' % Model.info['name'], plotter.Plotter.loglog,
-            'gene concentration', sim[-1,:],
+            'gene concentration', bm_data,
             'jacobian eigenvector of highest eigenvalue', ev,
             model=Model
         )
@@ -132,7 +135,7 @@ def investigate_active_edge_count_influence(Model, n=100, e=0.3, repeats=5):
     """ Compute correlation between pf and gene concentrations for varying numbers of activating links in network.
         repeats specifies how many runs are average for one specific number of activating links
     """
-    g = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
+    g = utils.GraphGenerator.get_er_graph(node_num=n, edge_prob=e)
     pf = g.math.get_perron_frobenius(remove_self_links=True)
 
     aug_adja_m = np.copy(g.adja_m).T
@@ -253,14 +256,14 @@ if __name__ == '__main__':
     plotter.Plotter.show_plots = True
 
     #simulate_model(models.MultiplicatorModel)
-    #simulate_model(models.BooleanModel, n=20)
+    simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
-    #analysis(utils.GraphGenerator.get_random_graph(100, 0.3), models.MultiplicatorModel)
+    #analysis(utils.GraphGenerator.get_er_graph(100, 0.3), models.MultiplicatorModel)
     #investigate_active_edge_count_influence(models.MultiplicatorModel, n=10, repeats=2)
 
-    gene_overview()
+    #gene_overview()
 
     #real_life_average()
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)

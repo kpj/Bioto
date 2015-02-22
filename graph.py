@@ -205,6 +205,7 @@ class Graph(object):
             self.graph = max(nx.weakly_connected_component_subgraphs(self.graph), key=len)
 
         self.adja_m = nx.to_numpy_matrix(self.graph, nodelist=sorted(self.graph.nodes()))
+        self.aug_adja_m = None
 
         self.io = IOComponent(self)
         self.system = DynamicalSystem(self)
