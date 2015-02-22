@@ -1,0 +1,10 @@
+numpy
+networkx
+sympy
+matplotlib
+pandas
+scipy
+pysoft
+bs4
+progressbar
+prettytable
