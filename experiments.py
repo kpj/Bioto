@@ -275,5 +275,5 @@ if __name__ == '__main__':
 
     #gene_overview()
 
-    real_life_average()
+    #real_life_average()
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)

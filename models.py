@@ -17,7 +17,7 @@ class Math(object):
     def __init__(self, model):
         self.model = model
 
-    def get_augmented_adja_m(self, edge_type=None):
+    def get_augmented_adja_m(self, edge_type=None, force_self_inhibition=True, **kwargs):
         """ Return augmented adjacency matrix, i.e.
             1: activating, -1: inhibiting
         """
@@ -40,15 +40,17 @@ class Math(object):
                     aug_adja_m[x,y] = npr.choice([-1, 1]) if edge_type is None else edge_type
 
         # add self-inhibitory links for all nodes without incoming inhibitory links
-        for x in range(len(self.model.graph)):
-            col = np.copy(aug_adja_m[:,x])
-            col[col==1] = 0
-            s = sum(abs(col))
+        if force_self_inhibition:
+            for x in range(len(self.model.graph)):
+                col = np.copy(aug_adja_m[:,x])
+                col[col==1] = 0
+                s = sum(abs(col))
 
-            if s == 0:
-                aug_adja_m[x,x] = -1
+                if s == 0:
+                    aug_adja_m[x,x] = -1
 
-        return aug_adja_m.T
+        self.model.graph.aug_adja_m = aug_adja_m
+        return aug_adja_m
 
     def get_jacobian_ev(self, point):
         """ Return eigenvector of highest eigenvalue of jacobian
@@ -80,14 +82,16 @@ class Model(object):
         """
         return utils.md5(repr(sorted(cls.info.items())))
 
-    def __init__(self, graph):
+    def __init__(self, graph, **kwargs):
         self.graph = graph
         self.math = Math(self)
 
-        self.setup()
+        self.setup(**kwargs)
 
-    def setup(self):
-        self.aug_adja_m = None
+    def setup(self, **kwargs):
+        self.aug_adja_m = kwargs['aug_adja'] if 'aug_adja' in kwargs else self.graph.aug_adja_m
+        if not self.aug_adja_m is None: self.graph.aug_adja_m = self.aug_adja_m
+
         self.stats = None
 
     def generate(self, **kwargs):
@@ -125,11 +129,11 @@ class BooleanModel(Model):
         'avg_runs': 1 # how many averaged binary runs to average in the end
     }
 
-    def setup(self):
+    def setup(self, **kwargs):
         """ Declare activating and inhibiting links and further constants
         """
-        Model.setup(self)
-        self.aug_adja_m = self.math.get_augmented_adja_m()
+        Model.setup(self, **kwargs)
+        self.aug_adja_m = self.math.get_augmented_adja_m(**kwargs)
         self.stats = stats.BMStatsMan()
 
     def generate_binary_time_series(self, initial_state=None):
@@ -259,11 +263,11 @@ class BooleanModel(Model):
 class ODEModel(Model):
     """ General model of ODEs to generate data
     """
-    def setup(self):
+    def setup(self, **kwargs):
         """ Setup needed constants,
             this method needs to be called by all children
         """
-        Model.setup(self)
+        Model.setup(self, **kwargs)
 
         self.e1 = 0.1
         self.e2 = 0.9
@@ -272,7 +276,7 @@ class ODEModel(Model):
         self.f1 = lambda x: 1
         self.f2 = lambda x: 1
 
-        self.aug_adja_m = self.math.get_augmented_adja_m()
+        self.aug_adja_m = self.math.get_augmented_adja_m(**kwargs)
 
     def get_terms(self, X):
         """ Return individual terms of ODE.
@@ -310,8 +314,8 @@ class LinearModel(ODEModel):
         'name': 'Linear Model'
     }
 
-    def setup(self):
-        super(LinearModel, self).setup()
+    def setup(self, **kwargs):
+        super(LinearModel, self).setup(**kwargs)
 
         self.f1 = lambda x: x
         self.f2 = lambda x: -x
@@ -321,8 +325,8 @@ class NonlinearModel(ODEModel):
         'name': 'Nonlinear Model'
     }
 
-    def setup(self):
-        super(NonlinearModel, self).setup()
+    def setup(self, **kwargs):
+        super(NonlinearModel, self).setup(**kwargs)
 
         self.f1 = lambda x: 1/(1+x)
         self.f2 = lambda x: x/(1+x)

@@ -6,7 +6,7 @@ import numpy.testing as npt
 
 import networkx as nx
 
-import graph
+import graph, models
 
 
 class GraphTester(TestCase):
@@ -43,3 +43,32 @@ class GraphTester(TestCase):
         self.assertFalse(self.graph.math.test_significance(4, pf, mat=mat))
         self.assertFalse(self.graph.math.test_significance(3, np.array([4,-1]), mat=mat))
         npt.assert_allclose(self.graph.math.get_degree_distribution(), np.array([0.42640143, 0.63960215, 0.63960215]))
+
+    def test_aug_adja_m_generation(self):
+        rg = nx.DiGraph()
+        rg.add_nodes_from([1, 2])
+        rg.add_edges_from([(1,2)])
+
+
+        uam = np.array([[-1,-1], [-1,-1]])
+        g = graph.Graph(rg)
+        g.aug_adja_m = uam.copy()
+        g.system.simulate(models.BooleanModel, runs=4)
+        npt.assert_allclose(g.aug_adja_m, uam)
+        npt.assert_allclose(g.aug_adja_m, g.system.used_model.aug_adja_m)
+
+        g = graph.Graph(rg)
+        g.system.simulate(models.BooleanModel, runs=4, aug_adja=uam.copy())
+        npt.assert_allclose(g.system.used_model.aug_adja_m, uam)
+        npt.assert_allclose(g.aug_adja_m, g.system.used_model.aug_adja_m)
+
+
+        g = graph.Graph(rg)
+        g.system.simulate(models.BooleanModel, runs=4, edge_type=-1, force_self_inhibition=False)
+        npt.assert_allclose(g.system.used_model.aug_adja_m, np.array([[0,-1], [0,0]]))
+        npt.assert_allclose(g.aug_adja_m, g.system.used_model.aug_adja_m)
+
+        # reuse previous aa matrix
+        g.system.simulate(runs=4)
+        npt.assert_allclose(g.system.used_model.aug_adja_m, np.array([[0,-1], [0,0]]))
+        npt.assert_allclose(g.aug_adja_m, g.system.used_model.aug_adja_m)

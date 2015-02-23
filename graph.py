@@ -68,15 +68,20 @@ class DynamicalSystem(object):
         self.graph = graph
         self.used_model = None
 
-    def simulate(self, Model, **kwargs):
+    def simulate(self, Model=None, **kwargs):
         """ Simulates network evolution by using given model
             Model is passed as class, not as object
         """
-        model = Model(self.graph)
-        if 'aug_adja' in kwargs:
-            model.aug_adja_m = kwargs['aug_adja']
-
-        self.used_model = model
+        if Model is None:
+            if self.used_model is None:
+                print('No model was assigned to this graph. Please do so.')
+                return None
+            else:
+                print('Reusing previously selected model.')
+                model = self.used_model
+        else:
+            model = Model(self.graph, **kwargs)
+            self.used_model = model
 
         res = model.generate(**kwargs)
         return res
