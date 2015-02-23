@@ -2,10 +2,10 @@ numpy
 networkx
 sympy
 matplotlib
+ggplot
 pandas
 scipy
 pysoft
 beautifulsoup4
-progressbar
+progressbar2
 prettytable
-ggplot
