@@ -8,3 +8,4 @@ pysoft
 beautifulsoup4
 progressbar
 prettytable
+ggplot
