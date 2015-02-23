@@ -8,10 +8,10 @@ import numpy as np
 import numpy.random as npr
 
 import scipy.stats as scits
-
 import pandas as pd
-
 import networkx as nx
+
+import pysoft
 
 import parser, graph
 
@@ -240,6 +240,49 @@ class CacheHandler(object):
     @staticmethod
     def load(fname):
         return json.load(open(fname, 'r'))
+
+class GDSHandler(object):
+    """ Handles directories containing many GDS files
+    """
+    def __init__(self, dirname):
+        self.dir = dirname
+
+        self.common_genes = None
+
+    def process_directory(self):
+        """ Scan directory for SOFT files and extract gene concentration of genes which appear in all datasets
+        """
+        experiments = []
+        genes = []
+        for root, dirs, files in os.walk(self.dir):
+            for fname in sorted(files):
+                data = {}
+                genes.append(set())
+
+                soft = pysoft.SOFTFile(os.path.join(root, fname))
+
+                for row in soft.data:
+                    # keep all encountered genes
+                    gene = row['IDENTIFIER'].lower()
+                    genes[-1].add(gene)
+
+                    # extract gene concentrations
+                    conc = row[2]
+                    if conc == 'null': conc = row[3]
+                    if conc == 'null': conc = 0 # what to do now?
+                    data[gene] = conc
+
+                experiments.append(data)
+
+        self.common_genes = set.intersection(*genes)
+
+        # only extract common gene concentrations
+        result = []
+        for exp in experiments:
+            tmp = {k: exp[k] for k in self.common_genes}
+            result.append(tmp)
+
+        return result
 
 
 def clean_string(s):
