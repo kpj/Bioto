@@ -3,7 +3,7 @@ networkx
 sympy
 matplotlib
 ggplot
-pandas
+#pandas
 #scipy
 pysoft
 beautifulsoup4
