@@ -4,7 +4,7 @@ sympy
 matplotlib
 ggplot
 pandas
-scipy
+#scipy
 pysoft
 beautifulsoup4
 progressbar2
