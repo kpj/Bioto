@@ -8,7 +8,7 @@ before_install:
     - export PATH=/home/travis/miniconda/bin:$PATH
     - conda update --yes conda
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pandas
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pandas matplotlib
     - pip install -r requirements.txt
     - pip install coveralls
 script:
