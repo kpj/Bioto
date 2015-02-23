@@ -1,8 +1,8 @@
-numpy
+#numpy
 networkx
 sympy
 matplotlib
-#ggplot
+ggplot
 pandas
 #scipy
 pysoft
