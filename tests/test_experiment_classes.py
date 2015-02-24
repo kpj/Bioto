@@ -6,8 +6,18 @@ import numpy.testing as npt
 
 import networkx as nx
 
+from mock import patch
+
 import utils, experiment_classes
 
+
+class TestBaseExperiment(TestCase):
+    def setUp(self):
+        self.exp = experiment_classes.Experiment()
+
+    def test_conduct(self):
+        with self.assertRaises(NotImplementedError):
+            self.exp.conduct()
 
 class TestGeneExpressionVariance(TestCase):
     def setUp(self):
@@ -50,3 +60,23 @@ class TestGeneExpressionVariance(TestCase):
         self.assertEqual(len(self.exp.variances), 2)
 
         npt.assert_allclose(self.exp.variances, [113906.25, 53669.444367222219])
+
+    @patch("matplotlib.pyplot.show")
+    def test_conduct(self, mock_show):
+        self.exp._generate_x()
+        self.exp._generate_y()
+        self.exp._compute_variances()
+        res1 = self.exp.variances.copy()
+
+        # reset experiment
+        self.exp.x = []
+        self.exp.x_shuffled = []
+        self.exp.y = []
+        self.exp.y_shuffled = []
+        self.exp.variances = []
+        self.exp.variances_shuffled = []
+
+        self.exp.conduct()
+        res2 = self.exp.variances.copy()
+
+        npt.assert_allclose(res1, res2)

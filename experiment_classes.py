@@ -14,6 +14,8 @@ class Experiment(object):
         Each subclass must define "self.pathway" which lists all methods in the order they are supposed to be called.
     """
     def conduct(self):
+        """ Call each experimental step in the right order
+        """
         caller = self.__class__.__name__
 
         if caller == 'Experiment':
@@ -22,7 +24,6 @@ class Experiment(object):
             for func in self.pathway:
                 print(func.__doc__)
                 func()
-
 
 class GeneExpressionVariance(Experiment):
     """ Observe how strong the signal in gene expression vectors compared to their shuffled counterpart is
@@ -40,6 +41,7 @@ class GeneExpressionVariance(Experiment):
         self.variances = []
         self.variances_shuffled = []
 
+        # this has to be done for any experiment in some form
         self.pathway = [self._generate_x, self._generate_y, self._compute_variances, self._create_plot]
 
     def _generate_x(self):

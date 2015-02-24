@@ -9,3 +9,4 @@ pysoft
 beautifulsoup4
 progressbar2
 prettytable
+mock
