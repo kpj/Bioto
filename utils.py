@@ -256,6 +256,8 @@ class GDSHandler(object):
         genes = []
         for root, dirs, files in os.walk(self.dir):
             for fname in sorted(files):
+                if not fname.endswith('.soft'): continue
+
                 data = {}
                 genes.append(set())
 

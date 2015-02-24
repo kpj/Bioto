@@ -80,7 +80,7 @@ def get_advanced_adjacency_matrix(file):
 
         mat.append(col)
 
-    return np.array(mat)
+    return np.array(mat).T
 
 def parse_concentration(fname, conc_range=[0]):
     """ Return all concentrations (at specified point in time) of given entries and list of unprocessable entries

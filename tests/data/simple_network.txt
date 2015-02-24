@@ -1,0 +1,5 @@
+# simple networkx example
+AaeA	aaeB	+
+AaeA	zuzU	+
+AaeB	aaeA	-
+ZuzU	zuzU	-
