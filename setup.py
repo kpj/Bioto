@@ -16,7 +16,7 @@ setup(
 	license='MIT',
 	packages=[],
 	test_suite='nose.collector',
-	tests_require=['nose', 'mock'],
+	tests_require=['nose'],
 	scripts=[],
 	requires=['numpy', 'networkx', 'sympy', 'matplotlib', 'ggplot', 'pandas', 'scipy', 'pysoft', 'beautifulsoup4', 'progressbar2', 'prettytable']
 )

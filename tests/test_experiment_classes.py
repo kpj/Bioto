@@ -6,7 +6,8 @@ import numpy.testing as npt
 
 import networkx as nx
 
-from mock import patch
+import matplotlib
+matplotlib.use('Agg')
 
 import utils, experiment_classes
 
@@ -61,8 +62,7 @@ class TestGeneExpressionVariance(TestCase):
 
         npt.assert_allclose(self.exp.variances, [113906.25, 53669.444367222219])
 
-    @patch("matplotlib.pyplot.show")
-    def test_conduct(self, mock_show):
+    def test_conduct(self):
         self.exp._generate_x()
         self.exp._generate_y()
         self.exp._compute_variances()
