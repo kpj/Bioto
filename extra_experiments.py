@@ -229,7 +229,7 @@ def variance_of_gene_expression(data_dir):
 	""" Analyze the composition of real-life GEO data
 	"""
 	gdsh = utils.GDSHandler(data_dir)
-	experis = gdsh.process_directory()
+	experis = gdsh.process_directory(only_common_genes=True)
 
 	experiment = experiment_classes.GeneExpressionVariance(gdsh.common_genes, experis)
 	experiment.conduct()

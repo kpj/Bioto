@@ -12,7 +12,7 @@ import utils, experiment_classes
 class TestGeneExpressionVariance(TestCase):
     def setUp(self):
         gdsh = utils.GDSHandler('tests/data')
-        experis = gdsh.process_directory()
+        experis = gdsh.process_directory(only_common_genes=True)
 
         self.exp = experiment_classes.GeneExpressionVariance(gdsh.common_genes, experis)
 

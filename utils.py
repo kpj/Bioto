@@ -134,7 +134,7 @@ class DataHandler(object):
         data = []
         genes = []
         for file in os.listdir(directory):
-            if not file.endswith('.soft'): continue
+            if not is_soft_file(file): continue
 
             f = os.path.join(directory, file)
             c, m = DataHandler.load_concentrations(graph, f, conc_range)
@@ -249,14 +249,15 @@ class GDSHandler(object):
 
         self.common_genes = None
 
-    def process_directory(self):
-        """ Scan directory for SOFT files and extract gene concentration of genes which appear in all datasets
+    def process_directory(self, only_common_genes=False):
+        """ Scan directory for SOFT files.
+            Extract gene concentration of genes which appear in all datasets if requested
         """
         experiments = []
         genes = []
         for root, dirs, files in os.walk(self.dir):
             for fname in sorted(files):
-                if not fname.endswith('.soft'): continue
+                if not is_soft_file(fname): continue
 
                 data = {}
                 genes.append(set())
@@ -276,12 +277,15 @@ class GDSHandler(object):
 
                 experiments.append(data)
 
+        self.all_genes = set.union(*genes)
         self.common_genes = set.intersection(*genes)
 
-        # only extract common gene concentrations
+        # extract gene concentrations
         result = []
+        genes_to_extract = self.common_genes if only_common_genes else self.all_genes
         for exp in experiments:
-            tmp = {k: exp[k] for k in self.common_genes}
+            tmp = {k: exp[k] if k in exp else None for k in genes_to_extract}
+            tmp = dict(filter(lambda x: not x[1] is None, tmp.items()))
             result.append(tmp)
 
         return result
@@ -302,3 +306,6 @@ def md5(s):
     m = hashlib.md5()
     m.update(s.encode(encoding='utf-8'))
     return m.hexdigest()
+
+def is_soft_file(fname):
+    return fname.endswith('.soft') or fname.endswith('.soft.gz')
