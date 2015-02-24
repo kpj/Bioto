@@ -18,7 +18,7 @@ import networkx as nx
 
 import pysoft
 
-import plotter, utils, models, graph, parser, experiment_classes
+import plotter, utils, models, graph, file_parser, experiment_classes
 
 
 def plot_BM_runs(dire):
@@ -204,7 +204,7 @@ def plot_orga_distri(distr_file, fout):
 	os.system('Rscript org_distr_plot.R "%s"' % fout)
 
 def investigate_trn_eigensystem():
-	g = graph.Graph(parser.generate_tf_gene_regulation('../data/architecture/network_tf_gene.txt'), largest=True)
+	g = graph.Graph(file_parser.generate_tf_gene_regulation('../data/architecture/network_tf_gene.txt'), largest=True)
 
 	f = 816
 	mat_valid = g.adja_m[:f, :f].copy()

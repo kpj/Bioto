@@ -13,7 +13,7 @@ import networkx as nx
 
 import pysoft
 
-import parser, graph
+import file_parser, graph
 
 
 class GraphGenerator(object):
@@ -43,7 +43,7 @@ class GraphGenerator(object):
 
     @staticmethod
     def get_regulatory_graph(file):
-        return graph.Graph(parser.generate_tf_gene_regulation(file), largest=True)
+        return graph.Graph(file_parser.generate_tf_gene_regulation(file), largest=True)
 
     @staticmethod
     def get_minimal_graph():
@@ -94,7 +94,7 @@ class DataHandler(object):
             foo = np.load('%s.npy' % bak_fname).item()
         else:
             print('Parsing data file', file)
-            data = parser.parse_concentration(
+            data = file_parser.parse_concentration(
                 file,
                 conc_range
             )
