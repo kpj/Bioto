@@ -182,7 +182,7 @@ class BooleanModel(Model):
 
         return np.array(data)
 
-    def generate_continues_evolution(self, norm_time):
+    def generate_continues_evolution(self, norm_time, test_data=None):
         """ Generates continuous data from binary evolution
             Either norms along gene- or time-axis
             Returns:
@@ -200,6 +200,10 @@ class BooleanModel(Model):
 
             res = self.generate_binary_time_series()
             data = np.vstack((data, res)) if len(data) > 0 else res
+
+        # use debugging data if specified
+        if not test_data is None:
+            data = test_data
 
         # average gene activations over time window
         concs = []

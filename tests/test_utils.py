@@ -29,6 +29,7 @@ class TestGraphGenerators(TestCase):
         graph = utils.GraphGenerator.get_random_graph(42, 30, 50)
 
         self.assertEqual(len(graph), 42)
+        self.assertIsInstance(graph.graph, nx.DiGraph)
 
         pos_m = graph.aug_adja_m.copy()
         pos_m[pos_m != 1] = 0
@@ -37,6 +38,12 @@ class TestGraphGenerators(TestCase):
         neg_m = graph.aug_adja_m.copy()
         neg_m[neg_m != -1] = 0
         self.assertEqual(np.sum(neg_m), -50)
+
+    def test_er_graph(self):
+        graph = utils.GraphGenerator.get_er_graph(100, 0.66)
+
+        self.assertEqual(len(graph), 100)
+        self.assertIsInstance(graph.graph, nx.DiGraph)
 
 class TestGDSHandler(TestCase):
     def setUp(self):
