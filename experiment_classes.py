@@ -13,7 +13,7 @@ class Experiment(object):
 
         Each subclass must define "self.pathway" which lists all methods in the order they are supposed to be called.
     """
-    def conduct(self):
+    def conduct(self, **kwargs):
         """ Call each experimental step in the right order
         """
         caller = self.__class__.__name__
@@ -23,7 +23,7 @@ class Experiment(object):
         else:
             for func in self.pathway:
                 print(func.__doc__)
-                func()
+                func(**kwargs)
 
 class GeneExpressionVariance(Experiment):
     """ Observe how strong the signal in gene expression vectors compared to their shuffled counterpart is
@@ -44,7 +44,7 @@ class GeneExpressionVariance(Experiment):
         # this has to be done for any experiment in some form
         self.pathway = [self._generate_x, self._generate_y, self._compute_variances, self._create_plot]
 
-    def _generate_x(self):
+    def _generate_x(self, shuffle_experiment_order=False, **kwargs):
         """ Transform data such that x_i contains all gene expressions 1,...,j for experiment i
         """
         for exp in self.data:
@@ -55,7 +55,12 @@ class GeneExpressionVariance(Experiment):
         for e in self.x:
             self.x_shuffled.append(npr.permutation(e))
 
-    def _generate_y(self):
+        if shuffle_experiment_order:
+            ra = npr.permutation(list(range(len(self.x))))
+            self.x = [self.x[i] for i in ra]
+            self.x_shuffled = [self.x_shuffled[i] for i in ra]
+
+    def _generate_y(self, **kwargs):
         """ Generate y(m), which contains y_j(m) for j=1,...,n, which in turn contains the gene expression levels obtained by averaging the first m experiments
         """
         def gen_y(m, gene_data):
@@ -70,14 +75,14 @@ class GeneExpressionVariance(Experiment):
             self.y.append(gen_y(m + 1, self.x))
             self.y_shuffled.append(gen_y(m + 1, self.x_shuffled))
 
-    def _compute_variances(self):
+    def _compute_variances(self, **kwargs):
         """ Compute variances of shuffled and ordered gene expression data
         """
         for e, e_shuffled in zip(self.y, self.y_shuffled):
             self.variances.append(np.var(e))
             self.variances_shuffled.append(np.var(e_shuffled))
 
-    def _create_plot(self):
+    def _create_plot(self, **kwargs):
         """ Create plot of generated data
         """
         t = range(len(self.variances))

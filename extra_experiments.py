@@ -232,7 +232,7 @@ def variance_of_gene_expression(data_dir):
 	experis = gdsh.process_directory(only_common_genes=True)
 
 	experiment = experiment_classes.GeneExpressionVariance(gdsh.common_genes, experis)
-	experiment.conduct()
+	experiment.conduct(shuffle_experiment_order=True)
 
 
 if __name__ == '__main__':

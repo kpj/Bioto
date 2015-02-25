@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 import numpy as np
-import numpy.linalg as npl
+import numpy.random as npr
 import numpy.testing as npt
 
 import networkx as nx
@@ -44,6 +44,42 @@ class TestGeneExpressionVariance(TestCase):
         self.assertIn(set(['1337', '4']), shuffled)
         self.assertIn(set(['23', '6']), shuffled)
 
+    def test_x_shuffled_experiments(self):
+        npr.seed(42)
+        self.exp._generate_x(shuffle_experiment_order=True)
+
+        self.assertEqual(len(self.exp.x), 3)
+
+        self.assertEqual(self.exp.x[0], ['23', '6'])
+        self.assertEqual(self.exp.x[1], ['1337', '4'])
+        self.assertEqual(self.exp.x[2], ['42', '2'])
+
+        shuffled = [set(l) for l in self.exp.x_shuffled]
+        self.assertEqual(len(shuffled), 3)
+        self.assertEqual(shuffled[0], set(['23', '6']))
+        self.assertEqual(shuffled[1], set(['1337', '4']))
+        self.assertEqual(shuffled[2], set(['42', '2']))
+
+
+        self.exp.x = []
+        self.exp.x_shuffled = []
+
+
+        npr.seed(1337)
+        self.exp._generate_x(shuffle_experiment_order=True)
+
+        self.assertEqual(len(self.exp.x), 3)
+
+        self.assertEqual(self.exp.x[0], ['42', '2'])
+        self.assertEqual(self.exp.x[1], ['23', '6'])
+        self.assertEqual(self.exp.x[2], ['1337', '4'])
+
+        shuffled = [set(l) for l in self.exp.x_shuffled]
+        self.assertEqual(len(shuffled), 3)
+        self.assertEqual(shuffled[0], set(['42', '2']))
+        self.assertEqual(shuffled[1], set(['23', '6']))
+        self.assertEqual(shuffled[2], set(['1337', '4']))
+
     def test_y(self):
         self.exp._generate_x()
         self.exp._generate_y()
@@ -61,6 +97,11 @@ class TestGeneExpressionVariance(TestCase):
         self.assertEqual(len(self.exp.variances), 2)
 
         npt.assert_allclose(self.exp.variances, [113906.25, 53669.444367222219])
+
+    def test_variances_shuffled_experiments(self):
+        self.exp.conduct(shuffle_experiment_order=True)
+
+        npt.assert_approx_equal(self.exp.variances[-1], 53669.444367222219)
 
     def test_conduct(self):
         self.exp._generate_x()
