@@ -7,7 +7,7 @@ import numpy.testing as npt
 import networkx as nx
 
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('agg')
 
 import utils, experiment_classes
 

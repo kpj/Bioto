@@ -50,7 +50,7 @@ class Math(object):
                     aug_adja_m[x,x] = -1
 
         self.model.graph.aug_adja_m = aug_adja_m
-        return aug_adja_m
+        return np.array(aug_adja_m, dtype=np.uint8)
 
     def get_jacobian_ev(self, point):
         """ Return eigenvector of highest eigenvalue of jacobian

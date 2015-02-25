@@ -24,7 +24,7 @@ class IOComponent(object):
     def dump_adjacency_matrix(self, file):
         """ Dumps adjacency matrix into specified file
         """
-        np.savetxt(file, self.graph.adja_m)
+        np.savetxt(file, self.graph.adja_m, fmt='%d')
 
     def dump_node_names(self, file):
         """ Dumps node names into specified file
@@ -74,8 +74,7 @@ class DynamicalSystem(object):
         """
         if Model is None:
             if self.used_model is None:
-                print('No model was assigned to this graph. Please do so.')
-                return None
+                raise RuntimeError('No model was assigned to this graph. Please do so.')
             else:
                 print('Reusing previously selected model.')
                 model = self.used_model
@@ -105,15 +104,13 @@ class Math(object):
             norm = npl.norm(step)
 
             b = step / norm
-            b = b.tolist()[0]
 
             if abs(norm - eival) < precision:
                 break
 
             maxruns -= 1
             if maxruns == 0:
-                print('Power Iteration Method did not converge, aborting...')
-                break
+                raise RuntimeError('Power Iteration Method did not converge, aborting...')
 
         return np.array(b)
 
@@ -212,7 +209,7 @@ class Graph(object):
         if largest:
             self.graph = max(nx.weakly_connected_component_subgraphs(self.graph), key=len)
 
-        self.adja_m = nx.to_numpy_matrix(self.graph, nodelist=sorted(self.graph.nodes()))
+        self.adja_m = np.array(nx.to_numpy_matrix(self.graph, nodelist=sorted(self.graph.nodes())), dtype=np.uint8)
         self.aug_adja_m = None
 
         self.io = IOComponent(self)
