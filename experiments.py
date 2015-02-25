@@ -39,14 +39,14 @@ def real_life_average():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
     c, used_gene_indices = g.io.load_averaged_concentrations('../data/concentrations/')
 
-    """pf_tmp = g.math.get_perron_frobenius()
+    pf_tmp = g.math.get_perron_frobenius()
     pf = [pf_tmp[i] for i in used_gene_indices]
     corr, p_val = utils.StatsHandler.correlate(c, pf)
     present(
         'Real-Life Data (averaged)', plotter.Plotter.loglog,
         'averaged gene concentration', c,
         'perron-frobenius eigenvector', pf
-    )"""
+    )
 
     pr_tmp = g.math.get_pagerank()
     pr = [pr_tmp[i] for i in used_gene_indices]
@@ -266,7 +266,7 @@ if __name__ == '__main__':
     plotter.Plotter.show_plots = True
 
     #simulate_model(models.MultiplicatorModel)
-    simulate_model(models.BooleanModel)
+    #simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
