@@ -50,7 +50,7 @@ class Math(object):
                     aug_adja_m[x,x] = -1
 
         self.model.graph.aug_adja_m = aug_adja_m
-        return np.array(aug_adja_m, dtype=np.uint8)
+        return np.array(aug_adja_m, dtype=np.int8)
 
     def get_jacobian_ev(self, point):
         """ Return eigenvector of highest eigenvalue of jacobian
@@ -95,7 +95,7 @@ class Model(object):
         self.stats = None
 
     def generate(self, **kwargs):
-        Exception('This model lacks any generating function')
+        raise NotImplementedError('This model lacks any generating function')
 
 class MultiplicatorModel(Model):
     """ Simulates network evolution by adjacency matrix multiplication

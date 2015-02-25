@@ -141,10 +141,10 @@ class TestGraphMath(GraphTester):
 
         g = graph.Graph(rg)
         g.system.simulate(models.BooleanModel, runs=4, edge_type=-1, force_self_inhibition=False)
-        npt.assert_allclose(g.system.used_model.aug_adja_m, np.array([[0,-1], [0,0]], dtype=np.uint8))
+        npt.assert_allclose(g.system.used_model.aug_adja_m, np.array([[0,-1], [0,0]], dtype=np.int8))
         npt.assert_allclose(g.aug_adja_m, g.system.used_model.aug_adja_m)
 
         # reuse previous aa matrix
         g.system.simulate(runs=4)
-        npt.assert_allclose(g.system.used_model.aug_adja_m, np.array([[0,-1], [0,0]], dtype=np.uint8))
+        npt.assert_allclose(g.system.used_model.aug_adja_m, np.array([[0,-1], [0,0]], dtype=np.int8))
         npt.assert_allclose(g.aug_adja_m, g.system.used_model.aug_adja_m)
