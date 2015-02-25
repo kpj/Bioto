@@ -3,6 +3,8 @@ from unittest import TestCase
 import numpy as np
 import numpy.testing as npt
 
+import networkx as nx
+
 import file_parser
 
 
@@ -23,9 +25,10 @@ class TestParser(TestCase):
         self.assertEqual(data['zuzu'], 23.)
 
         data = file_parser.parse_concentration(gds_file, conc_range=[1])
-        self.assertEqual(len(data), 3)
+        self.assertEqual(len(data), 4)
         self.assertEqual(data['aaea'], 43.)
         self.assertEqual(data['aaeb'], 3.)
+        self.assertEqual(data['haba'], 1.)
         self.assertEqual(data['zuzu'], 24.)
 
     def test_concentration_parser_multiple(self):
@@ -44,22 +47,25 @@ class TestParser(TestCase):
         self.assertEqual(len(data), 3)
         self.assertEqual(data['aaea'], [('aaeb', '+'), ('zuzu', '+')])
         self.assertEqual(data['aaeb'], [('aaea', '-')])
-        self.assertEqual(data['zuzu'], [('zuzu', '-')])
+        self.assertEqual(data['zuzu'], [('zuzu', '-'), ('aaeb', '+-')])
 
     def test_trn_generation(self):
         network_file = 'tests/data/simple_network.txt'
         graph = file_parser.generate_tf_gene_regulation(network_file)
+
+        self.assertIsInstance(graph, nx.DiGraph)
 
         self.assertEqual(len(graph), 3)
         self.assertIn('aaea', graph)
         self.assertIn('aaeb', graph)
         self.assertIn('zuzu', graph)
 
-        self.assertEqual(len(graph.edges()), 4)
+        self.assertEqual(len(graph.edges()), 5)
         self.assertIn(('aaea', 'aaeb'), graph.edges())
         self.assertIn(('aaea', 'zuzu'), graph.edges())
         self.assertIn(('aaeb', 'aaea'), graph.edges())
         self.assertIn(('zuzu', 'zuzu'), graph.edges())
+        self.assertIn(('zuzu', 'aaeb'), graph.edges())
 
     def test_augmented_adjacency_matrix_generation(self):
         network_file = 'tests/data/simple_network.txt'

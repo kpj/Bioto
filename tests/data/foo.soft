@@ -2,7 +2,8 @@
 #IDENTIFIER = identifier
 #GSM37063 = Value for GSM37063: glucose1; src: E. coli cell
 #GSM37064 = Value for GSM37064: whatever
-ID IDENTIFIER	GSM37063
+ID IDENTIFIER	GSM37063	GSM37064
 bar	aaea	42	43
 bar	aaeb	2	3
+bar	haba	fun	1
 bar	zuzu	23	24

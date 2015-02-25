@@ -53,17 +53,17 @@ class TestGDSHandler(TestCase):
         res = self.gdsh.process_directory()
 
         self.assertEqual(len(res), 3)
-        self.assertIn({'aaea': '42', 'aaeb': '2', 'zuzu': '23'}, res)
-        self.assertIn({'aaea': '1337', 'aaeb': '4'}, res)
-        self.assertIn({'aaea': '23', 'aaeb': '6'}, res)
+        self.assertIn({'aaea': 42., 'aaeb': 2., 'zuzu': 23.}, res)
+        self.assertIn({'aaea': 1337., 'aaeb': 4.}, res)
+        self.assertIn({'aaea': 23., 'aaeb': 6.}, res)
 
     def test_common_genes(self):
         res = self.gdsh.process_directory(only_common_genes=True)
 
         self.assertEqual(len(res), 3)
-        self.assertIn({'aaea': '42', 'aaeb': '2'}, res)
-        self.assertIn({'aaea': '1337', 'aaeb': '4'}, res)
-        self.assertIn({'aaea': '23', 'aaeb': '6'}, res)
+        self.assertIn({'aaea': 42., 'aaeb': 2.}, res)
+        self.assertIn({'aaea': 1337., 'aaeb': 4.}, res)
+        self.assertIn({'aaea': 23., 'aaeb': 6.}, res)
 
 class TestDataHandler(TestCase):
     def setUp(self):

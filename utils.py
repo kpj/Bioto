@@ -259,23 +259,11 @@ class GDSHandler(object):
             for fname in sorted(files):
                 if not is_soft_file(fname): continue
 
-                data = {}
-                genes.append(set())
-
-                soft = pysoft.SOFTFile(os.path.join(root, fname))
-
-                for row in soft.data:
-                    # keep all encountered genes
-                    gene = row['IDENTIFIER'].lower()
-                    genes[-1].add(gene)
-
-                    # extract gene concentrations
-                    conc = row[2]
-                    if conc == 'null': conc = row[3]
-                    if conc == 'null': conc = 0 # what to do now?
-                    data[gene] = conc
-
+                data = file_parser.parse_concentration(os.path.join(root, fname))
                 experiments.append(data)
+
+                genes.append(set())
+                genes[-1] = set(data.keys())
 
         self.all_genes = set.union(*genes)
         self.common_genes = set.intersection(*genes)

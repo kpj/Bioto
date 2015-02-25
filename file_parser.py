@@ -83,7 +83,7 @@ def get_advanced_adjacency_matrix(file):
     return np.array(mat).T
 
 def parse_concentration(fname, conc_range=[0]):
-    """ Return all concentrations (at specified point in time) of given entries and list of unprocessable entries
+    """ Return all concentrations (at specified point in time) of given entries
     """
     soft = pysoft.SOFTFile(fname)
 
@@ -94,8 +94,12 @@ def parse_concentration(fname, conc_range=[0]):
         conc = []
         cont = False
         for i in conc_range:
+            entry = row[2+i]
             try:
-                conc.append(float(row[2+i]))
+                if entry == 'null': entry = row[3+i]
+                if entry == 'null': entry = 'fail' # what to do now?
+
+                conc.append(float(entry))
             except (ValueError, IndexError) as e:
                 cont = True
                 break

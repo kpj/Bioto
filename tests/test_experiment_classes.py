@@ -35,14 +35,14 @@ class TestGeneExpressionVariance(TestCase):
 
         self.assertEqual(len(self.exp.x), 3)
 
-        self.assertIn(['42', '2'], self.exp.x)
-        self.assertIn(['1337', '4'], self.exp.x)
-        self.assertIn(['23', '6'], self.exp.x)
+        self.assertIn([42., 2.], self.exp.x)
+        self.assertIn([1337., 4.], self.exp.x)
+        self.assertIn([23., 6.], self.exp.x)
 
         shuffled = [set(l) for l in self.exp.x_shuffled]
-        self.assertIn(set(['42', '2']), shuffled)
-        self.assertIn(set(['1337', '4']), shuffled)
-        self.assertIn(set(['23', '6']), shuffled)
+        self.assertIn(set([42., 2.]), shuffled)
+        self.assertIn(set([1337., 4.]), shuffled)
+        self.assertIn(set([23., 6.]), shuffled)
 
     def test_x_shuffled_experiments(self):
         npr.seed(42)
@@ -50,15 +50,15 @@ class TestGeneExpressionVariance(TestCase):
 
         self.assertEqual(len(self.exp.x), 3)
 
-        self.assertEqual(self.exp.x[0], ['23', '6'])
-        self.assertEqual(self.exp.x[1], ['1337', '4'])
-        self.assertEqual(self.exp.x[2], ['42', '2'])
+        self.assertEqual(self.exp.x[0], [23., 6.])
+        self.assertEqual(self.exp.x[1], [1337., 4.])
+        self.assertEqual(self.exp.x[2], [42., 2.])
 
         shuffled = [set(l) for l in self.exp.x_shuffled]
         self.assertEqual(len(shuffled), 3)
-        self.assertEqual(shuffled[0], set(['23', '6']))
-        self.assertEqual(shuffled[1], set(['1337', '4']))
-        self.assertEqual(shuffled[2], set(['42', '2']))
+        self.assertEqual(shuffled[0], set([23., 6.]))
+        self.assertEqual(shuffled[1], set([1337., 4.]))
+        self.assertEqual(shuffled[2], set([42., 2.]))
 
 
         self.exp.x = []
@@ -70,15 +70,15 @@ class TestGeneExpressionVariance(TestCase):
 
         self.assertEqual(len(self.exp.x), 3)
 
-        self.assertEqual(self.exp.x[0], ['42', '2'])
-        self.assertEqual(self.exp.x[1], ['23', '6'])
-        self.assertEqual(self.exp.x[2], ['1337', '4'])
+        self.assertEqual(self.exp.x[0], [42., 2.])
+        self.assertEqual(self.exp.x[1], [23., 6.])
+        self.assertEqual(self.exp.x[2], [1337., 4.])
 
         shuffled = [set(l) for l in self.exp.x_shuffled]
         self.assertEqual(len(shuffled), 3)
-        self.assertEqual(shuffled[0], set(['42', '2']))
-        self.assertEqual(shuffled[1], set(['23', '6']))
-        self.assertEqual(shuffled[2], set(['1337', '4']))
+        self.assertEqual(shuffled[0], set([42., 2.]))
+        self.assertEqual(shuffled[1], set([23., 6.]))
+        self.assertEqual(shuffled[2], set([1337., 4.]))
 
     def test_y(self):
         self.exp._generate_x()
