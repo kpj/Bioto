@@ -228,10 +228,19 @@ def investigate_trn_eigensystem():
 def variance_of_gene_expression(data_dir):
 	""" Analyze the composition of real-life GEO data
 	"""
-	gdsh = utils.GDSHandler(data_dir)
-	experis = gdsh.process_directory(only_common_genes=True)
+	save_file = 'gene_variance.dat'
+	if not os.path.isfile('%s.npy' % save_file):
+		gdsh = utils.GDSHandler(data_dir)
+		
+		experis = gdsh.process_directory(only_common_genes=True)
+		common_genes = gdsh.common_genes
 
-	experiment = experiment_classes.GeneExpressionVariance(gdsh.common_genes, experis)
+		np.save(save_file, (common_genes, experis))
+	else:
+		print('Using cached data')
+		common_genes, experis = np.load('%s.npy' % save_file)
+
+	experiment = experiment_classes.GeneExpressionVariance(common_genes, experis)
 	experiment.conduct(shuffle_experiment_order=True)
 
 
