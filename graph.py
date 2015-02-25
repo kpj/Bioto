@@ -58,10 +58,10 @@ class IOComponent(object):
         """
         return utils.DataHandler.load_concentrations(self.graph, file, conc_range)
 
-    def load_averaged_concentrations(self, directory, conc_range=[0], cache=False):
+    def load_averaged_concentrations(self, directory, conc_range=[0], cache_file=None):
         """ Delegates to utils.DataHandler
         """
-        return utils.DataHandler.load_averaged_concentrations(self.graph, directory, conc_range, cache)
+        return utils.DataHandler.load_averaged_concentrations(self.graph, directory, conc_range, cache_file)
 
 class DynamicalSystem(object):
     def __init__(self, graph):

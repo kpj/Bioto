@@ -24,6 +24,13 @@ class TestMethods(TestCase):
         self.assertFalse(utils.is_soft_file('foo.txt'))
         self.assertFalse(utils.is_soft_file('foo.txt.gz'))
 
+    def test_data_frame_creator(self):
+        res = utils.df(foo=[23,42], bar=['baz','qux'])
+
+        self.assertEqual(len(res), 2)
+        npt.assert_allclose(res['foo'], [23, 42])
+        npt.assert_array_equal(res['bar'], ['baz', 'qux'])
+
 class TestGraphGenerators(TestCase):
     def test_random_graph(self):
         graph = utils.GraphGenerator.get_random_graph(42, 30, 50)
@@ -45,6 +52,45 @@ class TestGraphGenerators(TestCase):
         self.assertEqual(len(graph), 100)
         self.assertIsInstance(graph.graph, nx.DiGraph)
 
+class TestStatsHandler(TestCase):
+    def test_pearson_correlation(self):
+        v = list(range(0, 100))
+
+        cp = utils.StatsHandler().correlate(v, v)
+        self.assertEqual(cp, (1., 0.))
+
+        cp = utils.StatsHandler().correlate(v, list(reversed(v)))
+        self.assertEqual(cp, (-1., 0.))
+
+        c, p, mi, ma = utils.StatsHandler().correlate(v, v, compute_bands=True)
+        self.assertEqual((c, p), (1., 0.))
+        self.assertTrue(mi > -1)
+        self.assertTrue(ma < 1)
+
+class TestCacheHandler(TestCase):
+    def test_json_handling(self):
+        tmp_file = 'tmp_testing.json'
+
+        # general stuff
+        struct = [{'3': [1,2,3]}]
+        utils.CacheHandler.dump(tmp_file, struct)
+        res = utils.CacheHandler.load(tmp_file)
+        self.assertEqual(struct, res)
+
+        # numpy array conversion
+        np_struct = np.array([{'3': np.array([1,2,3])}])
+        utils.CacheHandler.dump(tmp_file, np_struct)
+        res = utils.CacheHandler.load(tmp_file)
+        self.assertEqual(struct, res)
+
+        # range conversion
+        range_struct = [{'3': range(1,4)}]
+        utils.CacheHandler.dump(tmp_file, range_struct)
+        res = utils.CacheHandler.load(tmp_file)
+        self.assertEqual(struct, res)
+
+        os.remove(tmp_file)
+
 class TestGDSHandler(TestCase):
     def setUp(self):
         self.gdsh = utils.GDSHandler('tests/data')
@@ -57,6 +103,9 @@ class TestGDSHandler(TestCase):
         self.assertIn({'aaea': 1337., 'aaeb': 4.}, res)
         self.assertIn({'aaea': 23., 'aaeb': 6.}, res)
 
+        self.assertEqual(len(self.gdsh.all_genes), 3)
+        self.assertEqual(len(self.gdsh.common_genes), 2)
+
     def test_common_genes(self):
         res = self.gdsh.process_directory(only_common_genes=True)
 
@@ -64,6 +113,9 @@ class TestGDSHandler(TestCase):
         self.assertIn({'aaea': 42., 'aaeb': 2.}, res)
         self.assertIn({'aaea': 1337., 'aaeb': 4.}, res)
         self.assertIn({'aaea': 23., 'aaeb': 6.}, res)
+
+        self.assertEqual(len(self.gdsh.all_genes), 3)
+        self.assertEqual(len(self.gdsh.common_genes), 2)
 
 class TestDataHandler(TestCase):
     def setUp(self):
@@ -73,7 +125,17 @@ class TestDataHandler(TestCase):
         self.graph = utils.GraphGenerator.get_regulatory_graph(network_file)
 
     def tearDown(self):
-        shutil.rmtree(utils.DataHandler.backup_dir)
+        try:
+            shutil.rmtree(utils.DataHandler.backup_dir)
+        except FileNotFoundError:
+            pass
+
+    def test_empty_file(self):
+        conc_file = 'tests/data/qux.soft'
+        concs, data = utils.DataHandler.load_concentrations(self.graph, conc_file)
+
+        self.assertEqual(len(concs), 0)
+        self.assertEqual(len(data), 0)
 
     def test_single_file(self):
         conc_file = 'tests/data/foo.soft'
@@ -84,7 +146,7 @@ class TestDataHandler(TestCase):
 
         conc_vec = [42., 2., 23.]
         self.assertEqual(len(concs), 3)
-        npt.assert_allclose(concs, conc_vec / npl.norm(conc_vec))
+        npt.assert_allclose(concs, conc_vec)
 
         self.assertEqual(len(data), 3)
         self.assertEqual(data['aaea'], 42.)
@@ -93,10 +155,17 @@ class TestDataHandler(TestCase):
 
     def test_file_averaging(self):
         conc_dir = 'tests/data/'
-        concs, used_gene_indices = utils.DataHandler.load_averaged_concentrations(self.graph, conc_dir)
+        cache_file = 'RL_av_data_testing.csv'
+        concs, used_gene_indices = utils.DataHandler.load_averaged_concentrations(self.graph, conc_dir, cache_file=cache_file)
 
         self.assertEqual(len(concs), 3)
         self.assertEqual(len(used_gene_indices), 3)
 
-        npt.assert_allclose(concs, [467.3333333333333, 4., 23])
+        npt.assert_allclose(concs, [467.3333333333333, 4., 23.])
         npt.assert_allclose(used_gene_indices, [0, 1, 2])
+
+        self.assertTrue(os.path.isfile(cache_file))
+        with open(cache_file, 'r') as fd:
+            content = fd.read()
+            self.assertEqual(content, '1337.0,23.0,42.0\n4.0,6.0,2.0\n23.0\n')
+        os.remove(cache_file)

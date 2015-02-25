@@ -45,17 +45,6 @@ class GraphGenerator(object):
     def get_regulatory_graph(file):
         return graph.Graph(file_parser.generate_tf_gene_regulation(file), largest=True)
 
-    @staticmethod
-    def get_minimal_graph():
-        g = nx.DiGraph()
-
-        g.add_edge(0,2)
-        g.add_edge(1,0)
-        g.add_edge(1,2)
-        g.add_edge(2,1)
-
-        return graph.Graph(g)
-
 class StatsHandler(object):
     @staticmethod
     def correlate(x, y, compute_bands=False):
@@ -87,6 +76,7 @@ class DataHandler(object):
     def load_concentrations(graph, file, conc_range=[0]):
         """ Loads concentrations for given graph from given file and caches results for later reuse
         """
+        # TODO: merge this with GDSHandler
         bak_fname = os.path.join(DataHandler.backup_dir, 'conc_%s.bak' % os.path.basename(file))
 
         if os.path.isfile('%s.npy' % bak_fname):
@@ -100,12 +90,6 @@ class DataHandler(object):
             )
 
             concentrations = [t[1] for t in sorted(data.items(), key=operator.itemgetter(0))]
-            if concentrations is None:
-                return None
-            try:
-                concentrations = np.array(concentrations) / np.linalg.norm(concentrations)
-            except ValueError:
-                return None
 
             names = list(graph)
             #matched = set(names).intersection(set(data.keys()))
@@ -126,37 +110,27 @@ class DataHandler(object):
         return foo['concentrations'], foo['map']
 
     @staticmethod
-    def load_averaged_concentrations(graph, directory, conc_range=[0], cache=False):
+    def load_averaged_concentrations(graph, directory, conc_range=[0], cache_file=None):
         """ Loads concentration files in given directory and averages them
             In order to account for genes which appear in the graph but not in any dataset, this function will also return a vector of indices of the genes of the graph which were found in at least on dataset
         """
         # gather all data
-        data = []
-        genes = []
-        for file in os.listdir(directory):
-            if not is_soft_file(file): continue
+        gdsh = GDSHandler(directory)
+        experis = gdsh.process_directory()
 
-            f = os.path.join(directory, file)
-            c, m = DataHandler.load_concentrations(graph, f, conc_range)
-
-            data.append(m)
-            genes.append(set(m.keys()))
-
-        # extract genes which are common to all data sets
-        common_genes = sorted(set.intersection(*genes)) # genes which appear in all datasets
-        all_genes = sorted(set.union(*genes).intersection(set(graph))) # genes which appear in at least one dataset
-        print('-> Found', len(common_genes), 'common genes (%i covered in total)' % len(all_genes))
+        genes_in_graph = sorted(set(gdsh.all_genes).intersection(set(graph)))
+        print('-> Found', len(gdsh.common_genes), 'common genes (%i covered in total)' % len(genes_in_graph))
 
         # accumulate data
         res = []
-        for gene in all_genes:
+        for gene in genes_in_graph:
             gene_concs = []
-            for exp in data:
+            for exp in experis:
                 if gene in exp:
                     gene_concs.append(exp[gene])
 
-            if cache:
-                with open('RL_av_data.csv', 'a') as fd:
+            if not cache_file is None:
+                with open(cache_file, 'a') as fd:
                     writer = csv.writer(fd)
                     writer.writerow(gene_concs)
 
@@ -165,7 +139,7 @@ class DataHandler(object):
         # find used genes
         used_gene_indices = []
         for i, gene in enumerate(graph):
-            if gene in all_genes:
+            if gene in genes_in_graph:
                 used_gene_indices.append(i)
 
         return np.array(res), used_gene_indices
@@ -219,7 +193,7 @@ class CacheHandler(object):
         return dic
 
     @staticmethod
-    def dump(fname, dic):
+    def dump(fname, obj):
         """ Save dictionary to file (convert numpy arrays to python lists)
         """
         def clean(foo):
@@ -230,12 +204,12 @@ class CacheHandler(object):
             elif t == type([]):
                 return [clean(e) for e in foo]
             elif t == type(np.array([])):
-                return foo.tolist()
+                return clean(foo.tolist())
             elif t == type(range(0)):
                 return list(foo)
             return foo
 
-        json.dump(clean(dic), open(fname, 'w'))
+        json.dump(clean(obj), open(fname, 'w'))
 
     @staticmethod
     def load(fname):
@@ -247,7 +221,8 @@ class GDSHandler(object):
     def __init__(self, dirname):
         self.dir = dirname
 
-        self.common_genes = None
+        self.all_genes = None # genes which appear in at least one dataset
+        self.common_genes = None # genes which appear in all datasets
 
     def process_directory(self, only_common_genes=False):
         """ Scan directory for SOFT files.
@@ -260,13 +235,15 @@ class GDSHandler(object):
                 if not is_soft_file(fname): continue
 
                 data = file_parser.parse_concentration(os.path.join(root, fname))
+                if len(data) == 0: continue
+
                 experiments.append(data)
 
                 genes.append(set())
                 genes[-1] = set(data.keys())
 
-        self.all_genes = set.union(*genes)
-        self.common_genes = set.intersection(*genes)
+        self.all_genes = sorted(set.union(*genes))
+        self.common_genes = sorted(set.intersection(*genes))
 
         # extract gene concentrations
         result = []
