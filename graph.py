@@ -140,6 +140,7 @@ class Math(object):
             max_eigenvalue_index = np.argmax(np.real(vals))
 
         perron_frobenius = np.real(vecs[:, max_eigenvalue_index])
+        perron_frobenius[perron_frobenius < 1e-13] = 0 # account for numeric instabilities
 
         if rescale:
             if all(i <= 0 for i in perron_frobenius):
