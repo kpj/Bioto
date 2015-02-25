@@ -182,7 +182,7 @@ class BooleanModel(Model):
 
         return np.array(data)
 
-    def generate_continues_evolution(self, norm_time, test_data=None):
+    def generate_continuous_evolution(self, norm_time, test_data=None):
         """ Generates continuous data from binary evolution
             Either norms along gene- or time-axis
             Returns:
@@ -250,7 +250,7 @@ class BooleanModel(Model):
 
         tmp = None
         for i in range(BooleanModel.info['avg_runs']):
-            cur = self.generate_continues_evolution(norm_time=BooleanModel.info['norm_time'])
+            cur = self.generate_continuous_evolution(norm_time=BooleanModel.info['norm_time'])
             if not tmp is None:
                 tmp += cur
             else:

@@ -39,13 +39,13 @@ class TestBooleanModel(TestCase):
         for step in data[3:]: npt.assert_allclose(step, [0, 0, 1, 0, 1, 0, 1, 0, 0, 0])
 
     def test_continuous_series_over_time(self):
-        data = self.model.generate_continues_evolution(True, test_data=self.discrete_runs)
+        data = self.model.generate_continuous_evolution(True, test_data=self.discrete_runs)
         expected = np.loadtxt('tests/data/continuous_boolean_model_run_time.txt').T
 
         npt.assert_allclose(data, expected)
 
     def test_continuous_series_over_genes(self):
-        data = self.model.generate_continues_evolution(False, test_data=self.discrete_runs)
+        data = self.model.generate_continuous_evolution(False, test_data=self.discrete_runs)
         expected = np.loadtxt('tests/data/continuous_boolean_model_run_genes.txt').T
 
         npt.assert_allclose(data, expected)
