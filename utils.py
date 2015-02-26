@@ -89,17 +89,22 @@ class DataHandler(object):
                 conc_range
             )
 
-            concentrations = [t[1] for t in sorted(data.items(), key=operator.itemgetter(0))]
+            concentrations = []
+            used_gene_indices = []
+            for i, gene in enumerate(graph):
+                if gene in data:
+                    concentrations.append(data[gene])
+                    used_gene_indices.append(i)
 
             names = list(graph)
             #matched = set(names).intersection(set(data.keys()))
             no_match = set(names).difference(set(data.keys()))
-
             print('> coverage:', round(1 - len(no_match)/len(names), 3))
 
             foo = {
                 'concentrations': concentrations,
-                'map': data
+                'map': data,
+                'used_gene_indices': used_gene_indices
             }
 
             # save for faster reuse
@@ -107,7 +112,7 @@ class DataHandler(object):
                 os.makedirs(DataHandler.backup_dir)
             np.save(bak_fname, foo)
 
-        return foo['concentrations'], foo['map']
+        return foo['concentrations'], foo['map'], foo['used_gene_indices']
 
     @staticmethod
     def load_averaged_concentrations(graph, directory, conc_range=[0], cache_file=None):

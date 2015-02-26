@@ -132,14 +132,15 @@ class TestDataHandler(TestCase):
 
     def test_empty_file(self):
         conc_file = 'tests/data/qux.soft'
-        concs, data = utils.DataHandler.load_concentrations(self.graph, conc_file)
+        concs, data, ugi = utils.DataHandler.load_concentrations(self.graph, conc_file)
 
         self.assertEqual(len(concs), 0)
         self.assertEqual(len(data), 0)
+        self.assertEqual(len(ugi), 0)
 
     def test_single_file(self):
         conc_file = 'tests/data/foo.soft'
-        concs, data = utils.DataHandler.load_concentrations(self.graph, conc_file)
+        concs, data, ugi = utils.DataHandler.load_concentrations(self.graph, conc_file)
 
         self.assertTrue(os.path.isdir(utils.DataHandler.backup_dir))
         self.assertTrue(os.path.isfile(os.path.join(utils.DataHandler.backup_dir, 'conc_foo.soft.bak.npy')))
