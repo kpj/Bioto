@@ -95,15 +95,26 @@ class TestGDSHandler(TestCase):
     def setUp(self):
         self.gdsh = utils.GDSHandler('tests/data')
 
+    def test_single_file(self):
+        gds_file = 'foo.soft'
+        res = self.gdsh.parse_file(gds_file)
+
+        self.assertEqual(res, {
+            'aaea': 42.,
+            'aaeb': 2.,
+            'haba': 1.,
+            'zuzu': 23.
+        })
+
     def test_all_genes(self):
         res = self.gdsh.process_directory()
 
         self.assertEqual(len(res), 3)
-        self.assertIn({'aaea': 42., 'aaeb': 2., 'zuzu': 23.}, res)
+        self.assertIn({'aaea': 42., 'aaeb': 2., 'haba': 1., 'zuzu': 23.}, res)
         self.assertIn({'aaea': 1337., 'aaeb': 4.}, res)
         self.assertIn({'aaea': 23., 'aaeb': 6.}, res)
 
-        self.assertEqual(len(self.gdsh.all_genes), 3)
+        self.assertEqual(len(self.gdsh.all_genes), 4)
         self.assertEqual(len(self.gdsh.common_genes), 2)
 
     def test_common_genes(self):
@@ -114,7 +125,7 @@ class TestGDSHandler(TestCase):
         self.assertIn({'aaea': 1337., 'aaeb': 4.}, res)
         self.assertIn({'aaea': 23., 'aaeb': 6.}, res)
 
-        self.assertEqual(len(self.gdsh.all_genes), 3)
+        self.assertEqual(len(self.gdsh.all_genes), 4)
         self.assertEqual(len(self.gdsh.common_genes), 2)
 
 class TestDataHandler(TestCase):
@@ -132,27 +143,20 @@ class TestDataHandler(TestCase):
 
     def test_empty_file(self):
         conc_file = 'tests/data/qux.soft'
-        concs, data, ugi = utils.DataHandler.load_concentrations(self.graph, conc_file)
+        concs, ugi = utils.DataHandler.load_concentrations(self.graph, conc_file)
 
         self.assertEqual(len(concs), 0)
-        self.assertEqual(len(data), 0)
         self.assertEqual(len(ugi), 0)
 
     def test_single_file(self):
         conc_file = 'tests/data/foo.soft'
-        concs, data, ugi = utils.DataHandler.load_concentrations(self.graph, conc_file)
+        concs, ugi = utils.DataHandler.load_concentrations(self.graph, conc_file)
 
         self.assertTrue(os.path.isdir(utils.DataHandler.backup_dir))
         self.assertTrue(os.path.isfile(os.path.join(utils.DataHandler.backup_dir, 'conc_foo.soft.bak.npy')))
 
-        conc_vec = [42., 2., 23.]
-        self.assertEqual(len(concs), 3)
-        npt.assert_allclose(concs, conc_vec)
-
-        self.assertEqual(len(data), 3)
-        self.assertEqual(data['aaea'], 42.)
-        self.assertEqual(data['aaeb'], 2.)
-        self.assertEqual(data['zuzu'], 23.)
+        npt.assert_allclose(concs, [42., 2., 23.])
+        npt.assert_allclose(ugi, [0, 1, 2])
 
     def test_file_averaging(self):
         conc_dir = 'tests/data/'

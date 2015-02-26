@@ -19,9 +19,10 @@ class TestParser(TestCase):
         gds_file = 'tests/data/foo.soft'
 
         data = file_parser.parse_concentration(gds_file)
-        self.assertEqual(len(data), 3)
+        self.assertEqual(len(data), 4)
         self.assertEqual(data['aaea'], 42.)
         self.assertEqual(data['aaeb'], 2.)
+        self.assertEqual(data['haba'], 1.)
         self.assertEqual(data['zuzu'], 23.)
 
         data = file_parser.parse_concentration(gds_file, conc_range=[1])

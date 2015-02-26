@@ -74,9 +74,9 @@ class DataHandler(object):
 
     @staticmethod
     def load_concentrations(graph, file, conc_range=[0]):
-        """ Loads concentrations for given graph from given file and caches results for later reuse
+        """ Extract gene concentrations from file which also appear in graph.
+            Also return vector of node indices used in concentration vector
         """
-        # TODO: merge this with GDSHandler
         bak_fname = os.path.join(DataHandler.backup_dir, 'conc_%s.bak' % os.path.basename(file))
 
         if os.path.isfile('%s.npy' % bak_fname):
@@ -84,10 +84,8 @@ class DataHandler(object):
             foo = np.load('%s.npy' % bak_fname).item()
         else:
             print('Parsing data file', file)
-            data = file_parser.parse_concentration(
-                file,
-                conc_range
-            )
+            gdsh = GDSHandler(os.path.dirname(file))
+            data = gdsh.parse_file(os.path.basename(file), conc_range)
 
             concentrations = []
             used_gene_indices = []
@@ -96,23 +94,21 @@ class DataHandler(object):
                     concentrations.append(data[gene])
                     used_gene_indices.append(i)
 
-            names = list(graph)
-            #matched = set(names).intersection(set(data.keys()))
-            no_match = set(names).difference(set(data.keys()))
-            print('> coverage:', round(1 - len(no_match)/len(names), 3))
+            #matched = set(graph).intersection(set(data.keys()))
+            no_match = set(graph).difference(set(data.keys()))
+            print('> coverage:', round(1 - len(no_match)/len(graph), 3))
 
             foo = {
                 'concentrations': concentrations,
-                'map': data,
                 'used_gene_indices': used_gene_indices
             }
 
-            # save for faster reuse
+            # cache for faster reuse
             if not os.path.exists(DataHandler.backup_dir):
                 os.makedirs(DataHandler.backup_dir)
             np.save(bak_fname, foo)
 
-        return foo['concentrations'], foo['map'], foo['used_gene_indices']
+        return foo['concentrations'], foo['used_gene_indices']
 
     @staticmethod
     def load_averaged_concentrations(graph, directory, conc_range=[0], cache_file=None):
@@ -123,8 +119,9 @@ class DataHandler(object):
         gdsh = GDSHandler(directory)
         experis = gdsh.process_directory()
 
+        common_genes_in_graph = sorted(set(gdsh.common_genes).intersection(set(graph)))
         genes_in_graph = sorted(set(gdsh.all_genes).intersection(set(graph)))
-        print('-> Found', len(gdsh.common_genes), 'common genes (%i covered in total)' % len(genes_in_graph))
+        print('-> Found', len(common_genes_in_graph), 'common genes (%i covered in total)' % len(genes_in_graph))
 
         # accumulate data
         res = []
@@ -229,6 +226,12 @@ class GDSHandler(object):
         self.all_genes = None # genes which appear in at least one dataset
         self.common_genes = None # genes which appear in all datasets
 
+    def parse_file(self, fname, conc_range=[0]):
+        """ Extract all (valid) gene concentrations from file
+            fname is relative to dirname given in constructor
+        """
+        return file_parser.parse_concentration(os.path.join(self.dir, fname), conc_range)
+
     def process_directory(self, only_common_genes=False):
         """ Scan directory for SOFT files.
             Extract gene concentration of genes which appear in all datasets if requested
@@ -239,7 +242,7 @@ class GDSHandler(object):
             for fname in sorted(files):
                 if not is_soft_file(fname): continue
 
-                data = file_parser.parse_concentration(os.path.join(root, fname))
+                data = self.parse_file(fname)
                 if len(data) == 0: continue
 
                 experiments.append(data)

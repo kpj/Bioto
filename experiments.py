@@ -24,7 +24,7 @@ def present(title, func, *args, model=None):
 
 def real_life_single(file):
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
-    c, m, used_gene_indices = g.io.load_concentrations('../data/concentrations/%s' % file)
+    c, used_gene_indices = g.io.load_concentrations('../data/concentrations/%s' % file)
 
     pf_tmp = g.math.get_perron_frobenius()
     pf = [pf_tmp[i] for i in used_gene_indices]
@@ -69,7 +69,7 @@ def gene_overview(density_plot=True):
     # gather data
     data = collections.defaultdict(list)
     for f in files:
-        c_tmp, m, used_gene_indices = graph.io.load_concentrations(os.path.join(dire, f))
+        c_tmp, used_gene_indices = graph.io.load_concentrations(os.path.join(dire, f))
         c = [c_tmp[i] for i in used_gene_indices]
 
         for i, name in enumerate(names):
@@ -279,5 +279,5 @@ if __name__ == '__main__':
 
     #gene_overview()
 
-    #real_life_average()
+    real_life_average()
     for f in os.listdir('../data/concentrations/'): real_life_single(f)

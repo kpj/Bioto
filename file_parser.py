@@ -93,11 +93,13 @@ def parse_concentration(fname, conc_range=[0]):
 
         conc = []
         cont = False
+        base = 2
         for i in conc_range:
-            entry = row[2+i]
             try:
-                if entry == 'null': entry = row[3+i]
-                if entry == 'null': entry = 'fail' # what to do now?
+                entry = 'null'
+                while entry == 'null':
+                    entry = row[base+i]
+                    if entry == 'null': base += 1
 
                 conc.append(float(entry))
             except (ValueError, IndexError) as e:
