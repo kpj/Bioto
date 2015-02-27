@@ -149,15 +149,13 @@ class Math(object):
         if test_significance:
             eival = vals[max_eigenvalue_index]
             if not self.test_significance(eival, perron_frobenius, mat=mat):
-                print("pf-ev not significant, trying averaged power iteration method")
-
                 pfs = []
                 for i in range(50):
                     pfs.append(self.apply_power_iteration(eival))
                 perron_frobenius = sum(pfs)/len(pfs)
 
-            if not self.test_significance(eival, perron_frobenius, mat=mat):
-                print("It didn't help, sorry")
+                if not self.test_significance(eival, perron_frobenius, mat=mat):
+                    raise RuntimeError('Error, pf-eigenvector is not significant')
 
         return perron_frobenius
 
