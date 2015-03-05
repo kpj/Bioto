@@ -211,11 +211,13 @@ class CacheHandler(object):
                 return list(foo)
             return foo
 
-        json.dump(clean(obj), open(fname, 'w'))
+        with open(fname, 'w') as fd:
+            json.dump(clean(obj), fd)
 
     @staticmethod
     def load(fname):
-        return json.load(open(fname, 'r'))
+        with open(fname, 'r') as fd:
+            return json.load(fd)
 
 class GDSHandler(object):
     """ Handles directories containing many GDS files
