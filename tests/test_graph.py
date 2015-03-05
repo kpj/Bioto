@@ -28,7 +28,14 @@ class GraphTester(TestCase):
     def test_initialization(self):
         self.assertEqual(len(self.graph), 3)
         self.assertEqual(list(self.graph), ['1', '2', '3'])
-        npt.assert_array_equal(self.graph.adja_m, np.array([[0,1,0], [0,0,1], [1,1,0]]))
+        npt.assert_array_equal(
+            self.graph.adja_m,
+            np.array([
+                [0,1,0],
+                [0,0,1],
+                [1,1,0]
+            ])
+        )
         self.assertIsNone(self.graph.aug_adja_m)
 
         # don't just take largest subcomponent
@@ -36,8 +43,65 @@ class GraphTester(TestCase):
 
         self.assertEqual(len(whole_graph), 4)
         self.assertEqual(list(whole_graph), ['1', '2', '3', '4'])
-        npt.assert_array_equal(whole_graph.adja_m, np.array([[0,1,0,0], [0,0,1,0], [1,1,0,0], [0,0,0,0]]))
+        npt.assert_array_equal(
+            whole_graph.adja_m,
+            np.array([
+                [0,1,0,0],
+                [0,0,1,0],
+                [1,1,0,0],
+                [0,0,0,0]
+            ])
+        )
         self.assertIsNone(whole_graph.aug_adja_m)
+
+    def test_graph_add_overload(self):
+        rg = nx.DiGraph()
+        rg.add_nodes_from([3,4,5,6])
+        rg.add_edges_from([(3,4), (5,4)])
+        g = graph.Graph(rg)
+
+        g_sum = self.graph + g
+
+        self.assertEqual(len(g_sum), 6)
+        self.assertEqual(list(g_sum), ['1', '2', '3', '4', '5', '6'])
+        self.assertEqual(g_sum.graph.edges(), [(1,2), (2,3), (3,1), (3,2), (3,4), (5,4)])
+        npt.assert_array_equal(
+            g_sum.adja_m,
+            np.array([
+                [0,1,0,0,0,0],
+                [0,0,1,0,0,0],
+                [1,1,0,1,0,0],
+                [0,0,0,0,0,0],
+                [0,0,0,1,0,0],
+                [0,0,0,0,0,0]
+            ])
+        )
+
+        with self.assertRaises(TypeError):
+            foo = self.graph + 23
+
+    def test_graph_iadd_overload(self):
+        rg = nx.DiGraph()
+        rg.add_nodes_from([42])
+        g = graph.Graph(rg)
+
+        g += self.graph
+
+        self.assertEqual(len(g), 4)
+        self.assertEqual(list(g), ['1', '2', '3', '42'])
+        self.assertEqual(g.graph.edges(), [(1,2), (2,3), (3,1), (3,2)])
+        npt.assert_array_equal(
+            g.adja_m,
+            np.array([
+                [0,1,0,0],
+                [0,0,1,0],
+                [1,1,0,0],
+                [0,0,0,0],
+            ])
+        )
+
+        with self.assertRaises(TypeError):
+            g += 42
 
 class TestGraphIO(GraphTester):
     def test_adja_dumping(self):

@@ -207,12 +207,15 @@ class Graph(object):
         if largest:
             self.graph = max(nx.weakly_connected_component_subgraphs(self.graph), key=len)
 
-        self.adja_m = np.array(nx.to_numpy_matrix(self.graph, nodelist=sorted(self.graph.nodes())), dtype=np.int8)
-        self.aug_adja_m = None
-
         self.io = IOComponent(self)
         self.system = DynamicalSystem(self)
         self.math = Math(self)
+
+        self.setup()
+
+    def setup(self):
+        self.adja_m = np.array(nx.to_numpy_matrix(self.graph, nodelist=sorted(self.graph.nodes())), dtype=np.int8)
+        self.aug_adja_m = None
 
     def __len__(self):
         """ Returns number of nodes in wrapped graph
@@ -224,3 +227,21 @@ class Graph(object):
         """
         for e in sorted([str(n).lower() for n in nx.nodes_iter(self.graph)]):
             yield e
+
+    def __add__(self, right):
+        """ Compose graphs
+        """
+        if not isinstance(right, Graph):
+            raise TypeError('Can only compose to graph objects')
+
+        return Graph(nx.compose(self.graph, right.graph))
+
+    def __iadd__(self, right):
+        """ Compose given graph to myself and recompute stuff
+        """
+        if not isinstance(right, Graph):
+            raise TypeError('Can only compose to graph objects')
+
+        self.graph = nx.compose(self.graph, right.graph)
+        self.setup()
+        return self
