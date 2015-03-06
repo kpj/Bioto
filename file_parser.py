@@ -151,8 +151,6 @@ def parse_concentration(fname, conc_range=[0]):
 
     data = {}
     for row in gdsh.get_data():
-        if row is None: return None
-
         gene = row['IDENTIFIER'].lower()
 
         conc = []

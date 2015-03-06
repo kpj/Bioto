@@ -13,7 +13,7 @@ import networkx as nx
 
 import pysoft
 
-import file_parser, graph
+import file_parser, graph, errors
 
 
 class GraphGenerator(object):
@@ -263,8 +263,11 @@ class GDSHandler(object):
             for fname in sorted(files):
                 if not is_soft_file(fname): continue
 
-                data = self.parse_file(fname)
-                if data is None or len(data) == 0: continue
+                try:
+                    data = self.parse_file(fname)
+                except errors.InvalidGDSFormatError:
+                    continue
+                if len(data) == 0: continue
 
                 experiments.append(data)
 
@@ -298,7 +301,8 @@ class GDSFormatHandler(object):
     def parse_row(self, row):
         if self.type == 'log2 ratio':
             return row
-        return None
+
+        raise errors.InvalidGDSFormatError('Encountered invalid format "%s"' % self.type)
 
 
 def clean_string(s):

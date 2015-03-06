@@ -4,7 +4,7 @@ import os, os.path
 import numpy as np
 import numpy.linalg as npl
 
-import utils, models, plotter
+import utils, models, plotter, errors
 
 
 ####################
@@ -23,8 +23,13 @@ def present(title, func, *args, model=None):
 ##################
 
 def real_life_single(file):
-    g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
-    c, used_gene_indices = g.io.load_concentrations('../data/concentrations/%s' % file)
+    g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
+
+    try:
+        c, used_gene_indices = g.io.load_concentrations('../data/concentrations/%s' % file)
+    except errors.InvalidGDSFormatError as e:
+        print('Could not process "%s" (%s)' % (file, e))
+        return
 
     pf_tmp = g.math.get_perron_frobenius()
     pf = [pf_tmp[i] for i in used_gene_indices]
@@ -279,5 +284,5 @@ if __name__ == '__main__':
 
     #gene_overview()
 
-    real_life_average()
-    #for f in os.listdir('../data/concentrations/'): real_life_single(f)
+    #real_life_average()
+    for f in os.listdir('../data/concentrations/'): real_life_single(f)
