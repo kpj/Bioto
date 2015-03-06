@@ -140,7 +140,7 @@ class Math(object):
         perron_frobenius[abs(perron_frobenius) < 1e-13] = 0 # account for numeric instabilities
 
         if rescale:
-            if all(i < 0 for i in perron_frobenius):
+            if all(i <= 0 for i in perron_frobenius):
                 perron_frobenius *= -1
             elif any(i < 0 for i in perron_frobenius):
                 raise RuntimeError('pf-eigenvector is malformed')
