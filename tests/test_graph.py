@@ -15,16 +15,17 @@ matplotlib.use('agg')
 import graph, models, utils
 
 
-class GraphTester(TestCase):
+class GraphInit(TestCase):
     def setUp(self):
         self.raw_graph = nx.DiGraph()
-        self.raw_graph.add_nodes_from([1, 2, 3, 4])
-        self.raw_graph.add_edges_from([(1,2), (2,3), (3,2), (3,1)])
+        self.raw_graph.add_nodes_from(['1', '2', '3', '4'])
+        self.raw_graph.add_edges_from([('1','2'), ('2','3'), ('3','2'), ('3','1')])
         self.graph = graph.Graph(self.raw_graph, largest=True)
 
     def tearDown(self):
         pass
 
+class GraphTester(GraphInit):
     def test_initialization(self):
         self.assertEqual(len(self.graph), 3)
         self.assertEqual(list(self.graph), ['1', '2', '3'])
@@ -54,17 +55,17 @@ class GraphTester(TestCase):
         )
         self.assertIsNone(whole_graph.aug_adja_m)
 
-    def test_graph_add_overload(self):
+    def test_graph_add(self):
         rg = nx.DiGraph()
-        rg.add_nodes_from([3,4,5,6])
-        rg.add_edges_from([(3,4), (5,4)])
+        rg.add_nodes_from(['3','4','5','6'])
+        rg.add_edges_from([('3','4'), ('5','4')])
         g = graph.Graph(rg)
 
+        # test simple case
         g_sum = self.graph + g
-
         self.assertEqual(len(g_sum), 6)
         self.assertEqual(list(g_sum), ['1', '2', '3', '4', '5', '6'])
-        self.assertEqual(g_sum.graph.edges(), [(1,2), (2,3), (3,1), (3,2), (3,4), (5,4)])
+        self.assertEqual(set(g_sum.graph.edges()), set([('1','2'), ('2','3'), ('3','1'), ('3','2'), ('3','4'), ('5','4')]))
         npt.assert_array_equal(
             g_sum.adja_m,
             np.array([
@@ -77,19 +78,20 @@ class GraphTester(TestCase):
             ])
         )
 
+        # test invalid case
         with self.assertRaises(TypeError):
             foo = self.graph + 23
 
-    def test_graph_iadd_overload(self):
+    def test_graph_iadd(self):
         rg = nx.DiGraph()
-        rg.add_nodes_from([42])
+        rg.add_nodes_from(['42'])
         g = graph.Graph(rg)
 
         g += self.graph
 
         self.assertEqual(len(g), 4)
         self.assertEqual(list(g), ['1', '2', '3', '42'])
-        self.assertEqual(g.graph.edges(), [(1,2), (2,3), (3,1), (3,2)])
+        self.assertEqual(set(g.graph.edges()), set([('1','2'), ('2','3'), ('3','1'), ('3','2')]))
         npt.assert_array_equal(
             g.adja_m,
             np.array([
@@ -103,7 +105,34 @@ class GraphTester(TestCase):
         with self.assertRaises(TypeError):
             g += 42
 
-class TestGraphIO(GraphTester):
+    def test_graph_conversion_on_composition(self):
+        drg = nx.DiGraph()
+        drg.add_nodes_from([3,4,5,6])
+        drg.add_edges_from([(3,4), (5,4)])
+        dg = graph.Graph(drg)
+        self.assertIsInstance(dg.graph, nx.DiGraph)
+
+        mrg = nx.MultiDiGraph()
+        mrg.add_nodes_from([1,2])
+        mrg.add_edges_from([(1,2), (2,1)])
+        mg = graph.Graph(mrg)
+        self.assertIsInstance(mg.graph, nx.MultiDiGraph)
+
+        sg = dg + mg
+        self.assertIsInstance(sg.graph, nx.MultiDiGraph)
+
+    def test_graph_reduction(self):
+        rg = nx.DiGraph()
+        rg.add_nodes_from(['1', '2'])
+        g = graph.Graph(rg)
+
+        self.graph.reduce_to(g)
+
+        self.assertEqual(len(self.graph), 2)
+        self.assertEqual(list(self.graph), ['1', '2'])
+        self.assertEqual(self.graph.graph.edges(), [('1','2')])
+
+class TestGraphIO(GraphInit):
     def test_adja_dumping(self):
         adja_file = 'adja_m_testing.txt'
         self.graph.io.dump_adjacency_matrix(adja_file)
@@ -149,12 +178,12 @@ class TestGraphIO(GraphTester):
 
         shutil.rmtree(utils.DataHandler.backup_dir)
 
-class TestGraphSystem(GraphTester):
+class TestGraphSystem(GraphInit):
     def test_unassigned_model(self):
         with self.assertRaises(RuntimeError):
             self.graph.system.simulate()
 
-class TestGraphMath(GraphTester):
+class TestGraphMath(GraphInit):
     def test_perron_frobenius(self):
         mat = np.array([[3,0], [8,-1]])
         pf = np.array([1,2])

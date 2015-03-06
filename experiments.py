@@ -37,7 +37,8 @@ def real_life_single(file):
     )
 
 def real_life_average():
-    g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
+    g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
+
     c, used_gene_indices = g.io.load_averaged_concentrations('../data/concentrations/')
 
     pf_tmp = g.math.get_perron_frobenius()
@@ -49,15 +50,14 @@ def real_life_average():
         'perron-frobenius eigenvector', pf
     )
 
-    pr_tmp = g.math.get_pagerank()
+    """pr_tmp = g.math.get_pagerank()
     pr = [pr_tmp[i] for i in used_gene_indices]
-
     corr, p_val = utils.StatsHandler.correlate(c, pr)
     present(
         'Real-Life Data (averaged)', plotter.Plotter.loglog,
         'averaged gene concentration', c,
         'page rank', pr
-    )
+    )"""
 
 def gene_overview(density_plot=True):
     graph = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
@@ -280,4 +280,4 @@ if __name__ == '__main__':
     #gene_overview()
 
     real_life_average()
-    for f in os.listdir('../data/concentrations/'): real_life_single(f)
+    #for f in os.listdir('../data/concentrations/'): real_life_single(f)

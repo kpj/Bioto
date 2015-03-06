@@ -52,6 +52,19 @@ class TestGraphGenerators(TestCase):
         self.assertEqual(len(graph), 100)
         self.assertIsInstance(graph.graph, nx.DiGraph)
 
+    def test_trn_graph(self):
+        trn_file = 'tests/data/trn_network.txt'
+        gpn_file = 'tests/data/gene_proximity_network.txt'
+
+        # without gpn is tested for file_parser, test TRN/GPN concatenation
+        graph = utils.GraphGenerator.get_regulatory_graph(trn_file, gpn_file, base_window=10, reduce_gpn=False)
+
+        self.assertIsInstance(graph.graph, nx.MultiDiGraph)
+        self.assertEqual(len(graph), 7)
+        self.assertEqual(list(graph), ['aaea', 'aaeb', 'cydc', 'fnge', 'mepm', 'yaaa', 'zuzu'])
+
+        self.assertEqual(set(graph.graph.edges()), set([('yaaa', 'cydc'), ('cydc', 'yaaa'), ('yaaa', 'mepm'), ('mepm', 'yaaa'), ('fnge', 'mepm'), ('mepm', 'fnge'), ('fnge', 'yaaa'), ('yaaa', 'fnge'), ('aaea', 'aaeb'), ('aaea', 'zuzu'), ('aaeb', 'aaea'), ('zuzu', 'zuzu'), ('zuzu', 'aaeb')]))
+
 class TestStatsHandler(TestCase):
     def test_pearson_correlation(self):
         v = list(range(0, 100))
@@ -132,7 +145,7 @@ class TestDataHandler(TestCase):
     def setUp(self):
         utils.DataHandler.backup_dir = 'conc_bak_test'
 
-        network_file = 'tests/data/simple_network.txt'
+        network_file = 'tests/data/trn_network.txt'
         self.graph = utils.GraphGenerator.get_regulatory_graph(network_file)
 
     def tearDown(self):

@@ -17,10 +17,12 @@ import file_parser, graph
 
 
 class GraphGenerator(object):
-    """ Returns different types of network configurations (i.e. topologies, etc)
+    """ Return different types of network configurations (i.e. topologies, etc)
     """
     @staticmethod
     def get_er_graph(node_num=20, edge_prob=0.3):
+        """ Return simple ER-graph
+        """
         return graph.Graph(nx.erdos_renyi_graph(node_num, edge_prob, directed=True))
 
     @staticmethod
@@ -42,8 +44,25 @@ class GraphGenerator(object):
         return gg
 
     @staticmethod
-    def get_regulatory_graph(file):
-        return graph.Graph(file_parser.generate_tf_gene_regulation(file), largest=True)
+    def get_regulatory_graph(tf_reg_file, gene_proximity_file=None, base_window=50000, reduce_gpn=True):
+        """ Return transcriptional regulatory network specified by given file
+            If gene_proximity_file is given, TRN and GPN will be composed to a MultiDiGraph
+        """
+        trn = graph.Graph(file_parser.generate_tf_gene_regulation(tf_reg_file), largest=True)
+
+        if not gene_proximity_file is None:
+            gpn = GraphGenerator.get_gene_proximity_network(gene_proximity_file, base_window)
+            if reduce_gpn: gpn.reduce_to(trn)
+
+            trn += gpn
+
+        return trn
+
+    @staticmethod
+    def get_gene_proximity_network(gene_prox_file, base_window):
+        """ Return gene proximity network specified by given file
+        """
+        return graph.Graph(file_parser.generate_gene_proximity_network(gene_prox_file, base_window))
 
 class StatsHandler(object):
     @staticmethod

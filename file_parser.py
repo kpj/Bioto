@@ -1,3 +1,5 @@
+import operator
+
 import numpy as np
 import networkx as nx
 
@@ -43,6 +45,63 @@ def generate_tf_gene_regulation(file):
 
             graph.add_nodes_from([source, sink])
             graph.add_edge(source, sink)
+
+    return graph
+
+def parse_gene_proximity_file(fname):
+    """ Parse gene proximity network file and return nodes ordered by their left starting base and the maximal right end
+    """
+    data = []
+    with open(fname, 'r') as fd:
+        content = fd.read()
+
+        for line in content.split('\n'):
+            if len(line) == 0 or line.startswith('#'): continue
+
+            parts = line.split()
+            data.append({
+                'name': parts[0].lower(),
+                'left': int(parts[1]),
+                'right': int(parts[2])
+            })
+
+    data = [e for e in sorted(data, key=operator.itemgetter('left'))]
+    max_right = max(data, key=operator.itemgetter('right'))['right']
+
+    return data, max_right
+
+def generate_gene_proximity_network(fname, base_window):
+    """ Generate gene proximity network (GPN) for given base window size
+    """
+    # gather raw data
+    data, max_right = parse_gene_proximity_file(fname)
+
+    # generate graph
+    graph = nx.MultiDiGraph()
+
+    for i in range(len(data)):
+        gene = data[i]
+        roffset = gene['right'] + base_window
+
+        # find genes in proximity
+        proximity = []
+        for j in range(i+1, len(data)):
+            if data[j]['left'] > roffset: break
+            proximity.append(data[j])
+        else:
+            new_roffset = roffset - max_right
+            for k in range(len(data)):
+                if data[k]['left'] > new_roffset: break
+                proximity.append(data[k])
+
+        edges = []
+        for p in proximity:
+            edges.append((gene['name'], p['name']))
+            edges.append((p['name'], gene['name']))
+
+        # add them to graph
+        graph.add_node(gene['name'])
+        graph.add_edges_from(edges)
 
     return graph
 

@@ -115,7 +115,7 @@ class Math(object):
         return np.array(b)
 
     def get_perron_frobenius(self, mat=None, test_significance=True, real_eva_only=False, rescale=True, remove_self_links=False):
-        """ Returns characteristic (normalized) Perron-Frobenius eigenvector
+        """ Return characteristic (normalized) Perron-Frobenius eigenvector
         """
         if mat is None:
             mat = self.graph.adja_m
@@ -137,13 +137,13 @@ class Math(object):
             max_eigenvalue_index = np.argmax(np.real(vals))
 
         perron_frobenius = np.real(vecs[:, max_eigenvalue_index])
-        perron_frobenius[perron_frobenius < 1e-13] = 0 # account for numeric instabilities
+        perron_frobenius[abs(perron_frobenius) < 1e-13] = 0 # account for numeric instabilities
 
         if rescale:
-            if all(i <= 0 for i in perron_frobenius):
+            if all(i < 0 for i in perron_frobenius):
                 perron_frobenius *= -1
             elif any(i < 0 for i in perron_frobenius):
-                print("Error, pf-eigenvector is malformed")
+                raise RuntimeError('pf-eigenvector is malformed')
 
         # check significance of result
         if test_significance:
@@ -155,7 +155,7 @@ class Math(object):
                 perron_frobenius = sum(pfs)/len(pfs)
 
                 if not self.test_significance(eival, perron_frobenius, mat=mat):
-                    raise RuntimeError('Error, pf-eigenvector is not significant')
+                    raise RuntimeError('pf-eigenvector is not significant')
 
         return perron_frobenius
 
@@ -188,7 +188,8 @@ class Math(object):
     def get_degree_distribution(self):
         """ Computes normalized degree distribution of current graph
         """
-        deg_di = nx.degree(self.graph.graph).values()
+        degs = nx.degree(self.graph.graph)
+        deg_di = [degs[node] for node in self.graph]
         max_deg = max(deg_di)
 
         vals = [d/max_deg for d in deg_di]
@@ -217,6 +218,15 @@ class Graph(object):
         self.adja_m = np.array(nx.to_numpy_matrix(self.graph, nodelist=sorted(self.graph.nodes())), dtype=np.int8)
         self.aug_adja_m = None
 
+    def reduce_to(self, graph):
+        """ Reduce current graph to only possess the nodes of the given graph
+        """
+        own_nodes = set(self)
+        his_nodes = set(graph)
+
+        self.graph.remove_nodes_from(own_nodes.difference(his_nodes))
+        self.setup()
+
     def __len__(self):
         """ Returns number of nodes in wrapped graph
         """
@@ -232,16 +242,12 @@ class Graph(object):
         """ Compose graphs
         """
         if not isinstance(right, Graph):
-            raise TypeError('Can only compose to graph objects')
+            raise TypeError('Can only compose two graph objects')
 
-        return Graph(nx.compose(self.graph, right.graph))
+        my_graph = self.graph
+        his_graph = right.graph
 
-    def __iadd__(self, right):
-        """ Compose given graph to myself and recompute stuff
-        """
-        if not isinstance(right, Graph):
-            raise TypeError('Can only compose to graph objects')
+        if isinstance(my_graph, nx.DiGraph) and isinstance(his_graph, nx.MultiDiGraph):
+            my_graph = nx.MultiDiGraph(my_graph)
 
-        self.graph = nx.compose(self.graph, right.graph)
-        self.setup()
-        return self
+        return Graph(nx.compose(my_graph, his_graph))
