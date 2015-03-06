@@ -264,7 +264,7 @@ class GDSHandler(object):
                 if not is_soft_file(fname): continue
 
                 data = self.parse_file(fname)
-                if len(data) == 0: continue
+                if data is None or len(data) == 0: continue
 
                 experiments.append(data)
 
@@ -283,6 +283,22 @@ class GDSHandler(object):
             result.append(tmp)
 
         return result
+
+class GDSFormatHandler(object):
+    """ Handle all the different file formats GDS files may come in
+    """
+    def __init__(self, soft):
+        self.soft = soft
+        self.type = self.soft.header['dataset']['dataset_value_type']
+
+    def get_data(self):
+        for row in self.soft.data:
+            yield self.parse_row(row)
+
+    def parse_row(self, row):
+        if self.type == 'log2 ratio':
+            return row
+        return None
 
 
 def clean_string(s):

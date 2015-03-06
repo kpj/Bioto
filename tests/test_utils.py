@@ -8,6 +8,8 @@ import numpy.testing as npt
 
 import networkx as nx
 
+import pysoft
+
 import utils
 
 
@@ -187,3 +189,14 @@ class TestDataHandler(TestCase):
             content = fd.read()
             self.assertEqual(content, '1337.0,23.0,42.0\n4.0,6.0,2.0\n23.0\n')
         os.remove(cache_file)
+
+class TestGDSFormatHandler(TestCase):
+    def test_log2_ratio_format(self):
+        soft = pysoft.SOFTFile('tests/data/foo.soft')
+        self.assertEqual(soft.header['dataset']['dataset_value_type'], 'log2 ratio')
+
+        gdsh = utils.GDSFormatHandler(soft)
+        rows = list(gdsh.get_data())
+
+        self.assertEqual(len(rows), 4)
+        for r in rows: self.assertIsInstance(r, pysoft.parser.Row)

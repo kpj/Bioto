@@ -5,6 +5,8 @@ import networkx as nx
 
 import pysoft
 
+import utils
+
 
 def parse_regulation_file(file):
     data = {}
@@ -145,9 +147,12 @@ def parse_concentration(fname, conc_range=[0]):
     """ Return all concentrations (at specified point in time) of given entries
     """
     soft = pysoft.SOFTFile(fname)
+    gdsh = utils.GDSFormatHandler(soft)
 
     data = {}
-    for row in soft.data:
+    for row in gdsh.get_data():
+        if row is None: return None
+
         gene = row['IDENTIFIER'].lower()
 
         conc = []
