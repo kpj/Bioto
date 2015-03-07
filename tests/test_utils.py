@@ -48,6 +48,25 @@ class TestGraphGenerators(TestCase):
         neg_m[neg_m != -1] = 0
         self.assertEqual(np.sum(neg_m), -50)
 
+    def test_random_graph_network_preservation(self):
+        graph = utils.GraphGenerator.get_random_graph(42, 30, 50)
+        new_graph = utils.GraphGenerator.get_random_graph(graph, 60, 13)
+
+        self.assertEqual(len(new_graph), 42)
+        self.assertIsInstance(new_graph.graph, nx.DiGraph)
+
+        pos_m = new_graph.aug_adja_m.copy()
+        pos_m[pos_m != 1] = 0
+        self.assertEqual(np.sum(pos_m), 60)
+
+        neg_m = new_graph.aug_adja_m.copy()
+        neg_m[neg_m != -1] = 0
+        self.assertEqual(np.sum(neg_m), -13)
+
+    def test_random_graph_invalid_preservation(self):
+        with self.assertRaises(RuntimeError):
+            new_graph = utils.GraphGenerator.get_random_graph('foo', 60, 13)
+
     def test_random_graph_only_activating(self):
         graph = utils.GraphGenerator.get_random_graph(5, 10)
 
