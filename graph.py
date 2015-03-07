@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 import networkx as nx
 
-import utils
+import utils, errors
 
 
 class IOComponent(object):
@@ -110,7 +110,7 @@ class Math(object):
 
             maxruns -= 1
             if maxruns == 0:
-                raise RuntimeError('Power Iteration Method did not converge, aborting...')
+                raise errors.PowerIterationError('Power Iteration Method did not converge, aborting...')
 
         return np.array(b)
 
@@ -143,7 +143,7 @@ class Math(object):
             if all(i <= 0 for i in perron_frobenius):
                 perron_frobenius *= -1
             elif any(i < 0 for i in perron_frobenius):
-                raise RuntimeError('pf-eigenvector is malformed')
+                raise errors.PFComputationError('pf-eigenvector is malformed')
 
         # check significance of result
         if test_significance:
@@ -155,7 +155,7 @@ class Math(object):
                 perron_frobenius = sum(pfs)/len(pfs)
 
                 if not self.test_significance(eival, perron_frobenius, mat=mat):
-                    raise RuntimeError('pf-eigenvector is not significant')
+                    raise errors.PFComputationError('pf-eigenvector is not significant')
 
         return perron_frobenius
 
