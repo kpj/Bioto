@@ -279,10 +279,10 @@ def analysis(graph, Model, runs=10):
 if __name__ == '__main__':
     plotter.Plotter.show_plots = True
 
-    simulate_model(models.MultiplicatorModel, runs=20)
+    #simulate_model(models.MultiplicatorModel, runs=20)
     #simulate_model(models.BooleanModel)
-    #simulate_model(models.LinearModel, plot_jc_ev=True)
-    #simulate_model(models.NonlinearModel, plot_jc_ev=True)
+    #simulate_model(models.LinearModel, plot_jc_ev=True, runs=20)
+    simulate_model(models.NonlinearModel, plot_jc_ev=True, runs=20)
 
     #analysis(utils.GraphGenerator.get_er_graph(100, 0.3), models.MultiplicatorModel)
     #investigate_active_edge_count_influence(models.BooleanModel)
