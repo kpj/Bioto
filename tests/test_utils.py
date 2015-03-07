@@ -10,7 +10,7 @@ import networkx as nx
 
 import pysoft
 
-import utils
+import utils, errors
 
 
 class TestMethods(TestCase):
@@ -168,6 +168,12 @@ class TestGDSHandler(TestCase):
             'zuzu': 23.
         })
 
+    def testInvalidFile(self):
+        gds_file = 'qux.soft'
+
+        with self.assertRaises(errors.InvalidGDSFormatError):
+            res = self.gdsh.parse_file(gds_file)
+
     def test_all_genes(self):
         res = self.gdsh.process_directory()
 
@@ -204,7 +210,7 @@ class TestDataHandler(TestCase):
             pass
 
     def test_empty_file(self):
-        conc_file = 'tests/data/qux.soft'
+        conc_file = 'tests/data/empty.soft'
         concs, ugi = utils.DataHandler.load_concentrations(self.graph, conc_file)
 
         self.assertEqual(len(concs), 0)
