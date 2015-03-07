@@ -164,23 +164,22 @@ class Plotter(object):
         Plotter.show(title)
 
     @staticmethod
-    def plot(x, y, title, xlabel='', ylabel='', show_corr=True):
+    def plot(data, fname=None):
         plt.plot(
-            x, y,
+            data['x_data'], data['y_data'],
             linestyle='None',
             marker='.', markeredgecolor='blue'
         )
 
-        orig_title = title
-        if show_corr:
-            corr, p_val, = utils.StatsHandler.correlate(x, y)
-            title += ' (corr: %.2f, p-value: %.2f)' % (round(corr, 2), round(p_val, 2))
+        title = data['title']
+        corr, p_val, = utils.StatsHandler.correlate(data['x_data'], data['y_data'])
+        title += ' (corr: %.2f, p-value: %.2f)' % (round(corr, 2), round(p_val, 2))
 
         plt.title(title)
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
+        plt.xlabel(data['x_label'])
+        plt.ylabel(data['y_label'])
 
-        Plotter.show(orig_title)
+        Plotter.show(data['title'], fname=fname)
 
     @staticmethod
     def errorbar_plot(data, fname=None):
