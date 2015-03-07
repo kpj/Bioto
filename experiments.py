@@ -14,8 +14,8 @@ import utils, models, plotter, errors
 def present(title, func, *args, model=None):
     """ Save and (if needed) plot data
     """
-    dic = utils.CacheHandler.store_plot_data(title, func, *args, model=model) # store data for later use
-    func(dic) # also plot if wanted
+    dic = utils.CacheHandler.store_plot_data(title, func, *args, model=model)
+    func(dic)
 
 
 ##################
@@ -113,6 +113,45 @@ def gene_overview(density_plot=True):
             plots
         )
 
+def investigate_base_window_influence():
+    """ Investigate how the size of the base window used to generate the GPN influences the correlation between the gene expression vector and the PF
+    """
+    def get_stuff(base_window):
+        """ Get gene expression vector and PF of GPN for given base window
+        """
+        graph = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', base_window)
+        c, used_gene_indices = graph.io.load_averaged_concentrations('../data/concentrations/')
+
+        pf_tmp = graph.math.get_perron_frobenius()
+        pf = [pf_tmp[i] for i in used_gene_indices]
+
+        return c, pf
+
+    correlations = []
+    used_windows = []
+
+    base_windows = range(int(5e3), int(100e3), int(1e3))
+    for bwin in base_windows:
+        print('Base window:', bwin)
+        try:
+            c, pf = get_stuff(bwin)
+        except (errors.PFComputationError, errors.PowerIterationError) as e:
+            print('Skipped base window size %d (%s)' % (bwin, e))
+            continue
+        finally:
+            print()
+
+        corr, p_val = utils.StatsHandler.correlate(c, pf)
+
+        correlations.append(corr)
+        used_windows.append(bwin)
+
+    present(
+        'Effect of base window size in GPN', plotter.Plotter.plot,
+        'base window size', used_windows,
+        'correlation between gene expression vector and PF', correlations
+    )
+
 
 ##################
 # Generated data #
@@ -120,7 +159,6 @@ def gene_overview(density_plot=True):
 
 def simulate_model(Model, n=20, ae=0, ie=50, plot_jc_ev=False, info={}):
     g = utils.GraphGenerator.get_random_graph(n, activating_edges=ae, inhibiting_edges=ie)
-    #g.io.visualize('random.png', use_R=False); sys.exit()
     Model.info.update(info)
 
     sim = g.system.simulate(Model)
@@ -247,9 +285,10 @@ if __name__ == '__main__':
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
 
     #analysis(utils.GraphGenerator.get_er_graph(100, 0.3), models.MultiplicatorModel)
-    investigate_active_edge_count_influence(models.BooleanModel)
+    #investigate_active_edge_count_influence(models.BooleanModel)
 
     #gene_overview()
+    investigate_base_window_influence()
 
     #real_life_average()
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)

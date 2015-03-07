@@ -177,7 +177,7 @@ class CacheHandler(object):
     cache_directory = 'plot_data'
 
     @staticmethod
-    def store_plot_data(title, func, *args, model=None): #x_data, y_data, title, x_label, y_label):
+    def store_plot_data(title, func, *args, model=None):
         """ Store plot data and return sanitized data dict
         """
         if len(args) == 2:
