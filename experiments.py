@@ -157,11 +157,11 @@ def investigate_base_window_influence():
 # Generated data #
 ##################
 
-def simulate_model(Model, n=20, ae=0, ie=50, plot_jc_ev=False, info={}):
+def simulate_model(Model, n=20, ae=0, ie=50, plot_jc_ev=False, info={}, **kwargs):
     g = utils.GraphGenerator.get_random_graph(n, activating_edges=ae, inhibiting_edges=ie)
     Model.info.update(info)
 
-    sim = g.system.simulate(Model)
+    sim = g.system.simulate(Model, **kwargs)
     avg_data = [np.mean(time_unit) for time_unit in sim.T]
 
     pf = g.math.get_perron_frobenius(remove_self_links=True)
@@ -169,7 +169,7 @@ def simulate_model(Model, n=20, ae=0, ie=50, plot_jc_ev=False, info={}):
 
     #show_evolution(g, sim)#, pf=pf)
     present(
-        '%s with PF of A' % Model.info['name'], plotter.Plotter.loglog,
+        '%s with PF of A' % Model.info['name'], plotter.Plotter.plot,
         'gene concentration', avg_data,
         'perron-frobenius eigenvector', pf,
         model=Model
@@ -182,7 +182,7 @@ def simulate_model(Model, n=20, ae=0, ie=50, plot_jc_ev=False, info={}):
     #)
     if plot_jc_ev:
         present(
-            '%s with EV of J' % Model.info['name'], plotter.Plotter.loglog,
+            '%s with EV of J' % Model.info['name'], plotter.Plotter.plot,
             'gene concentration', avg_data,
             'jacobian eigenvector of highest eigenvalue', ev,
             model=Model
@@ -277,9 +277,9 @@ def analysis(graph, Model, runs=10):
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = False
+    plotter.Plotter.show_plots = True
 
-    #simulate_model(models.MultiplicatorModel)
+    simulate_model(models.MultiplicatorModel, runs=20)
     #simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel, plot_jc_ev=True)
     #simulate_model(models.NonlinearModel, plot_jc_ev=True)
@@ -288,7 +288,7 @@ if __name__ == '__main__':
     #investigate_active_edge_count_influence(models.BooleanModel)
 
     #gene_overview()
-    investigate_base_window_influence()
+    #investigate_base_window_influence()
 
     #real_life_average()
     #for f in os.listdir('../data/concentrations/'): real_life_single(f)

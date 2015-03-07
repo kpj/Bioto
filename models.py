@@ -109,7 +109,7 @@ class MultiplicatorModel(Model):
 
         data = [initial]
         for i in range(kwargs['runs']-1):
-            cur = [self.graph.adja_m.dot(data[-1])[0, i] for i in range(len(self.graph))]
+            cur = self.graph.adja_m.dot(data[-1])
             cur /= npl.norm(cur)
 
             data = np.vstack((data, cur))
