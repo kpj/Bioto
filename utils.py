@@ -26,13 +26,21 @@ class GraphGenerator(object):
         return graph.Graph(nx.erdos_renyi_graph(node_num, edge_prob, directed=True))
 
     @staticmethod
-    def get_random_graph(node_num=20, activating_edges=0, inhibiting_edges=50):
+    def get_random_graph(graphdef, activating_edges=0, inhibiting_edges=0):
         """ Create random graph by subsetting complete graph
         """
-        g = nx.complete_graph(node_num, create_using=nx.DiGraph())
+        if isinstance(graphdef, int):
+            node_num = graphdef
+            g = nx.complete_graph(graphdef, create_using=nx.DiGraph())
+        elif isinstance(graphdef, graph.Graph):
+            node_num = len(graphdef)
+            g = graphdef.graph
+        else:
+            raise RuntimeError('Invalid graph definition given')
+
         edges = random.sample(g.edges(), activating_edges + inhibiting_edges)
         a_edges = edges[:activating_edges]
-        i_edges = edges[-inhibiting_edges:]
+        i_edges = edges[-inhibiting_edges:] if inhibiting_edges > 0 else []
 
         amat = np.zeros((node_num, node_num))
         for source, sink in a_edges: amat[source, sink] = 1

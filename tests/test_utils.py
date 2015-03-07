@@ -48,6 +48,34 @@ class TestGraphGenerators(TestCase):
         neg_m[neg_m != -1] = 0
         self.assertEqual(np.sum(neg_m), -50)
 
+    def test_random_graph_only_activating(self):
+        graph = utils.GraphGenerator.get_random_graph(5, 10)
+
+        self.assertEqual(len(graph), 5)
+        self.assertIsInstance(graph.graph, nx.DiGraph)
+
+        pos_m = graph.aug_adja_m.copy()
+        pos_m[pos_m != 1] = 0
+        self.assertEqual(np.sum(pos_m), 10)
+
+        neg_m = graph.aug_adja_m.copy()
+        neg_m[neg_m != -1] = 0
+        self.assertEqual(np.sum(neg_m), 0)
+
+    def test_random_graph_only_inhibiting(self):
+        graph = utils.GraphGenerator.get_random_graph(5, 0, 10)
+
+        self.assertEqual(len(graph), 5)
+        self.assertIsInstance(graph.graph, nx.DiGraph)
+
+        pos_m = graph.aug_adja_m.copy()
+        pos_m[pos_m != 1] = 0
+        self.assertEqual(np.sum(pos_m), 0)
+
+        neg_m = graph.aug_adja_m.copy()
+        neg_m[neg_m != -1] = 0
+        self.assertEqual(np.sum(neg_m), -10)
+
     def test_er_graph(self):
         graph = utils.GraphGenerator.get_er_graph(100, 0.66)
 
