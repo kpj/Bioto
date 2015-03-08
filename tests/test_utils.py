@@ -10,7 +10,7 @@ import networkx as nx
 
 import pysoft
 
-import utils, errors
+import utils, errors, models
 
 
 class TestMethods(TestCase):
@@ -130,6 +130,76 @@ class TestStatsHandler(TestCase):
         self.assertTrue(ma < 1)
 
 class TestCacheHandler(TestCase):
+    def setUp(self):
+        utils.CacheHandler.cache_directory = 'plot_data_testing'
+
+        self.func = lambda x: x
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(utils.CacheHandler.cache_directory)
+        except FileNotFoundError:
+            pass
+
+    def test_data_storage_2_args(self):
+        res = utils.CacheHandler.store_plot_data('The Neverending Story', self.func, 'x axis stuff', 'important data')
+
+        self.assertEqual(len(res), 4)
+        self.assertEqual(len(res['info']), 1)
+
+        self.assertEqual(res['title'], 'The Neverending Story')
+        self.assertEqual(res['info']['function'], '<lambda>')
+
+        self.assertEqual(res['x_label'], 'x axis stuff')
+        self.assertEqual(res['data'], 'important data')
+
+        self.assertTrue(os.path.isfile(os.path.join(utils.CacheHandler.cache_directory, 'The_Neverending_Story__raw.dat')))
+
+    def test_data_storage_3_args(self):
+        res = utils.CacheHandler.store_plot_data('The Neverending Story', self.func, 'x axis stuff', 'y axis stuff', 'important data')
+
+        self.assertEqual(len(res), 5)
+        self.assertEqual(len(res['info']), 1)
+
+        self.assertEqual(res['title'], 'The Neverending Story')
+        self.assertEqual(res['info']['function'], '<lambda>')
+
+        self.assertEqual(res['x_label'], 'x axis stuff')
+        self.assertEqual(res['y_label'], 'y axis stuff')
+        self.assertEqual(res['data'], 'important data')
+
+        self.assertTrue(os.path.isfile(os.path.join(utils.CacheHandler.cache_directory, 'The_Neverending_Story__raw.dat')))
+
+    def test_data_storage_4_args(self):
+        res = utils.CacheHandler.store_plot_data('The Neverending Story', self.func, 'x axis stuff', 'x data', 'y axis stuff', 'y data')
+
+        self.assertEqual(len(res), 6)
+        self.assertEqual(len(res['info']), 1)
+
+        self.assertEqual(res['title'], 'The Neverending Story')
+        self.assertEqual(res['info']['function'], '<lambda>')
+
+        self.assertEqual(res['x_label'], 'x axis stuff')
+        self.assertEqual(res['y_label'], 'y axis stuff')
+        self.assertEqual(res['x_data'], 'x data')
+        self.assertEqual(res['y_data'], 'y data')
+        self.assertTrue(os.path.isfile(os.path.join(utils.CacheHandler.cache_directory, 'The_Neverending_Story__raw.dat')))
+
+    def test_data_storage_multiplicator_model(self):
+        res = utils.CacheHandler.store_plot_data('The Neverending Story', self.func, 'x axis stuff', 'important data', model=models.MultiplicatorModel)
+
+        self.assertEqual(len(res), 4)
+        self.assertEqual(len(res['info']), 2)
+
+        self.assertEqual(res['title'], 'The Neverending Story')
+        self.assertEqual(res['info']['function'], '<lambda>')
+        self.assertEqual(res['info']['name'], 'Multiplicator Model')
+
+        self.assertEqual(res['x_label'], 'x axis stuff')
+        self.assertEqual(res['data'], 'important data')
+
+        self.assertTrue(os.path.isfile(os.path.join(utils.CacheHandler.cache_directory, 'The_Neverending_Story__%s.dat' % models.MultiplicatorModel.hash())))
+
     def test_json_handling(self):
         tmp_file = 'tmp_testing.json'
 

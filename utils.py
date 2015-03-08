@@ -208,12 +208,13 @@ class CacheHandler(object):
                 'y_label': args[2]
             }
 
-        model_id = 'raw'
         dic['info'] = {}
-        if not model is None:
-            dic['info'] = model.info
-            model_id = model.hash()
         dic['info']['function'] = func.__name__
+
+        model_id = 'raw'
+        if not model is None:
+            dic['info'].update(model.info)
+            model_id = model.hash()
 
         if not os.path.exists(CacheHandler.cache_directory):
             os.makedirs(CacheHandler.cache_directory)
