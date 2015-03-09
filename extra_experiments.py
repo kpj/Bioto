@@ -21,50 +21,6 @@ import pysoft
 import plotter, utils, models, graph, file_parser, experiment_classes
 
 
-def plot_BM_runs(dire):
-	""" Plots all runs of a BM simulation in order to find out if it's normally distributed
-	"""
-	runs = []
-
-	# gather data
-	for f in os.listdir(dire):
-		runs.append([])
-
-		fname = os.path.join(dire, f)
-		with open(fname, 'r') as csvfile:
-			reader = csv.reader(csvfile)
-
-			for row in reader:
-				runs[-1].append(row)
-
-	# refactor data
-	tmp = []
-	for t in range(len(runs[0])):
-		tmp.append([])
-		for run in runs:
-			tmp[-1].append(run[t])
-
-	res = []
-	for t in tmp:
-		res.append(np.array(t).T)
-	res = np.array(res)
-
-	# plot data
-	for t, time_point in enumerate(res):
-		plots = []
-
-		for g, entry in enumerate(time_point):
-			"""plots.append({
-				'x': range(len(entry)),
-				'y': entry,
-				'label': 'gene %d at time %d' % (g, t)
-			})"""
-
-			data = [float(s) for s in entry.tolist()]
-			with open('BM_density_analysis', 'a') as fd:
-				writer = csv.writer(fd)
-				writer.writerow(data)
-
 def investigate_ER_edge_probs(node_num):
 	""" Compare theoretical versus practical edge numbers in ER-graph
 	"""
@@ -93,7 +49,7 @@ def investigate_ER_edge_probs(node_num):
 def visualize_discrete_bm_run(n=100, e=0.3):
 	""" Visualize one discrete BM run
 	"""
-	graph = utils.GraphGenerator.get_random_graph(node_num=n, edge_prob=e)
+	graph = utils.GraphGenerator.get_er_graph(node_num=n, edge_prob=e)
 
 	model = models.BooleanModel(graph)
 	#model.aug_adja_m = np.array([[-1,1,0,1,0,0,0,0,0,0],[0,-1,0,0,0,0,0,0,0,0],[0,-1,0,0,0,0,0,0,-1,0],[-1,0,0,0,0,0,-1,0,0,0],[0,0,0,0,-1,0,0,0,0,1],[-1,0,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,-1,0,0,0],[0,0,0,0,0,0,0,-1,0,0],[1,0,0,-1,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,-1]])
@@ -203,35 +159,13 @@ def plot_orga_distri(distr_file, fout):
 
 	os.system('Rscript org_distr_plot.R "%s"' % fout)
 
-def investigate_trn_eigensystem():
-	g = graph.Graph(file_parser.generate_tf_gene_regulation('../data/architecture/network_tf_gene.txt'), largest=True)
-
-	f = 816
-	mat_valid = g.adja_m[:f, :f].copy()
-	np.savetxt('valid.txt', mat_valid)
-
-	s = 817
-	mat_invalid = g.adja_m[:s, :s].copy()
-	np.savetxt('invalid.txt', mat_invalid)
-
-	print(np.array_equal(mat_valid, mat_invalid[:-1,:-1]))
-
-	g_valid = graph.Graph(nx.from_numpy_matrix(np.loadtxt('valid.txt'), create_using=nx.DiGraph()), largest=True)
-	g_invalid = graph.Graph(nx.from_numpy_matrix(np.loadtxt('invalid.txt'), create_using=nx.DiGraph()), largest=True)
-
-	#pf_valid = g_valid.math.get_perron_frobenius()
-	#pf_invalid = g_invalid.math.get_perron_frobenius()
-
-	#g_valid.io.visualize('valid.png')
-	#g_invalid.io.visualize('invalid.png', verbose=True)
-
 def variance_of_gene_expression(data_dir):
 	""" Analyze the composition of real-life GEO data
 	"""
 	save_file = 'gene_variance.dat'
 	if not os.path.isfile('%s.npy' % save_file):
 		gdsh = utils.GDSHandler(data_dir)
-		
+
 		experis = gdsh.process_directory(only_common_genes=True)
 		common_genes = gdsh.common_genes
 
@@ -247,12 +181,10 @@ def variance_of_gene_expression(data_dir):
 if __name__ == '__main__':
 	plotter.Plotter.show_plots = True
 
-	#plot_BM_runs('./BM_data')
 	#investigate_ER_edge_probs(100)
 	#visualize_discrete_bm_run(n=10)
 	#simple_plot()
 	#list_data('../data/concentrations/', 'data_summary.txt')
 	#search_database('/home/kpj/GEO/ftp.ncbi.nlm.nih.gov', save_dir='/home/kpj/GEO/ecoli', stats_file='GDS_stats.json')
 	#plot_orga_distri('GDS_stats.json', 'geo_db_organism_distribution.png')
-	#investigate_trn_eigensystem()
 	variance_of_gene_expression('/home/kpj/GEO/ecoli')
