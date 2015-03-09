@@ -256,11 +256,11 @@ class GDSHandler(object):
         self.all_genes = None # genes which appear in at least one dataset
         self.common_genes = None # genes which appear in all datasets
 
-    def parse_file(self, fname, conc_range=[0]):
+    def parse_file(self, fname, conc_range=[0], **kwargs):
         """ Extract all (valid) gene concentrations from file
             fname is relative to dirname given in constructor
         """
-        return file_parser.parse_concentration(os.path.join(self.dir, fname), conc_range)
+        return file_parser.parse_concentration(os.path.join(self.dir, fname), conc_range, **kwargs)
 
     def process_directory(self, only_common_genes=False):
         """ Scan directory for SOFT files.
@@ -299,9 +299,10 @@ class GDSHandler(object):
 class GDSFormatHandler(object):
     """ Handle all the different file formats GDS files may come in
     """
-    def __init__(self, soft):
+    def __init__(self, soft, throw_on_unknown_format=True):
         self.soft = soft
         self.type = self.soft.header['dataset']['dataset_value_type']
+        self.throw_on_unknown_format = throw_on_unknown_format
 
     def get_data(self):
         for row in self.soft.data:
@@ -311,7 +312,10 @@ class GDSFormatHandler(object):
         if self.type == 'log2 ratio':
             return row
 
-        raise errors.InvalidGDSFormatError('Encountered invalid format "%s"' % self.type)
+        if self.throw_on_unknown_format:
+            raise errors.InvalidGDSFormatError('Encountered invalid format "%s"' % self.type)
+        else:
+            return row
 
 
 def clean_string(s):

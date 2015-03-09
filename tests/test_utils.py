@@ -323,3 +323,19 @@ class TestGDSFormatHandler(TestCase):
 
         self.assertEqual(len(rows), 4)
         for r in rows: self.assertIsInstance(r, pysoft.parser.Row)
+
+    def test_unknown_format(self):
+        soft = pysoft.SOFTFile('tests/data/qux.soft')
+        self.assertEqual(soft.header['dataset']['dataset_value_type'], 'unsupported format')
+
+        # raise error
+        gdsh = utils.GDSFormatHandler(soft)
+        with self.assertRaises(errors.InvalidGDSFormatError):
+            rows = list(gdsh.get_data())
+
+        # deal with it
+        gdsh = utils.GDSFormatHandler(soft, throw_on_unknown_format=False)
+        rows = list(gdsh.get_data())
+
+        self.assertEqual(len(rows), 1)
+        for r in rows: self.assertIsInstance(r, pysoft.parser.Row)

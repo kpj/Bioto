@@ -143,11 +143,11 @@ def get_advanced_adjacency_matrix(file):
 
     return np.array(mat).T
 
-def parse_concentration(fname, conc_range=[0]):
+def parse_concentration(fname, conc_range=[0], **kwargs):
     """ Return all concentrations (at specified point in time) of given entries
     """
     soft = pysoft.SOFTFile(fname)
-    gdsh = utils.GDSFormatHandler(soft)
+    gdsh = utils.GDSFormatHandler(soft, **kwargs)
 
     data = {}
     for row in gdsh.get_data():
