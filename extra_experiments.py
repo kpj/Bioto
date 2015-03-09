@@ -81,13 +81,13 @@ def simple_plot():
 def list_data(dir, table_fname=None):
 	""" Generate overview over all SOFT files present in given directory
 	"""
-	col_names = ['name', 'origin', 'method', 'entry type', 'subset number', 'is timeseries?']
+	col_names = ['name', 'origin', 'method', 'entry type', 'value type', 'is timeseries?']
 	table = PrettyTable(col_names)
 	for n in col_names: table.align[n] = 'l'
 
-	for f in os.listdir(dir):
+	for f in sorted(os.listdir(dir)):
 		fname = os.path.join(dir, f)
-		soft = pysoft.SOFTFile(fname)
+		soft = pysoft.SOFTFile(fname, skip_data=True)
 		head = soft.header
 
 		if len(head) == 0:
@@ -96,10 +96,11 @@ def list_data(dir, table_fname=None):
 		sample_name = head['dataset']['name']
 		origin = head['database']['database_name']
 		data_type = head['dataset']['dataset_type']
-		subsets = ', '.join([x['subset_description'] for x in head['dataset']['subsets']])
+		subsets = '[%d]: %s' % (len(head['dataset']['subsets']), ', '.join([x['subset_description'] for x in head['dataset']['subsets']]))
 		is_time_series = 'min' in subsets
+		dataval_type = head['dataset']['dataset_value_type']
 
-		table.add_row([sample_name, origin, data_type, subsets, len(head['dataset']['subsets']), is_time_series])
+		table.add_row([sample_name, origin, data_type, subsets, dataval_type, is_time_series])
 
 	print(table)
 	if not table_fname is None:
