@@ -178,6 +178,26 @@ def variance_of_gene_expression(data_dir):
 	experiment = experiment_classes.GeneExpressionVariance(common_genes, experis)
 	experiment.conduct(shuffle_experiment_order=True)
 
+def summarize_gene_expression_data(dirname):
+	gdsh = utils.GDSHandler(dirname)
+
+	res = []
+	for root, dirs, files in os.walk(dirname):
+		for fname in sorted(files):
+			if not utils.is_soft_file(fname): continue
+
+			data = gdsh.parse_file(fname, throw_on_unknown_format=False)
+			if len(data) == 0: continue
+
+			res.append({
+				'data': data,
+				'fname': fname
+			})
+
+	for data in res:
+		gev = [t[1] for t in sorted(data['data'].items(), key=operator.itemgetter(0))]
+		plotter.Plotter.plot_histogram(gev, 'Gene expression vector overview for %s' % os.path.splitext(data['fname'])[0], 'gene expression value', 'count')
+
 
 if __name__ == '__main__':
 	plotter.Plotter.show_plots = True
@@ -188,4 +208,5 @@ if __name__ == '__main__':
 	#list_data('../data/concentrations/', 'data_summary.txt')
 	#search_database('/home/kpj/GEO/ftp.ncbi.nlm.nih.gov', save_dir='/home/kpj/GEO/ecoli', stats_file='GDS_stats.json')
 	#plot_orga_distri('GDS_stats.json', 'geo_db_organism_distribution.png')
-	variance_of_gene_expression('/home/kpj/GEO/ecoli')
+	#variance_of_gene_expression('/home/kpj/GEO/ecoli')
+	summarize_gene_expression_data('../data/concentrations/')
