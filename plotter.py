@@ -150,16 +150,16 @@ class Plotter(object):
         Plotter.show('overview')
 
     @staticmethod
-    def plot_histogram(data, title, xlabel, ylabel, bin_num=200):
-        plt.hist(data, bins=bin_num)
+    def plot_histogram(data, fname=None):
+        plt.hist(data['data'], bins=200)
 
         plt.tick_params(labelsize=20)
 
-        plt.title(title, fontsize=33)
-        plt.xlabel(xlabel, fontsize=30)
-        plt.ylabel(ylabel, fontsize=30)
+        plt.title(data['title'], fontsize=33)
+        plt.xlabel(data['x_label'], fontsize=30)
+        plt.ylabel(data['y_label'], fontsize=30)
 
-        Plotter.show(title)
+        Plotter.show(data['title'] if fname is None else fname)
 
     @staticmethod
     def plot(data, fname=None):

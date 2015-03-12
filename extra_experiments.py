@@ -186,7 +186,7 @@ def summarize_gene_expression_data(dirname):
 		for fname in sorted(files):
 			if not utils.is_soft_file(fname): continue
 
-			data = gdsh.parse_file(fname, throw_on_unknown_format=False)
+			data = gdsh.parse_file(fname, throw_on_unknown_format=False, conc_range=[0])
 			if len(data) == 0: continue
 
 			res.append({
@@ -196,7 +196,7 @@ def summarize_gene_expression_data(dirname):
 
 	for data in res:
 		gev = [t[1] for t in sorted(data['data'].items(), key=operator.itemgetter(0))]
-		plotter.Plotter.plot_histogram(gev, 'Gene expression vector overview for %s' % os.path.splitext(data['fname'])[0], 'gene expression value', 'count')
+		plotter.Plotter.plot_histogram({'data': gev, 'title': 'Gene expression vector overview for %s' % os.path.splitext(data['fname'])[0], 'x_label': 'gene expression value', 'y_label': 'count'})
 
 
 if __name__ == '__main__':
