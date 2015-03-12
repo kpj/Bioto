@@ -238,7 +238,7 @@ class TestGDSHandler(TestCase):
 
     def test_single_file(self):
         gds_file = 'foo.soft'
-        res = self.gdsh.parse_file(gds_file)
+        res = self.gdsh.parse_file(gds_file, conc_range=[0])
 
         self.assertEqual(res, {
             'aaea': 42.,
@@ -254,7 +254,7 @@ class TestGDSHandler(TestCase):
             res = self.gdsh.parse_file(gds_file)
 
     def test_all_genes(self):
-        res = self.gdsh.process_directory()
+        res = self.gdsh.process_directory(conc_range=[0])
 
         self.assertEqual(len(res), 3)
         self.assertIn({'aaea': 42., 'aaeb': 2., 'haba': 1., 'zuzu': 23.}, res)
@@ -265,7 +265,7 @@ class TestGDSHandler(TestCase):
         self.assertEqual(len(self.gdsh.common_genes), 2)
 
     def test_common_genes(self):
-        res = self.gdsh.process_directory(only_common_genes=True)
+        res = self.gdsh.process_directory(only_common_genes=True, conc_range=[0])
 
         self.assertEqual(len(res), 3)
         self.assertIn({'aaea': 42., 'aaeb': 2.}, res)
@@ -297,7 +297,7 @@ class TestDataHandler(TestCase):
 
     def test_single_file(self):
         conc_file = 'tests/data/foo.soft'
-        concs, ugi = utils.DataHandler.load_concentrations(self.graph, conc_file)
+        concs, ugi = utils.DataHandler.load_concentrations(self.graph, conc_file, conc_range=[0])
 
         self.assertTrue(os.path.isdir(utils.DataHandler.backup_dir))
         self.assertTrue(os.path.isfile(os.path.join(utils.DataHandler.backup_dir, 'conc_foo.soft.bak.npy')))
@@ -308,7 +308,7 @@ class TestDataHandler(TestCase):
     def test_file_averaging(self):
         conc_dir = 'tests/data/'
         cache_file = 'RL_av_data_testing.csv'
-        concs, used_gene_indices = utils.DataHandler.load_averaged_concentrations(self.graph, conc_dir, cache_file=cache_file)
+        concs, used_gene_indices = utils.DataHandler.load_averaged_concentrations(self.graph, conc_dir, cache_file=cache_file, conc_range=[0])
 
         self.assertEqual(len(concs), 3)
         self.assertEqual(len(used_gene_indices), 3)
@@ -327,7 +327,7 @@ class TestDataHandler(TestCase):
         partial_network_file = 'tests/data/partial_trn_network.txt'
 
         partial_graph = utils.GraphGenerator.get_regulatory_graph(partial_network_file)
-        concs, used_gene_indices = utils.DataHandler.load_averaged_concentrations(partial_graph, conc_dir)
+        concs, used_gene_indices = utils.DataHandler.load_averaged_concentrations(partial_graph, conc_dir, conc_range=[0])
 
         self.assertEqual(len(concs), 2)
         self.assertEqual(len(used_gene_indices), 2)
@@ -374,3 +374,19 @@ class TestGDSFormatHandler(TestCase):
 
         res = gdsh.transform_row(row, lambda x: x+10)
         self.assertEqual(list(res), ['bar', 'aaea', 52, 53])
+
+    def test_column_selector(self):
+        soft = pysoft.SOFTFile('tests/data/col_case.soft.fubar')
+        gdsh = utils.GDSFormatHandler(soft)
+
+        cols = gdsh.get_useful_columns()
+
+        self.assertEqual(len(cols), 7)
+
+        self.assertTrue('GSM37063' in cols)
+        self.assertTrue('GSM37064' in cols)
+        self.assertTrue('GSM37065' in cols)
+        self.assertTrue('GSM37066' in cols)
+        self.assertTrue('GSM37067' in cols)
+        self.assertTrue('GSM37068' in cols)
+        self.assertTrue('GSM37069' in cols)

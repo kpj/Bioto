@@ -1,3 +1,4 @@
+import re
 import copy
 import os, os.path
 import json, csv
@@ -103,6 +104,11 @@ class DataHandler(object):
     @staticmethod
     def _handle_data(graph, data):
         """ Take gene expression dict and return gene expression vector and used indices
+            Concentrations have the form: [
+                [<conc_1>, <conc_2>, ...],
+                [<conc_1>, <conc_2>, ...],
+                ...
+            ]
         """
         concentrations = []
         used_gene_indices = []
@@ -123,7 +129,7 @@ class DataHandler(object):
         return foo
 
     @staticmethod
-    def load_concentrations(graph, file, conc_range=[0]):
+    def load_concentrations(graph, file, conc_range=None):
         """ Extract gene concentrations from file which also appear in graph.
             Also return vector of node indices used in concentration vector
         """
@@ -147,13 +153,13 @@ class DataHandler(object):
         return foo['concentrations'], foo['used_gene_indices']
 
     @staticmethod
-    def load_averaged_concentrations(graph, directory, conc_range=[0], cache_file=None):
+    def load_averaged_concentrations(graph, directory, conc_range=None, cache_file=None):
         """ Load concentration files in given directory and average them.
             In order to account for genes which appear in the graph but not in any dataset, this function will also return a vector of indices of the genes of the graph which were found in at least on dataset
         """
         # gather all data
         gdsh = GDSHandler(directory)
-        experis = gdsh.process_directory()
+        experis = gdsh.process_directory(conc_range=conc_range)
 
         # accumulate data
         data = {}
@@ -257,13 +263,13 @@ class GDSHandler(object):
         self.all_genes = None # genes which appear in at least one dataset
         self.common_genes = None # genes which appear in all datasets
 
-    def parse_file(self, fname, conc_range=[0], **kwargs):
+    def parse_file(self, fname, conc_range=None, **kwargs):
         """ Extract all (valid) gene concentrations from file
             fname is relative to dirname given in constructor
         """
         return file_parser.parse_concentration(os.path.join(self.dir, fname), conc_range, **kwargs)
 
-    def process_directory(self, only_common_genes=False):
+    def process_directory(self, only_common_genes=False, conc_range=None):
         """ Scan directory for SOFT files.
             Extract gene concentration of genes which appear in all datasets if requested
         """
@@ -274,7 +280,7 @@ class GDSHandler(object):
                 if not is_soft_file(fname): continue
 
                 try:
-                    data = self.parse_file(fname)
+                    data = self.parse_file(fname, conc_range=conc_range)
                 except errors.InvalidGDSFormatError:
                     continue
                 if len(data) == 0: continue
@@ -304,6 +310,34 @@ class GDSFormatHandler(object):
         self.soft = soft
         self.type = self.soft.header['dataset']['dataset_value_type']
         self.throw_on_unknown_format = throw_on_unknown_format
+
+        self.column_keywords = ['aerobic', 'anaerobic']
+
+    def get_useful_columns(self):
+        """ Return list of columns which contain data which can be used (i.e. not mutants, but rather wild types under different external conditions)
+        """
+        # get sample descriptions
+        data = {}
+        for subset in self.soft.header['dataset']['subsets']:
+            for ss_id in subset['subset_sample_id'].split(','):
+                data[ss_id] = subset['subset_description'].lower()
+
+        # extract columns according to fitting sample descriptions
+        cols = []
+        for name, desc in data.items():
+            if 'mutant' in desc: continue
+
+            if (
+                'wild type' in desc or # default
+                'control' in desc or # default
+                desc in self.column_keywords or # specific set of keywords
+                re.match(r'[0-9]+ min(utes)?', desc) or # time series
+                re.match(r'ph [0-9]+', desc) or # pH value
+                re.match(r'od(600)? [-+]?[0-9]*\.?[0-9]*', desc) # some optical density stuff
+            ):
+                cols.append(name)
+
+        return cols
 
     def get_data(self):
         """ Yield data in soft file after transforming as needed

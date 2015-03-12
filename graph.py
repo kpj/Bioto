@@ -53,12 +53,12 @@ class IOComponent(object):
             plt.savefig(file, dpi=150)
             plt.close()
 
-    def load_concentrations(self, file, conc_range=[0]):
+    def load_concentrations(self, file, conc_range=None):
         """ Delegates to utils.DataHandler
         """
         return utils.DataHandler.load_concentrations(self.graph, file, conc_range)
 
-    def load_averaged_concentrations(self, directory, conc_range=[0], cache_file=None):
+    def load_averaged_concentrations(self, directory, conc_range=None, cache_file=None):
         """ Delegates to utils.DataHandler
         """
         return utils.DataHandler.load_averaged_concentrations(self.graph, directory, conc_range, cache_file)

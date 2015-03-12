@@ -170,13 +170,13 @@ class TestGraphIO(GraphInit):
         raw_graph.add_nodes_from(['aaea', 'aaeb', 'haba', 'zuzu'])
         trn = graph.Graph(raw_graph)
 
-        res1 = utils.DataHandler.load_concentrations(trn, conc_file)
+        res1 = utils.DataHandler.load_concentrations(trn, conc_file, conc_range=[0])
         res2 = trn.io.load_concentrations(conc_file)
         npt.assert_allclose(res1[0], res2[0])
         self.assertEqual(res1[1], res2[1])
 
-        res1 = utils.DataHandler.load_averaged_concentrations(trn, conc_dir)
-        res2 = trn.io.load_averaged_concentrations(conc_dir)
+        res1 = utils.DataHandler.load_averaged_concentrations(trn, conc_dir, conc_range=[0])
+        res2 = trn.io.load_averaged_concentrations(conc_dir, conc_range=[0])
         npt.assert_allclose(res1[0], res2[0])
         self.assertEqual(res1[1], res2[1])
 

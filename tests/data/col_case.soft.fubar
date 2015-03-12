@@ -1,0 +1,35 @@
+^DATASET = GDS100
+!dataset_value_type = log2 ratio
+^SUBSET = GDS99_1
+!subset_sample_id = GSM37063,GSM37064
+!subset_description = 5 minute
+^SUBSET = GDS99_2
+!subset_sample_id = GSM37065
+!subset_description = 30 min
+^SUBSET = GDS99_3
+!subset_sample_id = GSM37066
+!subset_description = OD 1.27
+^SUBSET = GDS99_4
+!subset_sample_id = GSM37067
+!subset_description = aerobic
+^SUBSET = GDS99_5
+!subset_sample_id = GSM37068
+!subset_description = control
+^SUBSET = GDS99_6
+!subset_sample_id = GSM37069
+!subset_description = OD600 0.13
+^SUBSET = GDS99_7
+!subset_sample_id = GSM37070
+!subset_description = mutant
+#ID = foo
+#IDENTIFIER = identifier
+#GSM37063 = Value for GSM37063: glucose1; src: E. coli cell
+#GSM37064 = Value for GSM37064: whatever
+#GSM37065 = foo
+#GSM37066 = foo
+#GSM37067 = foo
+#GSM37068 = foo
+#GSM37069 = foo
+#GSM37070 = foo
+ID IDENTIFIER	GSM37063	GSM37064	GSM37065	GSM37066	GSM37067	GSM37068	GSM37069	GSM37070
+bar	aaea	1	2	3	4	5	6	7	8

@@ -9,16 +9,10 @@ import file_parser
 
 
 class TestParser(TestCase):
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_concentration_parser_single(self):
         gds_file = 'tests/data/foo.soft'
 
-        data = file_parser.parse_concentration(gds_file)
+        data = file_parser.parse_concentration(gds_file, conc_range=[0])
         self.assertEqual(len(data), 4)
         self.assertEqual(data['aaea'], 42.)
         self.assertEqual(data['aaeb'], 2.)
@@ -31,6 +25,20 @@ class TestParser(TestCase):
         self.assertEqual(data['aaeb'], 3.)
         self.assertEqual(data['haba'], 1.)
         self.assertEqual(data['zuzu'], 24.)
+
+    def test_concentration_parser_column_selection(self):
+        gds_file = 'tests/data/col_case.soft.fubar'
+        data = file_parser.parse_concentration(gds_file)
+
+        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data['aaea']), 7)
+
+        self.assertTrue(1. in data['aaea'])
+        self.assertTrue(2. in data['aaea'])
+        self.assertTrue(3. in data['aaea'])
+        self.assertTrue(4. in data['aaea'])
+        self.assertTrue(5. in data['aaea'])
+        self.assertTrue(6. in data['aaea'])
 
     def test_concentration_parser_multiple(self):
         gds_file = 'tests/data/foo.soft'

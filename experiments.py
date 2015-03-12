@@ -22,29 +22,39 @@ def present(title, func, *args, model=None):
 # Real-life data #
 ##################
 
-def real_life_single(file):
+def real_life_single():
+    def process_file(g, file):
+        try:
+            c, used_gene_indices = g.io.load_concentrations('../data/concentrations/%s' % file)
+        except errors.InvalidGDSFormatError as e:
+            print('Could not process "%s" (%s)' % (file, e))
+            return
+
+        pf_tmp = g.math.get_perron_frobenius()
+        pf = [pf_tmp[i] for i in used_gene_indices]
+
+        for conc in np.array(c).T:
+            corr, p_val, = utils.StatsHandler.correlate(conc, pf)
+
+            present(
+                'Real-Life Data of %s against the PF' % file, plotter.Plotter.loglog,
+                'gene concentration', conc,
+                'perron-frobenius eigenvector', pf
+            )
+            present(
+                'Histogram of Real-Life Data of %s' % os.path.splitext(file)[0], plotter.Plotter.plot_histogram,
+                'gene concentration', 'count', conc
+            )
+
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
 
-    try:
-        c, used_gene_indices = g.io.load_concentrations('../data/concentrations/%s' % file)
-    except errors.InvalidGDSFormatError as e:
-        print('Could not process "%s" (%s)' % (file, e))
-        return
-
-    pf_tmp = g.math.get_perron_frobenius()
-    pf = [pf_tmp[i] for i in used_gene_indices]
-    corr, p_val, = utils.StatsHandler.correlate(c, pf)
-
-    present(
-        'Real-Life Data of %s' % file, plotter.Plotter.loglog,
-        'gene concentration', c,
-        'perron-frobenius eigenvector', pf
-    )
+    for f in os.listdir('../data/concentrations/'):
+        process_file(g, f)
 
 def real_life_average():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
 
-    c, used_gene_indices = g.io.load_averaged_concentrations('../data/concentrations/')
+    c, used_gene_indices = g.io.load_averaged_concentrations('../data/concentrations/', conc_range=[0])
 
     pf_tmp = g.math.get_perron_frobenius()
     pf = [pf_tmp[i] for i in used_gene_indices]
@@ -53,6 +63,11 @@ def real_life_average():
         'Real-Life Data (averaged)', plotter.Plotter.loglog,
         'averaged gene concentration', c,
         'perron-frobenius eigenvector', pf
+    )
+
+    present(
+        'Histogram of Real-Life Data (averaged)', plotter.Plotter.plot_histogram,
+        'gene concentration', 'count', c
     )
 
     """pr_tmp = g.math.get_pagerank()
@@ -282,7 +297,7 @@ if __name__ == '__main__':
     #simulate_model(models.MultiplicatorModel, runs=20)
     #simulate_model(models.BooleanModel)
     #simulate_model(models.LinearModel, plot_jc_ev=True, runs=20)
-    simulate_model(models.NonlinearModel, plot_jc_ev=True, runs=20)
+    #simulate_model(models.NonlinearModel, plot_jc_ev=True, runs=20)
 
     #analysis(utils.GraphGenerator.get_er_graph(100, 0.3), models.MultiplicatorModel)
     #investigate_active_edge_count_influence(models.BooleanModel)
@@ -290,5 +305,5 @@ if __name__ == '__main__':
     #gene_overview()
     #investigate_base_window_influence()
 
-    #real_life_average()
-    #for f in os.listdir('../data/concentrations/'): real_life_single(f)
+    real_life_average()
+    #real_life_single()

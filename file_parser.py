@@ -143,11 +143,19 @@ def get_advanced_adjacency_matrix(file):
 
     return np.array(mat).T
 
-def parse_concentration(fname, conc_range=[0], **kwargs):
-    """ Return all concentrations (at specified point in time) of given entries
+def parse_concentration(fname, conc_range=None, **kwargs):
+    """ Return all concentrations (in specified column) of given entries
+        Returned data is of form: {
+            'gene_name_1': [<conc_1>, <conc_2>, ...],
+            'gene_name_2': [<conc_1>, <conc_2>, ...],
+            ...
+        }
     """
     soft = pysoft.SOFTFile(fname)
     gdsh = utils.GDSFormatHandler(soft, **kwargs)
+
+    if conc_range is None:
+        conc_range = gdsh.get_useful_columns()
 
     data = {}
     for row in gdsh.get_data():
@@ -158,10 +166,13 @@ def parse_concentration(fname, conc_range=[0], **kwargs):
         base = 2
         for i in conc_range:
             try:
-                entry = 'null'
-                while entry == 'null':
-                    entry = row[base+i]
-                    if entry == 'null': base += 1
+                if isinstance(i, int):
+                    entry = 'null'
+                    while entry == 'null':
+                        entry = row[base+i]
+                        if entry == 'null': base += 1
+                else: # string
+                    entry = row[i]
 
                 conc.append(float(entry))
             except (ValueError, IndexError) as e:

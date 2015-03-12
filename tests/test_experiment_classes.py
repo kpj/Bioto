@@ -23,7 +23,7 @@ class TestBaseExperiment(TestCase):
 class TestGeneExpressionVariance(TestCase):
     def setUp(self):
         gdsh = utils.GDSHandler('tests/data')
-        experis = gdsh.process_directory(only_common_genes=True)
+        experis = gdsh.process_directory(only_common_genes=True, conc_range=[0])
 
         self.exp = experiment_classes.GeneExpressionVariance(gdsh.common_genes, experis)
 
