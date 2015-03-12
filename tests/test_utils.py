@@ -348,3 +348,16 @@ class TestGDSFormatHandler(TestCase):
 
         self.assertEqual(len(rows), 1)
         for r in rows: self.assertIsInstance(r, pysoft.parser.Row)
+
+    def test_row_formatter(self):
+        soft = pysoft.SOFTFile('tests/data/foo.soft')
+        gdsh = utils.GDSFormatHandler(soft)
+
+        row = soft.data[0]
+        self.assertEqual(list(row), ['bar', 'aaea', 42, 43])
+
+        res = gdsh.transform_row(row, np.log)
+        self.assertEqual(list(res), ['bar', 'aaea', np.log(42), np.log(43)])
+
+        res = gdsh.transform_row(row, lambda x: x+10)
+        self.assertEqual(list(res), ['bar', 'aaea', 52, 53])

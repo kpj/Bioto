@@ -1,3 +1,4 @@
+import copy
 import os, os.path
 import json, csv
 import hashlib
@@ -305,10 +306,27 @@ class GDSFormatHandler(object):
         self.throw_on_unknown_format = throw_on_unknown_format
 
     def get_data(self):
+        """ Yield data in soft file after transforming as needed
+        """
         for row in self.soft.data:
             yield self.parse_row(row)
 
+    def transform_row(self, r, func):
+        """ Transform all elements in new instance of given row by given operator if possible
+        """
+        row = copy.copy(r)
+
+        for i in range(len(row)):
+            try:
+                row[i] = func(row[i])
+            except:
+                pass
+
+        return row
+
     def parse_row(self, row):
+        """ Transform all data to common formatn
+        """
         if self.type == 'log2 ratio':
             return row
 
