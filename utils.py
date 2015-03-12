@@ -336,3 +336,15 @@ def md5(s):
 
 def is_soft_file(fname):
     return fname.endswith('.soft') or fname.endswith('.soft.gz')
+
+def get_interquartile_variance(data, pop_range=[25, 75]):
+    irange = np.percentile(data, pop_range, interpolation='nearest')
+
+    lspace = np.linspace(irange[0], irange[1], 2)
+    l_res = np.digitize(data, lspace)
+    r_res = np.digitize(data, lspace, right=True)
+
+    l_idata = set([data[i] for i in range(len(data)) if l_res[i] == 1])
+    r_idata = set([data[i] for i in range(len(data)) if r_res[i] == 1])
+
+    return np.var(list(l_idata.union(r_idata)))

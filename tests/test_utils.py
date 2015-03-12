@@ -33,6 +33,15 @@ class TestMethods(TestCase):
         npt.assert_allclose(res['foo'], [23, 42])
         npt.assert_array_equal(res['bar'], ['baz', 'qux'])
 
+    def test_interquartile_variance(self):
+        data = [102, 104, 105, 107, 108, 109, 110, 112, 115, 116, 118]
+
+        res = utils.get_interquartile_variance(data)
+        npt.assert_approx_equal(res, 9.3877551)
+
+        res = utils.get_interquartile_variance(data, pop_range=[0, 100])
+        npt.assert_approx_equal(res, 24.231404)
+
 class TestGraphGenerators(TestCase):
     def test_random_graph(self):
         graph = utils.GraphGenerator.get_random_graph(42, 30, 50)

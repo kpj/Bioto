@@ -4,6 +4,8 @@ import numpy as np
 import numpy.random as npr
 import matplotlib.pyplot as plt
 
+import utils
+
 
 class Experiment(object):
     """ Basic class to deal with experiments.
@@ -45,7 +47,7 @@ class GeneExpressionVariance(Experiment):
         self.pathway = [self._generate_x, self._generate_y, self._compute_variances, self._create_plot]
 
     def _generate_x(self, shuffle_experiment_order=False, **kwargs):
-        """ Transform data such that x_i contains all gene expressions 1,...,j for experiment i
+        """ Transform data such that x_i contains all gene expressions 1,...,n for experiment i
         """
         for exp in self.data:
             tmp = [t[1] for t in sorted(exp.items(), key=operator.itemgetter(0))]
@@ -79,8 +81,8 @@ class GeneExpressionVariance(Experiment):
         """ Compute variances of shuffled and ordered gene expression data
         """
         for e, e_shuffled in zip(self.y, self.y_shuffled):
-            self.variances.append(np.var(e))
-            self.variances_shuffled.append(np.var(e_shuffled))
+            self.variances.append(utils.get_interquartile_variance(e))
+            self.variances_shuffled.append(utils.get_interquartile_variance(e_shuffled))
 
     def _create_plot(self, **kwargs):
         """ Create plot of generated data
