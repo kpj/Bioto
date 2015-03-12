@@ -154,7 +154,7 @@ class TestGraphIO(GraphInit):
         os.remove(node_file)
 
     def test_matplotlib_visualization(self):
-        image_file = 'graph.png'
+        image_file = 'graph_testing.png'
 
         self.graph.io.visualize(image_file, use_R=False)
         self.assertTrue(os.path.isfile(image_file))
@@ -166,13 +166,17 @@ class TestGraphIO(GraphInit):
         conc_file = 'tests/data/foo.soft'
         conc_dir = 'tests/data/'
 
-        res1 = utils.DataHandler.load_concentrations(self.graph, conc_file)
-        res2 = self.graph.io.load_concentrations(conc_file)
+        raw_graph = nx.DiGraph()
+        raw_graph.add_nodes_from(['aaea', 'aaeb', 'haba', 'zuzu'])
+        trn = graph.Graph(raw_graph)
+
+        res1 = utils.DataHandler.load_concentrations(trn, conc_file)
+        res2 = trn.io.load_concentrations(conc_file)
         npt.assert_allclose(res1[0], res2[0])
         self.assertEqual(res1[1], res2[1])
 
-        res1 = utils.DataHandler.load_averaged_concentrations(self.graph, conc_dir)
-        res2 = self.graph.io.load_averaged_concentrations(conc_dir)
+        res1 = utils.DataHandler.load_averaged_concentrations(trn, conc_dir)
+        res2 = trn.io.load_averaged_concentrations(conc_dir)
         npt.assert_allclose(res1[0], res2[0])
         self.assertEqual(res1[1], res2[1])
 
