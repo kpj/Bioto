@@ -1,0 +1,2 @@
+AaeA	aaeB	+
+AaeB	aaeA	-

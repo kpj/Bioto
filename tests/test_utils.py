@@ -322,6 +322,19 @@ class TestDataHandler(TestCase):
             self.assertEqual(content, '1337.0,23.0,42.0\n4.0,6.0,2.0\n23.0\n')
         os.remove(cache_file)
 
+    def test_partial_file_averaging(self):
+        conc_dir = 'tests/data/'
+        partial_network_file = 'tests/data/partial_trn_network.txt'
+
+        partial_graph = utils.GraphGenerator.get_regulatory_graph(partial_network_file)
+        concs, used_gene_indices = utils.DataHandler.load_averaged_concentrations(partial_graph, conc_dir)
+
+        self.assertEqual(len(concs), 2)
+        self.assertEqual(len(used_gene_indices), 2)
+
+        npt.assert_allclose(concs, [467.3333333333333, 4.])
+        npt.assert_allclose(used_gene_indices, [0, 1])
+
 class TestGDSFormatHandler(TestCase):
     def test_log2_ratio_format(self):
         soft = pysoft.SOFTFile('tests/data/foo.soft')

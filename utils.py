@@ -101,6 +101,28 @@ class DataHandler(object):
     backup_dir = 'conc_baks'
 
     @staticmethod
+    def _handle_data(graph, data):
+        """ Take gene expression dict and return gene expression vector and used indices
+        """
+        concentrations = []
+        used_gene_indices = []
+        for i, gene in enumerate(graph):
+            if gene in data:
+                concentrations.append(data[gene])
+                used_gene_indices.append(i)
+
+        #matched = set(graph).intersection(set(data.keys()))
+        no_match = set(graph).difference(set(data.keys()))
+        print('> coverage:', round(1 - len(no_match)/len(graph), 3))
+
+        foo = {
+            'concentrations': concentrations,
+            'used_gene_indices': used_gene_indices
+        }
+
+        return foo
+
+    @staticmethod
     def load_concentrations(graph, file, conc_range=[0]):
         """ Extract gene concentrations from file which also appear in graph.
             Also return vector of node indices used in concentration vector
@@ -115,21 +137,7 @@ class DataHandler(object):
             gdsh = GDSHandler(os.path.dirname(file))
             data = gdsh.parse_file(os.path.basename(file), conc_range)
 
-            concentrations = []
-            used_gene_indices = []
-            for i, gene in enumerate(graph):
-                if gene in data:
-                    concentrations.append(data[gene])
-                    used_gene_indices.append(i)
-
-            #matched = set(graph).intersection(set(data.keys()))
-            no_match = set(graph).difference(set(data.keys()))
-            print('> coverage:', round(1 - len(no_match)/len(graph), 3))
-
-            foo = {
-                'concentrations': concentrations,
-                'used_gene_indices': used_gene_indices
-            }
+            foo = DataHandler._handle_data(graph, data)
 
             # cache for faster reuse
             if not os.path.exists(DataHandler.backup_dir):
@@ -140,20 +148,16 @@ class DataHandler(object):
 
     @staticmethod
     def load_averaged_concentrations(graph, directory, conc_range=[0], cache_file=None):
-        """ Loads concentration files in given directory and averages them
+        """ Load concentration files in given directory and average them.
             In order to account for genes which appear in the graph but not in any dataset, this function will also return a vector of indices of the genes of the graph which were found in at least on dataset
         """
         # gather all data
         gdsh = GDSHandler(directory)
         experis = gdsh.process_directory()
 
-        common_genes_in_graph = sorted(set(gdsh.common_genes).intersection(set(graph)))
-        genes_in_graph = sorted(set(gdsh.all_genes).intersection(set(graph)))
-        print('-> Found', len(common_genes_in_graph), 'common genes (%i covered in total)' % len(genes_in_graph))
-
         # accumulate data
-        res = []
-        for gene in genes_in_graph:
+        data = {}
+        for gene in graph:
             gene_concs = []
             for exp in experis:
                 if gene in exp:
@@ -164,15 +168,11 @@ class DataHandler(object):
                     writer = csv.writer(fd)
                     writer.writerow(gene_concs)
 
-            res.append(np.mean(gene_concs))
+            if len(gene_concs) == 0: continue
+            data[gene] = np.mean(gene_concs)
 
-        # find used genes
-        used_gene_indices = []
-        for i, gene in enumerate(graph):
-            if gene in genes_in_graph:
-                used_gene_indices.append(i)
-
-        return np.array(res), used_gene_indices
+        foo = DataHandler._handle_data(graph, data)
+        return foo['concentrations'], foo['used_gene_indices']
 
 class CacheHandler(object):
     cache_directory = 'plot_data'
