@@ -145,17 +145,6 @@ def get_advanced_adjacency_matrix(file):
 
 def parse_concentration(fname, conc_range=None, **kwargs):
     """ Return all concentrations (in specified column) of given entries
-        Returned data is of form: {
-            'data': {
-                'column': {
-                    'gene_name_1': [<conc_1>, <conc_2>, ...],
-                    'gene_name_2': [<conc_1>, <conc_2>, ...],
-                    ...
-                },
-                ...
-            },
-            'info': {}
-        }
     """
     soft = pysoft.SOFTFile(fname)
     gdsh = utils.GDSFormatHandler(soft, **kwargs)
@@ -177,12 +166,8 @@ def parse_concentration(fname, conc_range=None, **kwargs):
         conc_range = tmp
 
     # generate basic structure of data to be returned
-    data = {}
-    data['data'] = {c: {} for c in conc_range}
-    data['info'] = {}
-
-    data['info']['all_genes'] = set()
-    data['info']['file_name'] = os.path.basename(fname)
+    res = utils.GDSParseResult(conc_range)
+    res.add_filename(os.path.basename(fname))
 
     # gather data
     for row in gdsh.get_data():
@@ -194,10 +179,7 @@ def parse_concentration(fname, conc_range=None, **kwargs):
             except (ValueError, IndexError, KeyError) as e:
                 continue
 
-            data['data'][col][gene] = conc
-            data['info']['all_genes'].add(gene)
+            res.data[col][gene] = conc
+            res.add_gene(gene)
 
-    # some final adjustments
-    data['info']['all_genes'] = sorted(data['info']['all_genes'])
-
-    return data
+    return res

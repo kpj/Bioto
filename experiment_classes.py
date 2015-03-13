@@ -34,8 +34,8 @@ class GeneExpressionVariance(Experiment):
         self.common_genes = common_genes
         self.data = []
         for exp in experiments:
-            for col in exp['data']:
-                self.data.append(exp['data'][col])
+            for col in exp.get_columns():
+                self.data.append(exp.data[col])
 
         self.x = []
         self.x_shuffled = []

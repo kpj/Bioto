@@ -2,6 +2,7 @@ import re
 import copy
 import collections
 import os, os.path
+import operator
 import json, csv
 import hashlib
 import random
@@ -108,17 +109,18 @@ class DataHandler(object):
         used_genes = set()
         tmp = collections.defaultdict(dict)
         for gene in graph:
-            for col in exp['data']:
-                if gene in exp['data'][col]:
-                    tmp[col][gene] = exp['data'][col][gene]
+            for col in exp.get_columns():
+                if gene in exp.get_genes_in_col(col):
+                    tmp[col][gene] = exp.data[col][gene]
                     used_genes.add(gene)
-        exp['data'] = dict(tmp)
+        exp.data = dict(tmp)
 
         #matched = set(graph).intersection(used_genes)
         no_match = set(graph).difference(used_genes)
         print('> coverage:', round(1 - len(no_match)/len(graph), 3))
 
-        exp['info']['all_genes'] = sorted(used_genes)
+        exp.clear_genes()
+        exp.add_genes(used_genes)
 
         return exp
 
@@ -156,25 +158,18 @@ class DataHandler(object):
         experiments = gdsh.process_directory(conc_range=conc_range)
 
         # accumulate data
-        data = {}
-        data['data'] = {}
-        data['data']['average'] = {}
-        data['info'] = {}
-        data['info']['file_name'] = ''
+        res = GDSParseResult(['average'])
 
         used_genes = set()
         for gene in graph:
             gene_concs = []
             for exp in experiments:
-                for col in sorted(exp['data']):
-                    if gene in sorted(exp['data'][col]):
-                        gene_concs.append(exp['data'][col][gene])
+                for col in exp.get_columns():
+                    if gene in exp.get_genes_in_col(col):
+                        gene_concs.append(exp.data[col][gene])
                         used_genes.add(gene)
 
-                        if not exp['info']['file_name'] in data['info']['file_name']:
-                            foo = data['info']['file_name'].split(',')
-                            foo.append(exp['info']['file_name'])
-                            data['info']['file_name'] = ','.join(foo)
+                        res.add_filename(exp.filename)
 
             if not cache_file is None:
                 with open(cache_file, 'a') as fd:
@@ -182,11 +177,11 @@ class DataHandler(object):
                     writer.writerow(gene_concs)
 
             if len(gene_concs) == 0: continue
-            data['data']['average'][gene] = np.mean(gene_concs)
+            res.data['average'][gene] = np.mean(gene_concs)
 
-        data['info']['all_genes'] = sorted(used_genes)
+        res.add_genes(used_genes)
 
-        exp = DataHandler._handle_data(graph, data)
+        exp = DataHandler._handle_data(graph, res)
         return exp
 
 class CacheHandler(object):
@@ -289,14 +284,14 @@ class GDSHandler(object):
                 if not is_soft_file(fname): continue
 
                 try:
-                    data = self.parse_file(fname, conc_range=conc_range)
+                    res = self.parse_file(fname, conc_range=conc_range)
                 except errors.InvalidGDSFormatError:
                     continue
 
-                experiments.append(data)
+                experiments.append(res)
 
                 genes.append(set())
-                genes[-1] = set(data['info']['all_genes'])
+                genes[-1] = set(res.get_genes())
 
         self.all_genes = sorted(set.union(*genes))
         self.common_genes = sorted(set.intersection(*genes))
@@ -304,13 +299,13 @@ class GDSHandler(object):
         # extract gene concentrations
         genes_to_extract = self.common_genes if only_common_genes else self.all_genes
         for exp in experiments:
-            for col in exp['data']:
-                genes = exp['data'][col].keys()
+            for col in exp.data:
+                genes = exp.data[col].keys()
 
-                tmp = {k: exp['data'][col][k] if k in genes else None for k in genes_to_extract}
+                tmp = {k: exp.data[col][k] if k in genes else None for k in genes_to_extract}
                 tmp = dict(filter(lambda x: not x[1] is None, tmp.items()))
 
-                exp['data'][col] = tmp
+                exp.data[col] = tmp
 
         return experiments
 
@@ -379,6 +374,60 @@ class GDSFormatHandler(object):
             raise errors.InvalidGDSFormatError('Encountered invalid format "%s"' % self.type)
         else:
             return row
+
+class GDSParseResult(object):
+    def __init__(self, conc_range=[]):
+        self.data = {c: {} for c in conc_range}
+
+        self._genes = set()
+        self.filename = None
+
+    def __eq__(self, other):
+        return self.data == other.data and self._genes == other._genes and self.filename == other.filename
+
+    def trim_input(self, inp, graph, col):
+        """ Extract elements from input whose position corresponds to genes used in this dataset and actually appearing in the graph
+        """
+        used_gene_indices = [list(graph).index(gene) for gene in self.get_genes_in_col(col)]
+        return [inp[i] for i in used_gene_indices]
+
+    def get_data(self):
+        """ Return column and contained data
+        """
+        for col in sorted(self.data):
+            conc = [t[1] for t in sorted(self.data[col].items(), key=operator.itemgetter(0))]
+
+            yield col, conc
+
+    def get_columns(self):
+        for col in sorted(self.data.keys()):
+            yield col
+
+    def get_genes_in_col(self, col):
+        for gene in sorted(self.data[col].keys()):
+            yield gene
+
+    def add_gene(self, gene):
+        self._genes.add(gene)
+
+    def add_genes(self, genes):
+        for g in genes:
+            self.add_gene(g)
+
+    def get_genes(self):
+        return sorted(self._genes)
+
+    def clear_genes(self):
+        self._genes = set()
+
+    def add_filename(self, fname):
+        if self.filename is None:
+            self.filename = fname
+        else:
+            if not fname in self.filename:
+                foo = self.filename.split(',')
+                foo.append(fname)
+                self.filename = ','.join(foo)
 
 
 def clean_string(s):

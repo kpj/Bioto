@@ -13,59 +13,55 @@ class TestParser(TestCase):
         gds_file = 'tests/data/foo.soft'
 
         res = file_parser.parse_concentration(gds_file, conc_range=[0])
-        data, info = res['data'], res['info']
-        self.assertEqual(len(data['GSM37063']), 3)
-        self.assertEqual(data['GSM37063']['aaea'], 42.)
-        self.assertEqual(data['GSM37063']['aaeb'], 2.)
-        self.assertEqual(data['GSM37063']['zuzu'], 23.)
-        self.assertEqual(info['all_genes'], ['aaea', 'aaeb', 'zuzu'])
-        self.assertEqual(info['file_name'], 'foo.soft')
+        self.assertEqual(len(res.data['GSM37063']), 3)
+        self.assertEqual(res.data['GSM37063']['aaea'], 42.)
+        self.assertEqual(res.data['GSM37063']['aaeb'], 2.)
+        self.assertEqual(res.data['GSM37063']['zuzu'], 23.)
+        self.assertEqual(res.get_genes(), ['aaea', 'aaeb', 'zuzu'])
+        self.assertEqual(res.filename, 'foo.soft')
 
         res = file_parser.parse_concentration(gds_file, conc_range=[1])
-        data, info = res['data'], res['info']
-        self.assertEqual(len(data['GSM37064']), 4)
-        self.assertEqual(data['GSM37064']['aaea'], 43.)
-        self.assertEqual(data['GSM37064']['aaeb'], 3.)
-        self.assertEqual(data['GSM37064']['haba'], 1.)
-        self.assertEqual(data['GSM37064']['zuzu'], 24.)
-        self.assertEqual(info['all_genes'], ['aaea', 'aaeb', 'haba', 'zuzu'])
-        self.assertEqual(info['file_name'], 'foo.soft')
+        self.assertEqual(len(res.data['GSM37064']), 4)
+        self.assertEqual(res.data['GSM37064']['aaea'], 43.)
+        self.assertEqual(res.data['GSM37064']['aaeb'], 3.)
+        self.assertEqual(res.data['GSM37064']['haba'], 1.)
+        self.assertEqual(res.data['GSM37064']['zuzu'], 24.)
+        self.assertEqual(res.get_genes(), ['aaea', 'aaeb', 'haba', 'zuzu'])
+        self.assertEqual(res.filename, 'foo.soft')
 
     def test_concentration_parser_column_selection(self):
         gds_file = 'tests/data/col_case.soft.fubar'
         res = file_parser.parse_concentration(gds_file)
-        data, info = res['data'], res['info']
 
-        self.assertEqual(len(data), 7)
+        self.assertEqual(len(res.data), 7)
 
-        self.assertEqual(data['GSM37063']['aaea'], 1.)
-        self.assertEqual(data['GSM37064']['aaea'], 2.)
-        self.assertEqual(data['GSM37065']['aaea'], 3.)
-        self.assertEqual(data['GSM37066']['aaea'], 4.)
-        self.assertEqual(data['GSM37067']['aaea'], 5.)
-        self.assertEqual(data['GSM37068']['aaea'], 6.)
-        self.assertEqual(data['GSM37069']['aaea'], 7.)
+        self.assertEqual(res.data['GSM37063']['aaea'], 1.)
+        self.assertEqual(res.data['GSM37064']['aaea'], 2.)
+        self.assertEqual(res.data['GSM37065']['aaea'], 3.)
+        self.assertEqual(res.data['GSM37066']['aaea'], 4.)
+        self.assertEqual(res.data['GSM37067']['aaea'], 5.)
+        self.assertEqual(res.data['GSM37068']['aaea'], 6.)
+        self.assertEqual(res.data['GSM37069']['aaea'], 7.)
 
-        self.assertEqual(info['all_genes'], ['aaea'])
-        self.assertEqual(info['file_name'], 'col_case.soft.fubar')
+        self.assertEqual(res.get_genes(), ['aaea'])
+        self.assertEqual(res.filename, 'col_case.soft.fubar')
 
     def test_concentration_parser_multiple(self):
         gds_file = 'tests/data/foo.soft'
         res = file_parser.parse_concentration(gds_file, conc_range=[0, 1])
-        data, info = res['data'], res['info']
 
-        self.assertEqual(len(data['GSM37063']), 3)
-        self.assertEqual(data['GSM37063']['aaea'], 42.)
-        self.assertEqual(data['GSM37063']['aaeb'], 2.)
-        self.assertEqual(data['GSM37063']['zuzu'], 23.)
+        self.assertEqual(len(res.data['GSM37063']), 3)
+        self.assertEqual(res.data['GSM37063']['aaea'], 42.)
+        self.assertEqual(res.data['GSM37063']['aaeb'], 2.)
+        self.assertEqual(res.data['GSM37063']['zuzu'], 23.)
 
-        self.assertEqual(len(data['GSM37064']), 4)
-        self.assertEqual(data['GSM37064']['aaea'], 43.)
-        self.assertEqual(data['GSM37064']['aaeb'], 3.)
-        self.assertEqual(data['GSM37064']['haba'], 1.)
-        self.assertEqual(data['GSM37064']['zuzu'], 24.)
+        self.assertEqual(len(res.data['GSM37064']), 4)
+        self.assertEqual(res.data['GSM37064']['aaea'], 43.)
+        self.assertEqual(res.data['GSM37064']['aaeb'], 3.)
+        self.assertEqual(res.data['GSM37064']['haba'], 1.)
+        self.assertEqual(res.data['GSM37064']['zuzu'], 24.)
 
-        self.assertEqual(info['all_genes'], ['aaea', 'aaeb', 'haba', 'zuzu'])
+        self.assertEqual(res.get_genes(), ['aaea', 'aaeb', 'haba', 'zuzu'])
 
     def test_conc_range(self):
         gds_file = 'tests/data/foo.soft'

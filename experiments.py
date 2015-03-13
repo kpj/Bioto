@@ -1,5 +1,5 @@
 import sys, random, collections
-import os, os.path, operator
+import os, os.path
 
 import numpy as np
 import numpy.linalg as npl
@@ -32,17 +32,12 @@ def real_life_single():
 
         pf_tmp = g.math.get_perron_frobenius()
 
-        for col in exp['data']:
-            conc = [t[1] for t in sorted(exp['data'][col].items(), key=operator.itemgetter(0))]
+        for col, conc in exp.get_data():
+            pf = exp.trim_input(pf_tmp, g, col)
 
-            used_gene_indices = [list(g).index(gene) for gene in sorted(exp['data'][col].keys())]
-            pf = [pf_tmp[i] for i in used_gene_indices]
-
-            corr, p_val, = utils.StatsHandler.correlate(conc, pf)
-
-            spec = '%s, %s' % (os.path.splitext(file)[0], col)
+            spec = '%s, %s' % (os.path.splitext(exp.filename)[0], col)
             present(
-                'Real-Life Data of %s against the PF' % spec, plotter.Plotter.loglog,
+                'Real-Life Data of %s against PF' % spec, plotter.Plotter.loglog,
                 'gene concentration', conc,
                 'perron-frobenius eigenvector', pf
             )
@@ -53,21 +48,18 @@ def real_life_single():
 
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
 
-    for f in ['GDS2364.soft']:#os.listdir('../data/concentrations/'):
+    for f in os.listdir('../data/concentrations/'):
         process_file(g, f)
 
 def real_life_average():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
 
-    exp = g.io.load_averaged_concentrations('../data/concentrations/', conc_range=[0])
+    exp = g.io.load_averaged_concentrations('../data/concentrations/', conc_range=[0], cache_file='averaged_data.txt')
 
-    conc = [t[1] for t in sorted(exp['data']['average'].items(), key=operator.itemgetter(0))]
     pf_tmp = g.math.get_perron_frobenius()
 
-    used_gene_indices = [list(g).index(gene) for gene in sorted(exp['data']['average'].keys())]
-    pf = [pf_tmp[i] for i in used_gene_indices]
-
-    corr, p_val = utils.StatsHandler.correlate(conc, pf)
+    col, conc = next(exp.get_data())
+    pf = exp.trim_input(pf_tmp, g, col)
 
     present(
         'Real-Life Data (averaged)', plotter.Plotter.loglog,
@@ -81,8 +73,7 @@ def real_life_average():
     )
 
     """pr_tmp = g.math.get_pagerank()
-    pr = [pr_tmp[i] for i in used_gene_indices]
-    corr, p_val = utils.StatsHandler.correlate(conc, pr)
+    pr = exp.trim_input(pr_tmp, g, 'average')
     present(
         'Real-Life Data (averaged)', plotter.Plotter.loglog,
         'averaged gene concentration', conc,

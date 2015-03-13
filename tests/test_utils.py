@@ -10,7 +10,7 @@ import networkx as nx
 
 import pysoft
 
-import utils, errors, models
+import utils, errors, models, graph
 
 
 class TestMethods(TestCase):
@@ -240,19 +240,17 @@ class TestGDSHandler(TestCase):
         gds_file = 'foo.soft'
         res = self.gdsh.parse_file(gds_file, conc_range=[0])
 
-        self.assertEqual(res, {
-            'data': {
+        self.assertEqual(
+            res.data, {
                 'GSM37063': {
                     'aaea': 42.,
                     'aaeb': 2.,
                     'zuzu': 23.
                 }
-            },
-            'info': {
-                'all_genes': ['aaea', 'aaeb', 'zuzu'],
-                'file_name': 'foo.soft'
             }
-        })
+        )
+        self.assertEqual(res.get_genes(), ['aaea', 'aaeb', 'zuzu'])
+        self.assertEqual(res.filename, 'foo.soft')
 
     def testInvalidFile(self):
         gds_file = 'qux.soft'
@@ -264,12 +262,12 @@ class TestGDSHandler(TestCase):
         res = self.gdsh.process_directory(conc_range=[0, 'GSM37064'])
 
         self.assertEqual(len(res), 3)
-        self.assertEqual(res[0]['data']['GSM37063'], {'aaea': 1337., 'aaeb': 4.})
-        self.assertEqual(res[0]['data']['GSM37064'], {})
-        self.assertEqual(res[1]['data']['GSM37063'], {'aaea': 23., 'aaeb': 6.})
-        self.assertEqual(res[1]['data']['GSM37064'], {})
-        self.assertEqual(res[2]['data']['GSM37063'], {'aaea': 42., 'aaeb': 2., 'zuzu': 23.})
-        self.assertEqual(res[2]['data']['GSM37064'], {'aaea': 43., 'aaeb': 3., 'haba': 1, 'zuzu': 24.})
+        self.assertEqual(res[0].data['GSM37063'], {'aaea': 1337., 'aaeb': 4.})
+        self.assertEqual(res[0].data['GSM37064'], {})
+        self.assertEqual(res[1].data['GSM37063'], {'aaea': 23., 'aaeb': 6.})
+        self.assertEqual(res[1].data['GSM37064'], {})
+        self.assertEqual(res[2].data['GSM37063'], {'aaea': 42., 'aaeb': 2., 'zuzu': 23.})
+        self.assertEqual(res[2].data['GSM37064'], {'aaea': 43., 'aaeb': 3., 'haba': 1, 'zuzu': 24.})
 
         self.assertEqual(len(self.gdsh.all_genes), 4)
         self.assertEqual(len(self.gdsh.common_genes), 2)
@@ -278,10 +276,10 @@ class TestGDSHandler(TestCase):
         res = self.gdsh.process_directory(only_common_genes=True, conc_range=['GSM37063', 1])
 
         self.assertEqual(len(res), 3)
-        self.assertEqual(res[0]['data']['GSM37063'], {'aaea': 1337., 'aaeb': 4.})
-        self.assertEqual(res[1]['data']['GSM37063'], {'aaea': 23., 'aaeb': 6.})
-        self.assertEqual(res[2]['data']['GSM37063'], {'aaea': 42., 'aaeb': 2.})
-        self.assertEqual(res[2]['data']['GSM37064'], {'aaea': 43., 'aaeb': 3.})
+        self.assertEqual(res[0].data['GSM37063'], {'aaea': 1337., 'aaeb': 4.})
+        self.assertEqual(res[1].data['GSM37063'], {'aaea': 23., 'aaeb': 6.})
+        self.assertEqual(res[2].data['GSM37063'], {'aaea': 42., 'aaeb': 2.})
+        self.assertEqual(res[2].data['GSM37064'], {'aaea': 43., 'aaeb': 3.})
 
         self.assertEqual(len(self.gdsh.all_genes), 4)
         self.assertEqual(len(self.gdsh.common_genes), 2)
@@ -310,8 +308,8 @@ class TestDataHandler(TestCase):
         conc_file = 'tests/data/empty.soft.spec'
         exp = utils.DataHandler.load_concentrations(self.graph, conc_file)
 
-        self.assertEqual(len(exp['data']), 0)
-        self.assertEqual(len(exp['info']['all_genes']), 0)
+        self.assertEqual(len(exp.data), 0)
+        self.assertEqual(len(exp.get_genes()), 0)
 
     def test_single_file(self):
         conc_file = 'tests/data/foo.soft'
@@ -320,18 +318,18 @@ class TestDataHandler(TestCase):
         self.assertTrue(os.path.isdir(utils.DataHandler.backup_dir))
         self.assertTrue(os.path.isfile(os.path.join(utils.DataHandler.backup_dir, 'conc_foo.soft.bak.npy')))
 
-        self.assertEqual(exp['data']['GSM37064'], {'aaea': 43, 'aaeb': 3., 'zuzu': 24.})
-        self.assertEqual(exp['info']['all_genes'], ['aaea', 'aaeb', 'zuzu'])
+        self.assertEqual(exp.data['GSM37064'], {'aaea': 43., 'aaeb': 3., 'zuzu': 24.})
+        self.assertEqual(exp.get_genes(), ['aaea', 'aaeb', 'zuzu'])
 
     def test_file_averaging(self):
         conc_dir = 'tests/data/'
         exp = utils.DataHandler.load_averaged_concentrations(self.graph, conc_dir, cache_file=self.average_cache_file, conc_range=[0, 1])
 
-        self.assertEqual(len(exp['data']['average']), 3)
-        self.assertEqual(len(exp['info']['all_genes']), 3)
+        self.assertEqual(len(exp.data['average']), 3)
+        self.assertEqual(len(exp.get_genes()), 3)
 
-        self.assertEqual(exp['data']['average'], {'aaea': 361.25, 'aaeb': 3.75, 'zuzu': 23.5})
-        self.assertEqual(exp['info']['all_genes'], ['aaea', 'aaeb', 'zuzu'])
+        self.assertEqual(exp.data['average'], {'aaea': 361.25, 'aaeb': 3.75, 'zuzu': 23.5})
+        self.assertEqual(exp.get_genes(), ['aaea', 'aaeb', 'zuzu'])
 
         self.assertTrue(os.path.isfile(self.average_cache_file))
         with open(self.average_cache_file, 'r') as fd:
@@ -345,11 +343,11 @@ class TestDataHandler(TestCase):
         partial_graph = utils.GraphGenerator.get_regulatory_graph(partial_network_file)
         exp = utils.DataHandler.load_averaged_concentrations(partial_graph, conc_dir, conc_range=[0])
 
-        self.assertEqual(len(exp['data']['average']), 2)
-        self.assertEqual(len(exp['info']['all_genes']), 2)
+        self.assertEqual(len(exp.data['average']), 2)
+        self.assertEqual(len(exp.get_genes()), 2)
 
-        self.assertEqual(exp['data']['average'], {'aaea': 467.3333333333333, 'aaeb': 4.})
-        self.assertEqual(exp['info']['all_genes'], ['aaea', 'aaeb'])
+        self.assertEqual(exp.data['average'], {'aaea': 467.3333333333333, 'aaeb': 4.})
+        self.assertEqual(exp.get_genes(), ['aaea', 'aaeb'])
 
 class TestGDSFormatHandler(TestCase):
     def test_log2_ratio_format(self):
@@ -406,3 +404,72 @@ class TestGDSFormatHandler(TestCase):
         self.assertTrue('GSM37067' in cols)
         self.assertTrue('GSM37068' in cols)
         self.assertTrue('GSM37069' in cols)
+
+class TestGDSParseResult(TestCase):
+    def test_initialization(self):
+        res = utils.GDSParseResult(['foo', 'bar', 'baz', 'qux'])
+        self.assertEqual(sorted(res.data.keys()), ['bar', 'baz', 'foo', 'qux'])
+        self.assertEqual(list(res.get_columns()), ['bar', 'baz', 'foo', 'qux'])
+
+    def test_gene_getter(self):
+        res = utils.GDSParseResult()
+        res.data = {'foo': {'a': 1, 'b': 2}}
+
+        self.assertEqual(list(res.get_genes_in_col('foo')), ['a', 'b'])
+
+    def test_gene_addition(self):
+        res = utils.GDSParseResult()
+
+        res.add_gene('z')
+        res.add_gene('a')
+        res.add_gene('b')
+        self.assertEqual(res.get_genes(), ['a', 'b', 'z'])
+
+        res.add_genes(['d', 'c'])
+        self.assertEqual(res.get_genes(), ['a', 'b', 'c', 'd', 'z'])
+
+        res.clear_genes()
+        res.add_genes(['d', 'c'])
+        self.assertEqual(res.get_genes(), ['c', 'd'])
+
+    def test_equality_check(self):
+        res1 = utils.GDSParseResult(['foo'])
+        res2 = utils.GDSParseResult(['foo'])
+        self.assertEqual(res1, res2)
+
+        res2.add_filename('fubar.soft')
+        self.assertNotEqual(res1, res2)
+
+    def test_filename_setter(self):
+        res = utils.GDSParseResult()
+
+        res.add_filename('foo')
+        self.assertEqual(res.filename, 'foo')
+
+        res.add_filename('bar')
+        self.assertEqual(res.filename, 'foo,bar')
+
+        res.add_filename('baz')
+        self.assertEqual(res.filename, 'foo,bar,baz')
+
+    def test_data_getter(self):
+        res = utils.GDSParseResult()
+        res.data = {'foo': {'a': 1, 'b': 2}, 'bar': {'a': 10, 'b': 20}}
+
+        gener = list(res.get_data())
+        self.assertEqual(len(gener), 2)
+        self.assertEqual(gener[0], ('bar', [10, 20]))
+        self.assertEqual(gener[1], ('foo', [1, 2]))
+
+    def test_input_trimming(self):
+        raw_graph = nx.DiGraph()
+        raw_graph.add_nodes_from(['a', 'b', 'c', 'd'])
+        g = graph.Graph(raw_graph)
+
+        res = utils.GDSParseResult()
+        res.data = {'foo': {'b': 2, 'd': 4}}
+
+        inp = [4, 3, 2, 1]
+        trimmed = res.trim_input(inp, g, 'foo')
+
+        self.assertEqual(trimmed, [3, 1])
