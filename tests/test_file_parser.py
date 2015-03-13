@@ -12,42 +12,68 @@ class TestParser(TestCase):
     def test_concentration_parser_single(self):
         gds_file = 'tests/data/foo.soft'
 
-        data = file_parser.parse_concentration(gds_file, conc_range=[0])
-        self.assertEqual(len(data), 4)
-        self.assertEqual(data['aaea'], 42.)
-        self.assertEqual(data['aaeb'], 2.)
-        self.assertEqual(data['haba'], 1.)
-        self.assertEqual(data['zuzu'], 23.)
+        res = file_parser.parse_concentration(gds_file, conc_range=[0])
+        data, info = res['data'], res['info']
+        self.assertEqual(len(data['GSM37063']), 3)
+        self.assertEqual(data['GSM37063']['aaea'], 42.)
+        self.assertEqual(data['GSM37063']['aaeb'], 2.)
+        self.assertEqual(data['GSM37063']['zuzu'], 23.)
+        self.assertEqual(info['all_genes'], ['aaea', 'aaeb', 'zuzu'])
+        self.assertEqual(info['file_name'], 'foo.soft')
 
-        data = file_parser.parse_concentration(gds_file, conc_range=[1])
-        self.assertEqual(len(data), 4)
-        self.assertEqual(data['aaea'], 43.)
-        self.assertEqual(data['aaeb'], 3.)
-        self.assertEqual(data['haba'], 1.)
-        self.assertEqual(data['zuzu'], 24.)
+        res = file_parser.parse_concentration(gds_file, conc_range=[1])
+        data, info = res['data'], res['info']
+        self.assertEqual(len(data['GSM37064']), 4)
+        self.assertEqual(data['GSM37064']['aaea'], 43.)
+        self.assertEqual(data['GSM37064']['aaeb'], 3.)
+        self.assertEqual(data['GSM37064']['haba'], 1.)
+        self.assertEqual(data['GSM37064']['zuzu'], 24.)
+        self.assertEqual(info['all_genes'], ['aaea', 'aaeb', 'haba', 'zuzu'])
+        self.assertEqual(info['file_name'], 'foo.soft')
 
     def test_concentration_parser_column_selection(self):
         gds_file = 'tests/data/col_case.soft.fubar'
-        data = file_parser.parse_concentration(gds_file)
+        res = file_parser.parse_concentration(gds_file)
+        data, info = res['data'], res['info']
 
-        self.assertEqual(len(data), 1)
-        self.assertEqual(len(data['aaea']), 7)
+        self.assertEqual(len(data), 7)
 
-        self.assertTrue(1. in data['aaea'])
-        self.assertTrue(2. in data['aaea'])
-        self.assertTrue(3. in data['aaea'])
-        self.assertTrue(4. in data['aaea'])
-        self.assertTrue(5. in data['aaea'])
-        self.assertTrue(6. in data['aaea'])
+        self.assertEqual(data['GSM37063']['aaea'], 1.)
+        self.assertEqual(data['GSM37064']['aaea'], 2.)
+        self.assertEqual(data['GSM37065']['aaea'], 3.)
+        self.assertEqual(data['GSM37066']['aaea'], 4.)
+        self.assertEqual(data['GSM37067']['aaea'], 5.)
+        self.assertEqual(data['GSM37068']['aaea'], 6.)
+        self.assertEqual(data['GSM37069']['aaea'], 7.)
+
+        self.assertEqual(info['all_genes'], ['aaea'])
+        self.assertEqual(info['file_name'], 'col_case.soft.fubar')
 
     def test_concentration_parser_multiple(self):
         gds_file = 'tests/data/foo.soft'
-        data = file_parser.parse_concentration(gds_file, conc_range=[0, 1])
+        res = file_parser.parse_concentration(gds_file, conc_range=[0, 1])
+        data, info = res['data'], res['info']
 
-        self.assertEqual(len(data), 3)
-        self.assertEqual(data['aaea'], [42., 43.])
-        self.assertEqual(data['aaeb'], [2., 3.])
-        self.assertEqual(data['zuzu'], [23., 24.])
+        self.assertEqual(len(data['GSM37063']), 3)
+        self.assertEqual(data['GSM37063']['aaea'], 42.)
+        self.assertEqual(data['GSM37063']['aaeb'], 2.)
+        self.assertEqual(data['GSM37063']['zuzu'], 23.)
+
+        self.assertEqual(len(data['GSM37064']), 4)
+        self.assertEqual(data['GSM37064']['aaea'], 43.)
+        self.assertEqual(data['GSM37064']['aaeb'], 3.)
+        self.assertEqual(data['GSM37064']['haba'], 1.)
+        self.assertEqual(data['GSM37064']['zuzu'], 24.)
+
+        self.assertEqual(info['all_genes'], ['aaea', 'aaeb', 'haba', 'zuzu'])
+
+    def test_conc_range(self):
+        gds_file = 'tests/data/foo.soft'
+
+        data1 = file_parser.parse_concentration(gds_file, conc_range=[0])
+        data2 = file_parser.parse_concentration(gds_file, conc_range=['GSM37063'])
+
+        self.assertEqual(data1, data2)
 
     def test_regulation_parser(self):
         network_file = 'tests/data/trn_network.txt'

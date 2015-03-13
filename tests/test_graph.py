@@ -172,13 +172,11 @@ class TestGraphIO(GraphInit):
 
         res1 = utils.DataHandler.load_concentrations(trn, conc_file, conc_range=[0])
         res2 = trn.io.load_concentrations(conc_file)
-        npt.assert_allclose(res1[0], res2[0])
-        self.assertEqual(res1[1], res2[1])
+        self.assertEqual(res1, res2)
 
         res1 = utils.DataHandler.load_averaged_concentrations(trn, conc_dir, conc_range=[0])
         res2 = trn.io.load_averaged_concentrations(conc_dir, conc_range=[0])
-        npt.assert_allclose(res1[0], res2[0])
-        self.assertEqual(res1[1], res2[1])
+        self.assertEqual(res1, res2)
 
         shutil.rmtree(utils.DataHandler.backup_dir)
 

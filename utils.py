@@ -1,10 +1,10 @@
 import re
 import copy
+import collections
 import os, os.path
 import json, csv
 import hashlib
 import random
-import operator
 
 import numpy as np
 import numpy.random as npr
@@ -102,31 +102,25 @@ class DataHandler(object):
     backup_dir = 'conc_baks'
 
     @staticmethod
-    def _handle_data(graph, data):
+    def _handle_data(graph, exp):
         """ Take gene expression dict and return gene expression vector and used indices
-            Concentrations have the form: [
-                [<conc_1>, <conc_2>, ...],
-                [<conc_1>, <conc_2>, ...],
-                ...
-            ]
         """
-        concentrations = []
-        used_gene_indices = []
-        for i, gene in enumerate(graph):
-            if gene in data:
-                concentrations.append(data[gene])
-                used_gene_indices.append(i)
+        used_genes = set()
+        tmp = collections.defaultdict(dict)
+        for gene in graph:
+            for col in exp['data']:
+                if gene in exp['data'][col]:
+                    tmp[col][gene] = exp['data'][col][gene]
+                    used_genes.add(gene)
+        exp['data'] = dict(tmp)
 
-        #matched = set(graph).intersection(set(data.keys()))
-        no_match = set(graph).difference(set(data.keys()))
+        #matched = set(graph).intersection(used_genes)
+        no_match = set(graph).difference(used_genes)
         print('> coverage:', round(1 - len(no_match)/len(graph), 3))
 
-        foo = {
-            'concentrations': concentrations,
-            'used_gene_indices': used_gene_indices
-        }
+        exp['info']['all_genes'] = sorted(used_genes)
 
-        return foo
+        return exp
 
     @staticmethod
     def load_concentrations(graph, file, conc_range=None):
@@ -137,20 +131,20 @@ class DataHandler(object):
 
         if os.path.isfile('%s.npy' % bak_fname):
             print('Recovering data from', bak_fname)
-            foo = np.load('%s.npy' % bak_fname).item()
+            exp = np.load('%s.npy' % bak_fname).item()
         else:
             print('Parsing data file', file)
             gdsh = GDSHandler(os.path.dirname(file))
             data = gdsh.parse_file(os.path.basename(file), conc_range)
 
-            foo = DataHandler._handle_data(graph, data)
+            exp = DataHandler._handle_data(graph, data)
 
             # cache for faster reuse
             if not os.path.exists(DataHandler.backup_dir):
                 os.makedirs(DataHandler.backup_dir)
-            np.save(bak_fname, foo)
+            np.save(bak_fname, exp)
 
-        return foo['concentrations'], foo['used_gene_indices']
+        return exp
 
     @staticmethod
     def load_averaged_concentrations(graph, directory, conc_range=None, cache_file=None):
@@ -159,15 +153,28 @@ class DataHandler(object):
         """
         # gather all data
         gdsh = GDSHandler(directory)
-        experis = gdsh.process_directory(conc_range=conc_range)
+        experiments = gdsh.process_directory(conc_range=conc_range)
 
         # accumulate data
         data = {}
+        data['data'] = {}
+        data['data']['average'] = {}
+        data['info'] = {}
+        data['info']['file_name'] = ''
+
+        used_genes = set()
         for gene in graph:
             gene_concs = []
-            for exp in experis:
-                if gene in exp:
-                    gene_concs.append(exp[gene])
+            for exp in experiments:
+                for col in sorted(exp['data']):
+                    if gene in sorted(exp['data'][col]):
+                        gene_concs.append(exp['data'][col][gene])
+                        used_genes.add(gene)
+
+                        if not exp['info']['file_name'] in data['info']['file_name']:
+                            foo = data['info']['file_name'].split(',')
+                            foo.append(exp['info']['file_name'])
+                            data['info']['file_name'] = ','.join(foo)
 
             if not cache_file is None:
                 with open(cache_file, 'a') as fd:
@@ -175,10 +182,12 @@ class DataHandler(object):
                     writer.writerow(gene_concs)
 
             if len(gene_concs) == 0: continue
-            data[gene] = np.mean(gene_concs)
+            data['data']['average'][gene] = np.mean(gene_concs)
 
-        foo = DataHandler._handle_data(graph, data)
-        return foo['concentrations'], foo['used_gene_indices']
+        data['info']['all_genes'] = sorted(used_genes)
+
+        exp = DataHandler._handle_data(graph, data)
+        return exp
 
 class CacheHandler(object):
     cache_directory = 'plot_data'
@@ -283,25 +292,27 @@ class GDSHandler(object):
                     data = self.parse_file(fname, conc_range=conc_range)
                 except errors.InvalidGDSFormatError:
                     continue
-                if len(data) == 0: continue
 
                 experiments.append(data)
 
                 genes.append(set())
-                genes[-1] = set(data.keys())
+                genes[-1] = set(data['info']['all_genes'])
 
         self.all_genes = sorted(set.union(*genes))
         self.common_genes = sorted(set.intersection(*genes))
 
         # extract gene concentrations
-        result = []
         genes_to_extract = self.common_genes if only_common_genes else self.all_genes
         for exp in experiments:
-            tmp = {k: exp[k] if k in exp else None for k in genes_to_extract}
-            tmp = dict(filter(lambda x: not x[1] is None, tmp.items()))
-            result.append(tmp)
+            for col in exp['data']:
+                genes = exp['data'][col].keys()
 
-        return result
+                tmp = {k: exp['data'][col][k] if k in genes else None for k in genes_to_extract}
+                tmp = dict(filter(lambda x: not x[1] is None, tmp.items()))
+
+                exp['data'][col] = tmp
+
+        return experiments
 
 class GDSFormatHandler(object):
     """ Handle all the different file formats GDS files may come in

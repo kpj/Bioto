@@ -1,4 +1,4 @@
-import operator
+import operator, os.path
 
 import numpy as np
 import networkx as nx
@@ -146,42 +146,58 @@ def get_advanced_adjacency_matrix(file):
 def parse_concentration(fname, conc_range=None, **kwargs):
     """ Return all concentrations (in specified column) of given entries
         Returned data is of form: {
-            'gene_name_1': [<conc_1>, <conc_2>, ...],
-            'gene_name_2': [<conc_1>, <conc_2>, ...],
-            ...
+            'data': {
+                'column': {
+                    'gene_name_1': [<conc_1>, <conc_2>, ...],
+                    'gene_name_2': [<conc_1>, <conc_2>, ...],
+                    ...
+                },
+                ...
+            },
+            'info': {}
         }
     """
     soft = pysoft.SOFTFile(fname)
     gdsh = utils.GDSFormatHandler(soft, **kwargs)
 
-    if conc_range is None:
+    # prepare conc_range
+    if conc_range is None or len(conc_range) == 0:
         conc_range = gdsh.get_useful_columns()
+    else:
+        tmp = []
+        for c in conc_range:
+            if isinstance(c, int):
+                if c+2 < len(soft.columns):
+                    tmp.append(soft.columns[c+2].name)
+                else:
+                    print('warning: could not select column %d from "%s"' % (c+3, fname))
+            else:
+                tmp.append(c)
 
+        conc_range = tmp
+
+    # generate basic structure of data to be returned
     data = {}
+    data['data'] = {c: {} for c in conc_range}
+    data['info'] = {}
+
+    data['info']['all_genes'] = set()
+    data['info']['file_name'] = os.path.basename(fname)
+
+    # gather data
     for row in gdsh.get_data():
         gene = row['IDENTIFIER'].lower()
 
-        conc = []
-        cont = False
-        base = 2
-        for i in conc_range:
+        for col in conc_range:
             try:
-                if isinstance(i, int):
-                    entry = 'null'
-                    while entry == 'null':
-                        entry = row[base+i]
-                        if entry == 'null': base += 1
-                else: # string
-                    entry = row[i]
+                conc = float(row[col])
+            except (ValueError, IndexError, KeyError) as e:
+                continue
 
-                conc.append(float(entry))
-            except (ValueError, IndexError) as e:
-                cont = True
-                break
-        if cont:
-            continue
+            data['data'][col][gene] = conc
+            data['info']['all_genes'].add(gene)
 
-        if len(conc) == 1: conc = conc[0] # fix for compatibility and stuff
-        data[gene] = conc
+    # some final adjustments
+    data['info']['all_genes'] = sorted(data['info']['all_genes'])
 
     return data

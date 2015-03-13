@@ -1,5 +1,5 @@
 import sys, random, collections
-import os, os.path
+import os, os.path, operator
 
 import numpy as np
 import numpy.linalg as npl
@@ -25,57 +25,67 @@ def present(title, func, *args, model=None):
 def real_life_single():
     def process_file(g, file):
         try:
-            c, used_gene_indices = g.io.load_concentrations('../data/concentrations/%s' % file)
+            exp = g.io.load_concentrations('../data/concentrations/%s' % file)
         except errors.InvalidGDSFormatError as e:
             print('Could not process "%s" (%s)' % (file, e))
             return
 
         pf_tmp = g.math.get_perron_frobenius()
-        pf = [pf_tmp[i] for i in used_gene_indices]
 
-        for conc in np.array(c).T:
+        for col in exp['data']:
+            conc = [t[1] for t in sorted(exp['data'][col].items(), key=operator.itemgetter(0))]
+
+            used_gene_indices = [list(g).index(gene) for gene in sorted(exp['data'][col].keys())]
+            pf = [pf_tmp[i] for i in used_gene_indices]
+
             corr, p_val, = utils.StatsHandler.correlate(conc, pf)
 
+            spec = '%s, %s' % (os.path.splitext(file)[0], col)
             present(
-                'Real-Life Data of %s against the PF' % file, plotter.Plotter.loglog,
+                'Real-Life Data of %s against the PF' % spec, plotter.Plotter.loglog,
                 'gene concentration', conc,
                 'perron-frobenius eigenvector', pf
             )
             present(
-                'Histogram of Real-Life Data of %s' % os.path.splitext(file)[0], plotter.Plotter.plot_histogram,
+                'Histogram of Real-Life Data for %s' % spec, plotter.Plotter.plot_histogram,
                 'gene concentration', 'count', conc
             )
 
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
 
-    for f in os.listdir('../data/concentrations/'):
+    for f in ['GDS2364.soft']:#os.listdir('../data/concentrations/'):
         process_file(g, f)
 
 def real_life_average():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
 
-    c, used_gene_indices = g.io.load_averaged_concentrations('../data/concentrations/', conc_range=[0])
+    exp = g.io.load_averaged_concentrations('../data/concentrations/', conc_range=[0])
 
+    conc = [t[1] for t in sorted(exp['data']['average'].items(), key=operator.itemgetter(0))]
     pf_tmp = g.math.get_perron_frobenius()
+
+    used_gene_indices = [list(g).index(gene) for gene in sorted(exp['data']['average'].keys())]
     pf = [pf_tmp[i] for i in used_gene_indices]
-    corr, p_val = utils.StatsHandler.correlate(c, pf)
+
+    corr, p_val = utils.StatsHandler.correlate(conc, pf)
+
     present(
         'Real-Life Data (averaged)', plotter.Plotter.loglog,
-        'averaged gene concentration', c,
+        'averaged gene concentration', conc,
         'perron-frobenius eigenvector', pf
     )
 
     present(
         'Histogram of Real-Life Data (averaged)', plotter.Plotter.plot_histogram,
-        'gene concentration', 'count', c
+        'gene concentration', 'count', conc
     )
 
     """pr_tmp = g.math.get_pagerank()
     pr = [pr_tmp[i] for i in used_gene_indices]
-    corr, p_val = utils.StatsHandler.correlate(c, pr)
+    corr, p_val = utils.StatsHandler.correlate(conc, pr)
     present(
         'Real-Life Data (averaged)', plotter.Plotter.loglog,
-        'averaged gene concentration', c,
+        'averaged gene concentration', conc,
         'page rank', pr
     )"""
 

@@ -30,9 +30,12 @@ class Experiment(object):
 class GeneExpressionVariance(Experiment):
     """ Observe how strong the signal in gene expression vectors compared to their shuffled counterpart is
     """
-    def __init__(self, common_genes, data):
+    def __init__(self, common_genes, experiments):
         self.common_genes = common_genes
-        self.data = data
+        self.data = []
+        for exp in experiments:
+            for col in exp['data']:
+                self.data.append(exp['data'][col])
 
         self.x = []
         self.x_shuffled = []

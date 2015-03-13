@@ -241,10 +241,17 @@ class TestGDSHandler(TestCase):
         res = self.gdsh.parse_file(gds_file, conc_range=[0])
 
         self.assertEqual(res, {
-            'aaea': 42.,
-            'aaeb': 2.,
-            'haba': 1.,
-            'zuzu': 23.
+            'data': {
+                'GSM37063': {
+                    'aaea': 42.,
+                    'aaeb': 2.,
+                    'zuzu': 23.
+                }
+            },
+            'info': {
+                'all_genes': ['aaea', 'aaeb', 'zuzu'],
+                'file_name': 'foo.soft'
+            }
         })
 
     def testInvalidFile(self):
@@ -254,23 +261,27 @@ class TestGDSHandler(TestCase):
             res = self.gdsh.parse_file(gds_file)
 
     def test_all_genes(self):
-        res = self.gdsh.process_directory(conc_range=[0])
+        res = self.gdsh.process_directory(conc_range=[0, 'GSM37064'])
 
         self.assertEqual(len(res), 3)
-        self.assertIn({'aaea': 42., 'aaeb': 2., 'haba': 1., 'zuzu': 23.}, res)
-        self.assertIn({'aaea': 1337., 'aaeb': 4.}, res)
-        self.assertIn({'aaea': 23., 'aaeb': 6.}, res)
+        self.assertEqual(res[0]['data']['GSM37063'], {'aaea': 1337., 'aaeb': 4.})
+        self.assertEqual(res[0]['data']['GSM37064'], {})
+        self.assertEqual(res[1]['data']['GSM37063'], {'aaea': 23., 'aaeb': 6.})
+        self.assertEqual(res[1]['data']['GSM37064'], {})
+        self.assertEqual(res[2]['data']['GSM37063'], {'aaea': 42., 'aaeb': 2., 'zuzu': 23.})
+        self.assertEqual(res[2]['data']['GSM37064'], {'aaea': 43., 'aaeb': 3., 'haba': 1, 'zuzu': 24.})
 
         self.assertEqual(len(self.gdsh.all_genes), 4)
         self.assertEqual(len(self.gdsh.common_genes), 2)
 
     def test_common_genes(self):
-        res = self.gdsh.process_directory(only_common_genes=True, conc_range=[0])
+        res = self.gdsh.process_directory(only_common_genes=True, conc_range=['GSM37063', 1])
 
         self.assertEqual(len(res), 3)
-        self.assertIn({'aaea': 42., 'aaeb': 2.}, res)
-        self.assertIn({'aaea': 1337., 'aaeb': 4.}, res)
-        self.assertIn({'aaea': 23., 'aaeb': 6.}, res)
+        self.assertEqual(res[0]['data']['GSM37063'], {'aaea': 1337., 'aaeb': 4.})
+        self.assertEqual(res[1]['data']['GSM37063'], {'aaea': 23., 'aaeb': 6.})
+        self.assertEqual(res[2]['data']['GSM37063'], {'aaea': 42., 'aaeb': 2.})
+        self.assertEqual(res[2]['data']['GSM37064'], {'aaea': 43., 'aaeb': 3.})
 
         self.assertEqual(len(self.gdsh.all_genes), 4)
         self.assertEqual(len(self.gdsh.common_genes), 2)
@@ -282,58 +293,63 @@ class TestDataHandler(TestCase):
         network_file = 'tests/data/trn_network.txt'
         self.graph = utils.GraphGenerator.get_regulatory_graph(network_file)
 
+        self.average_cache_file = 'RL_av_data_testing.csv'
+
     def tearDown(self):
         try:
             shutil.rmtree(utils.DataHandler.backup_dir)
         except FileNotFoundError:
             pass
 
-    def test_empty_file(self):
-        conc_file = 'tests/data/empty.soft'
-        concs, ugi = utils.DataHandler.load_concentrations(self.graph, conc_file)
+        try:
+            os.remove(self.average_cache_file)
+        except FileNotFoundError:
+            pass
 
-        self.assertEqual(len(concs), 0)
-        self.assertEqual(len(ugi), 0)
+    def test_empty_file(self):
+        conc_file = 'tests/data/empty.soft.spec'
+        exp = utils.DataHandler.load_concentrations(self.graph, conc_file)
+
+        self.assertEqual(len(exp['data']), 0)
+        self.assertEqual(len(exp['info']['all_genes']), 0)
 
     def test_single_file(self):
         conc_file = 'tests/data/foo.soft'
-        concs, ugi = utils.DataHandler.load_concentrations(self.graph, conc_file, conc_range=[0])
+        exp = utils.DataHandler.load_concentrations(self.graph, conc_file, conc_range=[1])
 
         self.assertTrue(os.path.isdir(utils.DataHandler.backup_dir))
         self.assertTrue(os.path.isfile(os.path.join(utils.DataHandler.backup_dir, 'conc_foo.soft.bak.npy')))
 
-        npt.assert_allclose(concs, [42., 2., 23.])
-        npt.assert_allclose(ugi, [0, 1, 2])
+        self.assertEqual(exp['data']['GSM37064'], {'aaea': 43, 'aaeb': 3., 'zuzu': 24.})
+        self.assertEqual(exp['info']['all_genes'], ['aaea', 'aaeb', 'zuzu'])
 
     def test_file_averaging(self):
         conc_dir = 'tests/data/'
-        cache_file = 'RL_av_data_testing.csv'
-        concs, used_gene_indices = utils.DataHandler.load_averaged_concentrations(self.graph, conc_dir, cache_file=cache_file, conc_range=[0])
+        exp = utils.DataHandler.load_averaged_concentrations(self.graph, conc_dir, cache_file=self.average_cache_file, conc_range=[0, 1])
 
-        self.assertEqual(len(concs), 3)
-        self.assertEqual(len(used_gene_indices), 3)
+        self.assertEqual(len(exp['data']['average']), 3)
+        self.assertEqual(len(exp['info']['all_genes']), 3)
 
-        npt.assert_allclose(concs, [467.3333333333333, 4., 23.])
-        npt.assert_allclose(used_gene_indices, [0, 1, 2])
+        self.assertEqual(exp['data']['average'], {'aaea': 361.25, 'aaeb': 3.75, 'zuzu': 23.5})
+        self.assertEqual(exp['info']['all_genes'], ['aaea', 'aaeb', 'zuzu'])
 
-        self.assertTrue(os.path.isfile(cache_file))
-        with open(cache_file, 'r') as fd:
+        self.assertTrue(os.path.isfile(self.average_cache_file))
+        with open(self.average_cache_file, 'r') as fd:
             content = fd.read()
-            self.assertEqual(content, '1337.0,23.0,42.0\n4.0,6.0,2.0\n23.0\n')
-        os.remove(cache_file)
+            self.assertEqual(content, '1337.0,23.0,42.0,43.0\n4.0,6.0,2.0,3.0\n23.0,24.0\n')
 
     def test_partial_file_averaging(self):
         conc_dir = 'tests/data/'
         partial_network_file = 'tests/data/partial_trn_network.txt'
 
         partial_graph = utils.GraphGenerator.get_regulatory_graph(partial_network_file)
-        concs, used_gene_indices = utils.DataHandler.load_averaged_concentrations(partial_graph, conc_dir, conc_range=[0])
+        exp = utils.DataHandler.load_averaged_concentrations(partial_graph, conc_dir, conc_range=[0])
 
-        self.assertEqual(len(concs), 2)
-        self.assertEqual(len(used_gene_indices), 2)
+        self.assertEqual(len(exp['data']['average']), 2)
+        self.assertEqual(len(exp['info']['all_genes']), 2)
 
-        npt.assert_allclose(concs, [467.3333333333333, 4.])
-        npt.assert_allclose(used_gene_indices, [0, 1])
+        self.assertEqual(exp['data']['average'], {'aaea': 467.3333333333333, 'aaeb': 4.})
+        self.assertEqual(exp['info']['all_genes'], ['aaea', 'aaeb'])
 
 class TestGDSFormatHandler(TestCase):
     def test_log2_ratio_format(self):
