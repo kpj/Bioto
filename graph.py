@@ -180,7 +180,7 @@ class Math(object):
         """
         pagerank = np.array(nx.pagerank(self.graph.graph, alpha=damping_factor)).tolist()
 
-        vals = [v for v in pagerank.values()]
+        vals = list(pagerank.values())
         vals /= npl.norm(vals)
 
         return vals
@@ -189,6 +189,7 @@ class Math(object):
         """ Computes normalized degree distribution of current graph
         """
         degs = nx.degree(self.graph.graph)
+        degs = {str(k): v for k, v in degs.items()}
         deg_di = [degs[node] for node in self.graph]
         max_deg = max(deg_di)
 
