@@ -195,7 +195,7 @@ class Graph(object):
     """
 
     def __init__(self, graph, largest=False):
-        """ Only considers largest weakly connected component by default
+        """ Only considers largest weakly connected component if needed
         """
         self.graph = graph
         if largest:
