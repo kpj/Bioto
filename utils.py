@@ -460,3 +460,19 @@ def get_interquartile_variance(data, pop_range=[25, 75]):
     r_idata = set([data[i] for i in range(len(data)) if r_res[i] == 1])
 
     return np.var(list(l_idata.union(r_idata)))
+
+def get_max_entry_index(vec, real_entries_only=False):
+    """ Return index of element with highest real part (neglect complex numbers if wanted)
+    """
+    max_index = None
+    if real_entries_only:
+        lv = -float('inf')
+        for i, v in enumerate(vec):
+            if np.isreal(v):
+                if v > lv:
+                    max_index = i
+                    lv = v
+    else:
+        max_index = np.argmax(np.real(vec))
+
+    return max_index

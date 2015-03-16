@@ -126,15 +126,7 @@ class Math(object):
             np.fill_diagonal(mat, 0)
 
         vals, vecs = npl.eig(mat) # returns already normalized eigenvectors
-        if real_eva_only:
-            lv = -float('inf')
-            for i, v in enumerate(vals):
-                if np.isreal(v):
-                    if v > lv:
-                        max_eigenvalue_index = i
-                        lv = v
-        else:
-            max_eigenvalue_index = np.argmax(np.real(vals))
+        max_eigenvalue_index = utils.get_max_entry_index(vals, real_entries_only=real_eva_only)
 
         perron_frobenius = np.real(vecs[:, max_eigenvalue_index])
         perron_frobenius[abs(perron_frobenius) < 1e-13] = 0 # account for numeric instabilities

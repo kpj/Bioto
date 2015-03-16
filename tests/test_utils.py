@@ -42,6 +42,12 @@ class TestMethods(TestCase):
         res = utils.get_interquartile_variance(data, pop_range=[0, 100])
         npt.assert_approx_equal(res, 24.231404)
 
+    def test_max_real_entry_detection(self):
+        vec = [4-5j, 1, 5, 2, 6, 3, 7+1j, 6+10j]
+
+        self.assertEqual(utils.get_max_entry_index(vec), 6)
+        self.assertEqual(utils.get_max_entry_index(vec, real_entries_only=True), 4)
+
 class TestGraphGenerators(TestCase):
     def test_random_graph(self):
         graph = utils.GraphGenerator.get_random_graph(42, 30, 50)
