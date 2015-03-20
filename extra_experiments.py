@@ -105,7 +105,7 @@ def list_data(dir, table_fname=None):
 	print(table)
 	if not table_fname is None:
 		with open(table_fname, 'w') as fd:
-			fd.write(str(table))
+			fd.write(table.get_string())
 
 def search_database(dbname, save_dir=None, stats_file=None):
 	""" Crawl given database for SOFT files which comply with the given criterion
