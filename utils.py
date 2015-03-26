@@ -14,6 +14,8 @@ import scipy.stats as scits
 import pandas as pd
 import networkx as nx
 
+from progressbar import ProgressBar
+
 import pysoft
 
 import file_parser, graph, errors
@@ -59,10 +61,16 @@ class GraphGenerator(object):
         """ Return transcriptional regulatory network specified by given file
             If gene_proximity_file is given, TRN and GPN will be composed to a MultiDiGraph
         """
+        print('Generating TRN')
         trn = graph.Graph(file_parser.generate_tf_gene_regulation(tf_reg_file), largest=True)
+        print(' > %d nodes' % len(trn.graph.nodes()))
+        print(' > %d edges' % len(trn.graph.edges()))
 
         if not gene_proximity_file is None:
+            print('Generating GPN')
             gpn = GraphGenerator.get_gene_proximity_network(gene_proximity_file, base_window)
+            print(' > %d nodes' % len(gpn.graph.nodes()))
+            print(' > %d edges' % len(gpn.graph.edges()))
             if reduce_gpn: gpn.reduce_to(trn)
 
             trn += gpn
@@ -117,7 +125,7 @@ class DataHandler(object):
 
         #matched = set(graph).intersection(used_genes)
         no_match = set(graph).difference(used_genes)
-        print('> coverage:', round(1 - len(no_match)/len(graph), 3))
+        print(' > coverage:', round(1 - len(no_match)/len(graph), 3))
 
         exp.clear_genes()
         exp.add_genes(used_genes)
@@ -165,8 +173,13 @@ class DataHandler(object):
             if os.path.isfile(cache_file):
                 os.remove(cache_file)
 
+        print('Averaging data')
+        pbar = ProgressBar(maxval=len(graph))
+        pbar.start()
+
         used_genes = set()
-        for gene in graph:
+        dataset_lens = []
+        for i, gene in enumerate(graph):
             gene_concs = []
             for exp in experiments:
                 for col in exp.get_columns():
@@ -181,10 +194,15 @@ class DataHandler(object):
                     writer = csv.writer(fd)
                     writer.writerow([gene] + gene_concs)
 
+            pbar.update(i)
             if len(gene_concs) == 0: continue
+
+            dataset_lens.append(len(gene_concs))
             res.data['average'][gene] = np.mean(gene_concs)
+        pbar.finish()
 
         res.add_genes(used_genes)
+        print(' > entries/gene (avg): %f' % np.mean(dataset_lens))
 
         exp = DataHandler._handle_data(graph, res)
         return exp
@@ -282,10 +300,18 @@ class GDSHandler(object):
         """ Scan directory for SOFT files.
             Extract gene concentration of genes which appear in all datasets if requested
         """
+        print('Parsing SOFT files in "%s"' % self.dir)
+        walker = list(os.walk(self.dir))
+        pbar = ProgressBar(maxval=sum([len(files) for root, dirs, files in walker]))
+        pbar.start()
+
         experiments = []
         genes = []
-        for root, dirs, files in os.walk(self.dir):
+        counter = 0
+        for root, dirs, files in walker:
             for fname in sorted(files):
+                counter += 1
+                pbar.update(counter)
                 if not is_soft_file(fname): continue
 
                 try:
@@ -297,6 +323,7 @@ class GDSHandler(object):
 
                 genes.append(set())
                 genes[-1] = set(res.get_genes())
+        pbar.finish()
 
         self.all_genes = sorted(set.union(*genes))
         self.common_genes = sorted(set.intersection(*genes))
