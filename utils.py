@@ -160,6 +160,11 @@ class DataHandler(object):
         # accumulate data
         res = GDSParseResult(['average'])
 
+        # remove previous data file
+        if not cache_file is None:
+            if os.path.isfile(cache_file):
+                os.remove(cache_file)
+
         used_genes = set()
         for gene in graph:
             gene_concs = []
@@ -174,7 +179,7 @@ class DataHandler(object):
             if not cache_file is None:
                 with open(cache_file, 'a') as fd:
                     writer = csv.writer(fd)
-                    writer.writerow(gene_concs)
+                    writer.writerow([gene] + gene_concs)
 
             if len(gene_concs) == 0: continue
             res.data['average'][gene] = np.mean(gene_concs)

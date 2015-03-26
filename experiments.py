@@ -54,7 +54,7 @@ def real_life_single():
 def real_life_average():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
 
-    exp = g.io.load_averaged_concentrations('../data/concentrations/', conc_range=[0], cache_file='averaged_data.txt')
+    exp = g.io.load_averaged_concentrations('../data/concentrations/', conc_range=[0], cache_file='averaged_data.csv')
 
     pf_tmp = g.math.get_perron_frobenius()
 

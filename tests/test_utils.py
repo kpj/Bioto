@@ -337,10 +337,18 @@ class TestDataHandler(TestCase):
         self.assertEqual(exp.data['average'], {'aaea': 361.25, 'aaeb': 3.75, 'zuzu': 23.5})
         self.assertEqual(exp.get_genes(), ['aaea', 'aaeb', 'zuzu'])
 
+        expected_content = 'aaea,1337.0,23.0,42.0,43.0\naaeb,4.0,6.0,2.0,3.0\nzuzu,23.0,24.0\n'
         self.assertTrue(os.path.isfile(self.average_cache_file))
         with open(self.average_cache_file, 'r') as fd:
             content = fd.read()
-            self.assertEqual(content, '1337.0,23.0,42.0,43.0\n4.0,6.0,2.0,3.0\n23.0,24.0\n')
+            self.assertEqual(content, expected_content)
+
+        # check if multiple runs don't screw up data file
+        exp = utils.DataHandler.load_averaged_concentrations(self.graph, conc_dir, cache_file=self.average_cache_file, conc_range=[0, 1])
+        self.assertTrue(os.path.isfile(self.average_cache_file))
+        with open(self.average_cache_file, 'r') as fd:
+            content = fd.read()
+            self.assertEqual(content, expected_content)
 
     def test_partial_file_averaging(self):
         conc_dir = 'tests/data/'
