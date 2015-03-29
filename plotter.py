@@ -153,11 +153,9 @@ class Plotter(object):
     def plot_histogram(data, fname=None):
         plt.hist(data['data'], bins=200)
 
-        plt.tick_params(labelsize=20)
-
-        plt.title(data['title'], fontsize=33)
-        plt.xlabel(data['x_label'], fontsize=30)
-        plt.ylabel(data['y_label'], fontsize=30)
+        plt.title(data['title'])
+        plt.xlabel(data['x_label'])
+        plt.ylabel(data['y_label'])
 
         Plotter.show(data['title'] if fname is None else fname)
 
