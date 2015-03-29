@@ -125,7 +125,7 @@ class DataHandler(object):
 
         #matched = set(graph).intersection(used_genes)
         no_match = set(graph).difference(used_genes)
-        print(' > coverage:', round(1 - len(no_match)/len(graph), 3))
+        print(' > graph coverage:', round(1 - len(no_match)/len(graph), 3))
 
         exp.clear_genes()
         exp.add_genes(used_genes)
