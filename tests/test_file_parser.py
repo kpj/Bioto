@@ -33,7 +33,7 @@ class TestParser(TestCase):
         gds_file = 'tests/data/col_case.soft.fubar'
         res = file_parser.parse_concentration(gds_file)
 
-        self.assertEqual(len(res.data), 7)
+        self.assertEqual(len(res.data), 8)
 
         self.assertEqual(res.data['GSM37063']['aaea'], 1.)
         self.assertEqual(res.data['GSM37064']['aaea'], 2.)
@@ -42,6 +42,8 @@ class TestParser(TestCase):
         self.assertEqual(res.data['GSM37067']['aaea'], 5.)
         self.assertEqual(res.data['GSM37068']['aaea'], 6.)
         self.assertEqual(res.data['GSM37069']['aaea'], 7.)
+        # GSM37070 is mutant
+        self.assertEqual(res.data['GSM37071']['aaea'], 9.)
 
         self.assertEqual(res.get_genes(), ['aaea'])
         self.assertEqual(res.filename, 'col_case.soft.fubar')

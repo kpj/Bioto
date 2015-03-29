@@ -276,6 +276,7 @@ class TestGDSHandler(TestCase):
         self.assertEqual(res[2].data['GSM37064'], {'aaea': 43., 'aaeb': 3., 'haba': 1, 'zuzu': 24.})
 
         self.assertEqual(len(self.gdsh.all_genes), 4)
+        self.assertEqual(len(self.gdsh.quasi_genes), 3)
         self.assertEqual(len(self.gdsh.common_genes), 2)
 
     def test_common_genes(self):
@@ -288,6 +289,7 @@ class TestGDSHandler(TestCase):
         self.assertEqual(res[2].data['GSM37064'], {'aaea': 43., 'aaeb': 3.})
 
         self.assertEqual(len(self.gdsh.all_genes), 4)
+        self.assertEqual(len(self.gdsh.quasi_genes), 3)
         self.assertEqual(len(self.gdsh.common_genes), 2)
 
 class TestDataHandler(TestCase):
@@ -409,7 +411,7 @@ class TestGDSFormatHandler(TestCase):
 
         cols = gdsh.get_useful_columns()
 
-        self.assertEqual(len(cols), 7)
+        self.assertEqual(len(cols), 8)
 
         self.assertTrue('GSM37063' in cols)
         self.assertTrue('GSM37064' in cols)
@@ -418,6 +420,8 @@ class TestGDSFormatHandler(TestCase):
         self.assertTrue('GSM37067' in cols)
         self.assertTrue('GSM37068' in cols)
         self.assertTrue('GSM37069' in cols)
+        # GSM37070 is mutant
+        self.assertTrue('GSM37071' in cols)
 
 class TestGDSParseResult(TestCase):
     def test_initialization(self):
@@ -487,3 +491,11 @@ class TestGDSParseResult(TestCase):
         trimmed = res.trim_input(inp, g, 'foo')
 
         self.assertEqual(trimmed, [3, 1])
+
+    def test_common_gene_extraction(self):
+        res = utils.GDSParseResult()
+        res.data = {'foo': {'a': 1, 'b': 2}, 'bar': {'b': 10, 'c': 20}}
+
+        cgenes = res.get_common_genes()
+        self.assertEqual(len(cgenes), 1)
+        self.assertEqual(cgenes, ['b'])

@@ -305,8 +305,11 @@ class GDSHandler(object):
         pbar = ProgressBar(maxval=sum([len(files) for root, dirs, files in walker]))
         pbar.start()
 
+        self.all_genes = set()
+        self.quasi_genes = set()
+        self.common_genes = None
+
         experiments = []
-        genes = []
         counter = 0
         for root, dirs, files in walker:
             for fname in sorted(files):
@@ -321,12 +324,20 @@ class GDSHandler(object):
 
                 experiments.append(res)
 
-                genes.append(set())
-                genes[-1] = set(res.get_genes())
+                self.all_genes.update(set(res.get_genes()))
+                self.quasi_genes.update(set(res.get_common_genes()))
+
+                cgenes = res.get_common_genes()
+                if len(cgenes) != 0:
+                    if self.common_genes is None:
+                        self.common_genes = cgenes
+                    else:
+                        self.common_genes = set(cgenes).intersection(self.common_genes)
         pbar.finish()
 
-        self.all_genes = sorted(set.union(*genes))
-        self.common_genes = sorted(set.intersection(*genes))
+        self.all_genes = sorted(self.all_genes) # genes that appear in any column of any file
+        self.quasi_genes = sorted(self.quasi_genes) # genes that appear in all columns of any files
+        self.common_genes = sorted(self.common_genes) # genes that appear in all columns of all files
 
         # extract gene concentrations
         genes_to_extract = self.common_genes if only_common_genes else self.all_genes
@@ -371,7 +382,8 @@ class GDSFormatHandler(object):
                 desc in self.column_keywords or # specific set of keywords
                 re.match(r'[0-9]+ min(utes)?', desc) or # time series
                 re.match(r'ph [0-9]+', desc) or # pH value
-                re.match(r'od(600)? [-+]?[0-9]*\.?[0-9]*', desc) # some optical density stuff
+                re.match(r'od(600)? [-+]?[0-9]*\.?[0-9]*', desc), # some optical density stuff
+                re.match(r'[0-9]+ ug/ml', desc)
             ):
                 cols.append(name)
 
@@ -447,7 +459,19 @@ class GDSParseResult(object):
             self.add_gene(g)
 
     def get_genes(self):
+        """ Return genes present in any column
+        """
         return sorted(self._genes)
+
+    def get_common_genes(self):
+        """ Return genes present in all columns
+        """
+        genes = []
+        for col in sorted(self.data):
+            res = self.data[col].keys()
+            if len(res) != 0: genes.append(set(res))
+
+        return sorted(set.intersection(*genes))
 
     def clear_genes(self):
         self._genes = set()

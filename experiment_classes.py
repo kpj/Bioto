@@ -34,8 +34,8 @@ class GeneExpressionVariance(Experiment):
         self.common_genes = common_genes
         self.data = []
         for exp in experiments:
-            for col in exp.get_columns():
-                self.data.append(exp.data[col])
+            for col, conc in exp.get_data():
+                self.data.append(conc)
 
         self.x = []
         self.x_shuffled = []
@@ -52,11 +52,9 @@ class GeneExpressionVariance(Experiment):
     def _generate_x(self, shuffle_experiment_order=False, **kwargs):
         """ Transform data such that x_i contains all gene expressions 1,...,n for experiment i
         """
-        for exp in self.data:
-            tmp = [t[1] for t in sorted(exp.items(), key=operator.itemgetter(0))]
-            self.x.append(tmp)
+        self.x = self.data.copy()
 
-		# create shuffled version to check importance of signal in actual data
+        # create shuffled version to check importance of signal in actual data
         for e in self.x:
             self.x_shuffled.append(npr.permutation(e))
 

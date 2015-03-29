@@ -210,5 +210,5 @@ if __name__ == '__main__':
 	#list_data('../data/concentrations/', 'data_summary.txt')
 	#search_database('/home/kpj/GEO/ftp.ncbi.nlm.nih.gov', save_dir='/home/kpj/GEO/ecoli', stats_file='GDS_stats.json')
 	#plot_orga_distri('GDS_stats.json', 'geo_db_organism_distribution.png')
-	#variance_of_gene_expression('/home/kpj/GEO/ecoli')
-	summarize_gene_expression_data('../data/concentrations/')
+	variance_of_gene_expression('/home/kpj/GEO/ecoli')
+	#summarize_gene_expression_data('../data/concentrations/')
