@@ -23,14 +23,12 @@ def present(title, func, *args, model=None):
 ##################
 
 def real_life_single():
-    def process_file(g, file):
+    def process_file(g, pf_tmp, file):
         try:
             exp = g.io.load_concentrations('../data/concentrations/%s' % file)
         except errors.InvalidGDSFormatError as e:
             print('Could not process "%s" (%s)' % (file, e))
             return
-
-        pf_tmp = g.math.get_perron_frobenius()
 
         for col, conc in exp.get_data():
             pf = exp.trim_input(pf_tmp, g, col)
@@ -47,9 +45,10 @@ def real_life_single():
             )
 
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
+    pf_tmp = g.math.get_perron_frobenius()
 
     for f in os.listdir('../data/concentrations/'):
-        process_file(g, f)
+        process_file(g, pf_tmp, f)
 
 def real_life_average():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
