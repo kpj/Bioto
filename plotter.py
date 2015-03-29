@@ -47,7 +47,7 @@ class Plotter(object):
             else:
                 plt.close()
 
-            if not (fname.endswith('.png') and
+            if not (fname.endswith('.png') or
                     fname.endswith('.svg')):
                 fname += '.png'
 
