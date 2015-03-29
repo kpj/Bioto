@@ -179,6 +179,8 @@ def variance_of_gene_expression(data_dir):
 	experiment.conduct(shuffle_experiment_order=True)
 
 def summarize_gene_expression_data(dirname):
+	""" Show histogram for all SOFT files (also those with unsupported formats)
+	"""
 	gdsh = utils.GDSHandler(dirname)
 
 	res = []
@@ -186,17 +188,17 @@ def summarize_gene_expression_data(dirname):
 		for fname in sorted(files):
 			if not utils.is_soft_file(fname): continue
 
-			data = gdsh.parse_file(fname, throw_on_unknown_format=False, conc_range=[0])
-			if len(data) == 0: continue
+			pres = gdsh.parse_file(fname, throw_on_unknown_format=False)
 
-			res.append({
-				'data': data,
-				'fname': fname
-			})
+			for col, conc in pres.get_data():
+				if len(conc) == 0: continue
+				res.append({
+					'data': conc,
+					'fname': '%s:%s' % (pres.filename, col)
+				})
 
-	for data in res:
-		gev = [t[1] for t in sorted(data['data'].items(), key=operator.itemgetter(0))]
-		plotter.Plotter.plot_histogram({'data': gev, 'title': 'Gene expression vector overview for %s' % os.path.splitext(data['fname'])[0], 'x_label': 'gene expression value', 'y_label': 'count'})
+	for e in res:
+		plotter.Plotter.plot_histogram({'data': e['data'], 'title': 'Gene expression vector overview for %s' % e['fname'], 'x_label': 'gene expression value', 'y_label': 'count'})
 
 
 if __name__ == '__main__':
