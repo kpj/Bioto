@@ -47,6 +47,10 @@ class Plotter(object):
             else:
                 plt.close()
 
+            if not (fname.endswith('.png') and
+                    fname.endswith('.svg')):
+                fname += '.png'
+
             fig.savefig(fname, dpi=150)
         else:
             if Plotter.show_plots:
