@@ -23,7 +23,7 @@ def present(title, func, *args, model=None):
 ##################
 
 def real_life_single():
-    def process_file(g, pf_tmp, file):
+    def process_file(g, pf_tmp, pr_tmp, file):
         try:
             exp = g.io.load_concentrations('../data/concentrations/%s' % file)
         except errors.InvalidGDSFormatError as e:
@@ -32,6 +32,7 @@ def real_life_single():
 
         for col, conc in exp.get_data():
             pf = exp.trim_input(pf_tmp, g, col)
+            pr = exp.trim_input(pr_tmp, g, col)
 
             spec = '%s, %s' % (os.path.splitext(exp.filename)[0], col)
             present(
@@ -40,15 +41,21 @@ def real_life_single():
                 'perron-frobenius eigenvector', pf
             )
             present(
+                'Real-Life Data of %s against pagerank' % spec, plotter.Plotter.loglog,
+                'gene concentration', conc,
+                'pagerank', pr
+            )
+            present(
                 'Histogram of Real-Life Data for %s' % spec, plotter.Plotter.plot_histogram,
                 'gene concentration', 'count', conc
             )
 
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
     pf_tmp = g.math.get_perron_frobenius()
+    pr_tmp = g.math.get_pagerank()
 
     for f in os.listdir('../data/concentrations/'):
-        process_file(g, pf_tmp, f)
+        process_file(g, pf_tmp, pr_tmp, f)
 
 def real_life_average():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
@@ -56,28 +63,28 @@ def real_life_average():
     exp = g.io.load_averaged_concentrations('../data/concentrations/', cache_file='averaged_data.csv')
 
     pf_tmp = g.math.get_perron_frobenius()
+    pr_tmp = g.math.get_pagerank()
 
     col, conc = next(exp.get_data())
     pf = exp.trim_input(pf_tmp, g, col)
+    pr = exp.trim_input(pr_tmp, g, col)
 
     present(
-        'Real-Life Data (averaged)', plotter.Plotter.loglog,
+        'Real-Life data PF (averaged)', plotter.Plotter.loglog,
         'averaged gene concentration', conc,
         'perron-frobenius eigenvector', pf
+    )
+
+    present(
+        'Real-Life data pagerank (averaged)', plotter.Plotter.loglog,
+        'averaged gene concentration', conc,
+        'pagerank', pr
     )
 
     present(
         'Histogram of Real-Life Data (averaged)', plotter.Plotter.plot_histogram,
         'gene concentration', 'count', conc
     )
-
-    """pr_tmp = g.math.get_pagerank()
-    pr = exp.trim_input(pr_tmp, g, 'average')
-    present(
-        'Real-Life Data (averaged)', plotter.Plotter.loglog,
-        'averaged gene concentration', conc,
-        'page rank', pr
-    )"""
 
 def gene_overview(density_plot=True):
     graph = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
@@ -292,7 +299,7 @@ def analysis(graph, Model, runs=10):
 ##################
 
 if __name__ == '__main__':
-    plotter.Plotter.show_plots = True
+    plotter.Plotter.show_plots = False
 
     #simulate_model(models.MultiplicatorModel, runs=20)
     #simulate_model(models.BooleanModel)
@@ -306,4 +313,4 @@ if __name__ == '__main__':
     #investigate_base_window_influence()
 
     real_life_average()
-    #real_life_single()
+    real_life_single()
