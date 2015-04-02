@@ -57,6 +57,46 @@ def real_life_single():
     for f in os.listdir('../data/concentrations/'):
         process_file(g, pf_tmp, pr_tmp, f)
 
+def real_life_all():
+    g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
+    pf_tmp = g.math.get_perron_frobenius()
+    pr_tmp = g.math.get_pagerank()
+
+    pf_vec = []
+    pr_vec = []
+    conc_vec = []
+    for fname in os.listdir('../data/concentrations/'):
+        try:
+            exp = g.io.load_concentrations('../data/concentrations/%s' % fname)
+        except errors.InvalidGDSFormatError as e:
+            print('Could not process "%s" (%s)' % (fname, e))
+            continue
+
+        for col, conc in exp.get_data():
+            pf = exp.trim_input(pf_tmp, g, col)
+            pr = exp.trim_input(pr_tmp, g, col)
+
+            pf_vec.extend(pf)
+            pr_vec.extend(pr)
+            conc_vec.extend(conc)
+
+    present(
+        'Real-Life data PF (all)', plotter.Plotter.loglog,
+        'gene concentration', conc_vec,
+        'perron-frobenius eigenvector', pf_vec
+    )
+
+    present(
+        'Real-Life data pagerank (all)', plotter.Plotter.loglog,
+        'gene concentration', conc_vec,
+        'pagerank', pr_vec
+    )
+
+    present(
+        'Histogram of Real-Life Data (all)', plotter.Plotter.plot_histogram,
+        'gene concentration', 'count', conc_vec
+    )
+
 def real_life_average():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
 
@@ -312,5 +352,6 @@ if __name__ == '__main__':
     #gene_overview()
     #investigate_base_window_influence()
 
-    real_life_average()
-    real_life_single()
+    #real_life_average()
+    real_life_all()
+    #real_life_single()
