@@ -6,6 +6,7 @@ import numpy as np
 import numpy.linalg as npl
 import numpy.testing as npt
 
+import scipy.stats as scits
 import networkx as nx
 
 import pysoft
@@ -130,17 +131,41 @@ class TestGraphGenerators(TestCase):
         self.assertEqual(set(graph.graph.edges()), set([('yaaa', 'cydc'), ('cydc', 'yaaa'), ('yaaa', 'mepm'), ('mepm', 'yaaa'), ('fnge', 'mepm'), ('mepm', 'fnge'), ('fnge', 'yaaa'), ('yaaa', 'fnge'), ('aaea', 'aaeb'), ('aaea', 'zuzu'), ('aaeb', 'aaea'), ('zuzu', 'zuzu'), ('zuzu', 'aaeb')]))
 
 class TestStatsHandler(TestCase):
+    def setUp(self):
+        self.v = list(range(0, 100))
+        self.vex = np.exp(self.v)
+
     def test_pearson_correlation(self):
-        v = list(range(0, 100))
+        utils.StatsHandler.FUNC = scits.pearsonr
 
-        cp = utils.StatsHandler().correlate(v, v)
-        self.assertEqual(cp, (1., 0.))
+        c, p = utils.StatsHandler().correlate(self.v, self.vex)
+        npt.assert_almost_equal(c, 0.25, decimal=2)
+        npt.assert_almost_equal(p, 0.01, decimal=2)
 
-        cp = utils.StatsHandler().correlate(v, list(reversed(v)))
-        self.assertEqual(cp, (-1., 0.))
+        c, p = utils.StatsHandler().correlate(self.v, list(reversed(self.vex)))
+        npt.assert_almost_equal(c, -0.25, decimal=2)
+        npt.assert_almost_equal(p, 0.01, decimal=2)
 
-        c, p, mi, ma = utils.StatsHandler().correlate(v, v, compute_bands=True)
-        self.assertEqual((c, p), (1., 0.))
+        c, p, mi, ma = utils.StatsHandler().correlate(self.v, self.vex, compute_bands=True)
+        npt.assert_almost_equal(c, 0.25, decimal=2)
+        npt.assert_almost_equal(p, 0.01, decimal=2)
+        self.assertTrue(mi > -1)
+        self.assertTrue(ma < 1)
+
+    def test_spearman_correlation(self):
+        utils.StatsHandler.FUNC = scits.spearmanr
+
+        c, p = utils.StatsHandler().correlate(self.v, self.vex)
+        npt.assert_almost_equal(c, 1., decimal=2)
+        npt.assert_almost_equal(p, 0., decimal=2)
+
+        c, p = utils.StatsHandler().correlate(self.v, list(reversed(self.vex)))
+        npt.assert_almost_equal(c, -1., decimal=2)
+        npt.assert_almost_equal(p, 0., decimal=2)
+
+        c, p, mi, ma = utils.StatsHandler().correlate(self.v, self.vex, compute_bands=True)
+        npt.assert_almost_equal(c, 1., decimal=2)
+        npt.assert_almost_equal(p, 0., decimal=2)
         self.assertTrue(mi > -1)
         self.assertTrue(ma < 1)
 

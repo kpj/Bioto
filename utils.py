@@ -84,11 +84,14 @@ class GraphGenerator(object):
         return graph.Graph(file_parser.generate_gene_proximity_network(gene_prox_file, base_window))
 
 class StatsHandler(object):
+    FUNC = scits.pearsonr
+    #FUNC = scits.spearmanr
+
     @staticmethod
     def correlate(x, y, compute_bands=False):
         """ Computes Pearson coefficient of x, y and compares it to the correlation of shuffled forms of x, y
         """
-        (corr, p_val) = scits.pearsonr(x, y) # correlation r [-1,1], prob. that null-hypothesis (i.e. x,y uncorrelated) holds [0,1]
+        (corr, p_val) = StatsHandler.FUNC(x, y) # correlation r [-1,1], prob. that null-hypothesis (i.e. x,y uncorrelated) holds [0,1]
 
         if not compute_bands:
             return corr, p_val
@@ -101,7 +104,7 @@ class StatsHandler(object):
             npr.shuffle(xs)
             npr.shuffle(ys)
 
-            (r, p) = scits.pearsonr(xs, ys)
+            (r, p) = StatsHandler.FUNC(xs, ys)
             rs.append(r)
 
         mi, ma = min(rs), max(rs)
