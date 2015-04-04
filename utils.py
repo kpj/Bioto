@@ -412,7 +412,7 @@ class GDSFormatHandler(object):
         return row
 
     def parse_row(self, row):
-        """ Transform all data to common formatn
+        """ Transform all data to common format
         """
         if self.type == 'log2 ratio':
             return row
