@@ -264,15 +264,13 @@ class CacheHandler(object):
         """ Save dictionary to file (convert numpy arrays to python lists)
         """
         def clean(foo):
-            t = type(foo)
-
-            if t == type({}):
+            if isinstance(foo, dict):
                 return {k: clean(v) for (k,v) in foo.items()}
-            elif t == type([]):
+            elif isinstance(foo, list):
                 return [clean(e) for e in foo]
-            elif t == type(np.array([])):
+            elif type(foo) == type(np.array([])): # TODO: fixme
                 return clean(foo.tolist())
-            elif t == type(range(0)):
+            elif isinstance(foo, range):
                 return list(foo)
             return foo
 
