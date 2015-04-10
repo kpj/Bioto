@@ -255,28 +255,46 @@ def investigate_active_edge_count_influence(Model, node_num=100, edge_num=50, re
         repeats specifies how many runs are average for one specific number of activating links
     """
     g = utils.GraphGenerator.get_random_graph(node_num, activating_edges=0, inhibiting_edges=edge_num)
-    pf = g.math.get_perron_frobenius(remove_self_links=True)
 
-    correlations = []
+    dats = {
+        'PF': {
+            'get': lambda graph: graph.math.get_perron_frobenius(remove_self_links=True)
+        },
+        'Pagerank': {
+            'get': lambda graph: graph.math.get_pagerank()
+        },
+        'Node degree': {
+            'get': lambda graph: graph.math.get_degree_distribution()
+        }
+    }
+
+    for k in dats:
+        dats[k]['correlations'] = []
+        dats[k]['tmp'] = []
+        dats[k]['val'] = 0
+
     for enu in range(edge_num+1):
         g = utils.GraphGenerator.get_random_graph(g, activating_edges=enu, inhibiting_edges=edge_num-enu)
+        for k in dats: dats[k]['val'] = dats[k]['get'](g)
 
-        tmp_corr = []
+        for k in dats: dats[k]['tmp'] = []
         for i in range(repeats):
             sim = g.system.simulate(Model)
             avg_data = [np.mean(time_unit) for time_unit in sim.T]
 
             # do statistics
-            corr, p_val = utils.StatsHandler.correlate(pf, avg_data)
-            tmp_corr.append(corr)
+            for k in dats:
+                corr, _ = utils.StatsHandler.correlate(dats[k]['val'], avg_data)
+                dats[k]['tmp'].append(corr)
 
-        correlations.append(tmp_corr)
+        for k in dats: dats[k]['correlations'].append(dats[k]['tmp'])
 
-    present(
-        'Correlation development for increasing number of activating links (%s)' % Model.info['name'], plotter.Plotter.errorbar_plot,
-        'number of activating links', list(range(edge_num+1)),
-        'correlation coefficient', correlations
-    )
+    for k in dats:
+        present(
+            '%s correlation development for increasing number of activating links (%s)' % (k, Model.info['name']), plotter.Plotter.errorbar_plot,
+            'number of activating links', list(range(edge_num+1)),
+            'correlation coefficient', dats[k]['correlations']
+        )
 
 def show_evolution(graph, sim, genes=range(5), pf=None):
     """ Plots evolution of individual genes over time interval
@@ -347,11 +365,11 @@ if __name__ == '__main__':
     #simulate_model(models.NonlinearModel, plot_jc_ev=True, runs=20)
 
     #analysis(utils.GraphGenerator.get_er_graph(100, 0.3), models.MultiplicatorModel)
-    #investigate_active_edge_count_influence(models.BooleanModel)
+    investigate_active_edge_count_influence(models.BooleanModel)
 
     #gene_overview()
     #investigate_base_window_influence()
 
     #real_life_average()
-    real_life_all()
+    #real_life_all()
     #real_life_single()
