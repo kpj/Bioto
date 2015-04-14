@@ -4,6 +4,8 @@ import os, os.path
 import numpy as np
 import numpy.linalg as npl
 
+from progressbar import ProgressBar
+
 import utils, models, plotter, errors
 
 
@@ -250,11 +252,12 @@ def simulate_model(Model, n=20, ae=0, ie=50, plot_jc_ev=False, info={}, **kwargs
             model=Model
         )
 
-def investigate_active_edge_count_influence(Model, node_num=100, edge_num=50, repeats=10):
+def investigate_active_edge_count_influence(Model, node_num=20, edge_num=50, repeats=10):
     """ Compute correlation between pf and gene concentrations for varying numbers of activating links in network.
         repeats specifies how many runs are average for one specific number of activating links
     """
     g = utils.GraphGenerator.get_random_graph(node_num, activating_edges=0, inhibiting_edges=edge_num)
+    pbar = ProgressBar(maxval=(edge_num+1) * repeats)
 
     dats = {
         'PF': {
@@ -273,6 +276,8 @@ def investigate_active_edge_count_influence(Model, node_num=100, edge_num=50, re
         dats[k]['tmp'] = []
         dats[k]['val'] = 0
 
+    pbar.start()
+    counter = 0
     for enu in range(edge_num+1):
         g = utils.GraphGenerator.get_random_graph(g, activating_edges=enu, inhibiting_edges=edge_num-enu)
         for k in dats: dats[k]['val'] = dats[k]['get'](g)
@@ -287,11 +292,15 @@ def investigate_active_edge_count_influence(Model, node_num=100, edge_num=50, re
                 corr, _ = utils.StatsHandler.correlate(dats[k]['val'], avg_data)
                 dats[k]['tmp'].append(corr)
 
+            pbar.update(counter)
+            counter += 1
+
         for k in dats: dats[k]['correlations'].append(dats[k]['tmp'])
+    pbar.finish()
 
     for k in dats:
         present(
-            '%s correlation development for increasing number of activating links (%s)' % (k, Model.info['name']), plotter.Plotter.errorbar_plot,
+            '%s correlation development for increasing number of activating links (%s, %s)' % (k, Model.info['name'], 'time norm' if models.BooleanModel.info['norm_time'] else 'gene norm'), plotter.Plotter.errorbar_plot,
             'number of activating links', list(range(edge_num+1)),
             'correlation coefficient', dats[k]['correlations']
         )
