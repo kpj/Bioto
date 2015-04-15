@@ -215,18 +215,21 @@ class BooleanModel(Model):
         concs = np.array(concs)
 
         # normalize along genes/time
+        out = self.norm_data(concs, norm_time)
+
+        return out
+
+    def norm_data(self, data, norm_time):
+        """ Normalize given data either along the time or gene axis
+        """
         out = []
         if norm_time:
-            for time in concs.T:
-                norm = npl.norm(time)
-                time /= norm
-                out.append(time)
+            for time in data.T:
+                out.append(time / npl.norm(time))
             out = np.array(out).T
         else:
-            for genes in concs:
-                norm = npl.norm(genes)
-                genes /= norm
-                out.append(genes)
+            for genes in data:
+                out.append(genes / npl.norm(genes))
             out = np.array(out)
 
         return out

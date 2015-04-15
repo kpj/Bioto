@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 import numpy as np
+import numpy.linalg as npl
 import numpy.testing as npt
 
 import models, utils
@@ -116,3 +117,18 @@ class TestBooleanModel(TestCase):
         expected = np.loadtxt('tests/data/continuous_boolean_model_run_genes.txt').T
 
         npt.assert_allclose(data, expected)
+
+    def test_data_normalization(self):
+        data = np.array([
+            [1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9]
+        ])
+
+        time_res = self.model.norm_data(data, True)
+        for col in map(list, zip(*time_res)):
+            npt.assert_almost_equal(npl.norm(col), 1)
+
+        gene_res = self.model.norm_data(data, False)
+        for row in gene_res:
+            npt.assert_almost_equal(npl.norm(row), 1)
