@@ -279,11 +279,13 @@ def investigate_active_edge_count_influence(Model, node_num=20, edge_num=50, rep
     pbar.start()
     counter = 0
     for enu in range(edge_num+1):
-        g = utils.GraphGenerator.get_random_graph(g, activating_edges=enu, inhibiting_edges=edge_num-enu)
-        for k in dats: dats[k]['val'] = dats[k]['get'](g)
-
         for k in dats: dats[k]['tmp'] = []
         for i in range(repeats):
+            # regenerate graph
+            g = utils.GraphGenerator.get_random_graph(g, activating_edges=enu, inhibiting_edges=edge_num-enu)
+            for k in dats: dats[k]['val'] = dats[k]['get'](g)
+
+            # get data
             sim = g.system.simulate(Model)
             avg_data = [np.mean(time_unit) for time_unit in sim.T]
 
