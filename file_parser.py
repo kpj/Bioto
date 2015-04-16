@@ -67,7 +67,7 @@ def parse_gene_proximity_file(fname):
                 'right': int(parts[2])
             })
 
-    data = [e for e in sorted(data, key=operator.itemgetter('left'))]
+    data = list(sorted(data, key=operator.itemgetter('left')))
     max_right = max(data, key=operator.itemgetter('right'))['right']
 
     return data, max_right
