@@ -50,62 +50,113 @@ def generate_tf_gene_regulation(file):
 
     return graph
 
-def parse_gene_proximity_file(fname):
-    """ Parse gene proximity network file and return nodes ordered by their left starting base and the maximal right end
+class GPNGenerator(object):
+    """ Generate gene proximity network (GPN) via two different methods
     """
-    data = []
-    with open(fname, 'r') as fd:
-        content = fd.read()
 
-        for line in content.split('\n'):
-            if len(line) == 0 or line.startswith('#'): continue
+    def __init__(self, fname):
+        self.data, self.max_right = self.parse_gene_proximity_file(fname)
 
-            parts = line.split()
-            data.append({
-                'name': parts[0].lower(),
-                'left': int(parts[1]),
-                'right': int(parts[2])
-            })
+    def _get_strand(self, start, end):
+        if start < end:
+            return list(range(start, end+1))
 
-    data = list(sorted(data, key=operator.itemgetter('left')))
-    max_right = max(data, key=operator.itemgetter('right'))['right']
+        first_half = list(range(start, self.max_right+1))
+        second_half = list(range(1, end+1))
+        return first_half + second_half
 
-    return data, max_right
+    def _get_terminus(self, origin):
+        terminus = origin + (int(self.max_right/2))
+        if terminus > self.max_right: terminus -= self.max_right
 
-def generate_gene_proximity_network(fname, base_window):
-    """ Generate gene proximity network (GPN) for given base window size
-    """
-    # gather raw data
-    data, max_right = parse_gene_proximity_file(fname)
+        return terminus
 
-    # generate graph
-    graph = nx.MultiDiGraph()
+    def parse_gene_proximity_file(self, fname):
+        """ Parse gene proximity network file and return nodes ordered by their left starting base and the maximal right end
+        """
+        data = []
+        with open(fname, 'r') as fd:
+            content = fd.read()
 
-    for i in range(len(data)):
-        gene = data[i]
-        roffset = gene['right'] + base_window
+            for line in content.split('\n'):
+                if len(line) == 0 or line.startswith('#'): continue
 
-        # find genes in proximity
-        proximity = []
-        for j in range(i+1, len(data)):
-            if data[j]['left'] > roffset: break
-            proximity.append(data[j])
-        else:
-            new_roffset = roffset - max_right
-            for k in range(len(data)):
-                if data[k]['left'] > new_roffset: break
-                proximity.append(data[k])
+                parts = line.split()
+                data.append({
+                    'name': parts[0].lower(),
+                    'left': int(parts[1]),
+                    'right': int(parts[2])
+                })
 
-        edges = []
-        for p in proximity:
-            edges.append((gene['name'], p['name']))
-            edges.append((p['name'], gene['name']))
+        data = list(sorted(data, key=operator.itemgetter('left')))
+        max_right = max(data, key=operator.itemgetter('right'))['right']
 
-        # add them to graph
-        graph.add_node(gene['name'])
-        graph.add_edges_from(edges)
+        return data, max_right
 
-    return graph
+    def generate_gene_proximity_network_circular(self, base_window):
+        """ Generate GPN for given base window size over a circular genome (warp at beginning and end)
+        """
+        # generate graph
+        graph = nx.MultiDiGraph()
+
+        for i in range(len(self.data)):
+            gene = self.data[i]
+            roffset = gene['right'] + base_window
+
+            # find genes in proximity
+            proximity = []
+            for j in range(i+1, len(self.data)):
+                if self.data[j]['left'] > roffset: break
+                proximity.append(self.data[j])
+            else:
+                new_roffset = roffset - self.max_right
+                for k in range(len(self.data)):
+                    if self.data[k]['left'] > new_roffset: break
+                    proximity.append(self.data[k])
+
+            edges = []
+            for p in proximity:
+                edges.append((gene['name'], p['name']))
+                edges.append((p['name'], gene['name']))
+
+            # add them to graph
+            graph.add_node(gene['name'])
+            graph.add_edges_from(edges)
+
+        return graph
+
+    def generate_gene_proximity_network_two_strands(self, base_window, origin):
+        """ Don't assume a circular genome structure but divide it into two strands (cut at origin and terminus [at opposing side on circle])
+        """
+        # compute terminus
+        terminus = self._get_terminus(origin)
+
+        # generate graph
+        graph = nx.MultiDiGraph()
+
+        # generate strands
+        pos_strand = self._get_strand(origin, terminus)
+        neg_strand = self._get_strand(terminus+1, origin-1)
+
+        def handle_strand(strand):
+            """ Generate GPN form given strand
+            """
+            for e in self.data:
+                start = e['left']
+                if not start in strand: continue
+
+                roffset = e['right'] + base_window
+                if not roffset in strand: roffset = strand[-1]
+
+                for n in self.data:
+                    if n['left'] > start and n['left'] < roffset:
+                        graph.add_node(n['name'])
+                        graph.add_edges_from([(e['name'], n['name']), (n['name'], e['name'])])
+
+        handle_strand(pos_strand)
+        handle_strand(neg_strand)
+
+        return graph
 
 def get_advanced_adjacency_matrix(file):
     """ Returns adjacency matrix where an activating relationship is represented with a 1,

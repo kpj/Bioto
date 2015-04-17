@@ -165,6 +165,17 @@ class TestGraphGenerators(TestCase):
 
         self.assertEqual(set(graph.graph.edges()), set([('yaaa', 'cydc'), ('cydc', 'yaaa'), ('yaaa', 'mepm'), ('mepm', 'yaaa'), ('fnge', 'mepm'), ('mepm', 'fnge'), ('fnge', 'yaaa'), ('yaaa', 'fnge'), ('aaea', 'aaeb'), ('aaea', 'zuzu'), ('aaeb', 'aaea'), ('zuzu', 'zuzu'), ('zuzu', 'aaeb')]))
 
+    def test_gpn_graph(self):
+        gpn_file = 'tests/data/gene_proximity_network.txt'
+
+        # circular genome
+        graph = utils.GraphGenerator.get_gene_proximity_network(gpn_file, base_window=10)
+        self.assertEqual(set(graph.graph.edges()), set([('yaaa', 'cydc'), ('cydc', 'yaaa'), ('yaaa', 'mepm'), ('mepm', 'yaaa'), ('fnge', 'mepm'), ('mepm', 'fnge'), ('fnge', 'yaaa'), ('yaaa', 'fnge')]))
+
+        # two stranded genome
+        graph = utils.GraphGenerator.get_gene_proximity_network(gpn_file, base_window=10, origin=72)
+        self.assertEqual(set(graph.graph.edges()), set([('yaaa', 'cydc'), ('cydc', 'yaaa'), ('fnge', 'mepm'), ('mepm', 'fnge')]))
+
 class TestStatsHandler(TestCase):
     def setUp(self):
         self.v = list(range(0, 100))

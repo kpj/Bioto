@@ -78,10 +78,16 @@ class GraphGenerator(object):
         return trn
 
     @staticmethod
-    def get_gene_proximity_network(gene_prox_file, base_window):
+    def get_gene_proximity_network(gene_prox_file, base_window, origin=None):
         """ Return gene proximity network specified by given file
         """
-        return graph.Graph(file_parser.generate_gene_proximity_network(gene_prox_file, base_window))
+        gpng = file_parser.GPNGenerator(gene_prox_file)
+        if origin is None:
+            gpn = gpng.generate_gene_proximity_network_circular(base_window)
+        else:
+            gpn = gpng.generate_gene_proximity_network_two_strands(base_window, origin)
+
+        return graph.Graph(gpn)
 
 class StatsHandler(object):
     FUNC = scits.pearsonr
