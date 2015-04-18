@@ -1,5 +1,5 @@
 VERBOSE = True
 
-def log(msg):
+def log(*msg):
     if VERBOSE:
         print(msg)
