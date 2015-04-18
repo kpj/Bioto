@@ -103,8 +103,8 @@ class TestParser(TestCase):
     def test_gene_proximity_parser(self):
         gpng = file_parser.GPNGenerator('tests/data/gene_proximity_network.txt')
 
-        self.assertEqual(gpng.max_right, 70)
-        self.assertEqual(len(gpng.data), 4)
+        self.assertEqual(gpng.max_right, 100)
+        self.assertEqual(len(gpng.data), 5)
         self.assertEqual(gpng.data[0], {
             'name': 'yaaa',
             'left': 1,
@@ -125,26 +125,42 @@ class TestParser(TestCase):
             'left': 65,
             'right': 70
         })
+        self.assertEqual(gpng.data[4], {
+            'name': 'arga',
+            'left': 75,
+            'right': 100
+        })
 
     def test_circular_gene_proximity_network_generation(self):
         gpng = file_parser.GPNGenerator('tests/data/gene_proximity_network.txt')
-        graph = gpng.generate_gene_proximity_network_circular(10)
+        self.assertEqual(gpng.max_right, 100)
 
+        graph = gpng.generate_gene_proximity_network_circular(10)
         self.assertIsInstance(graph, nx.MultiDiGraph)
 
-        self.assertEqual(len(graph.nodes()), 4)
-        self.assertEqual(set(graph.nodes()), set(['cydc', 'fnge', 'mepm', 'yaaa']))
-        self.assertEqual(set(graph.edges()), set([('yaaa', 'cydc'), ('cydc', 'yaaa'), ('yaaa', 'mepm'), ('mepm', 'yaaa'), ('fnge', 'mepm'), ('mepm', 'fnge'), ('fnge', 'yaaa'), ('yaaa', 'fnge')]))
+        self.assertEqual(len(graph.nodes()), 5)
+        self.assertEqual(set(graph.nodes()), set(['arga', 'cydc', 'fnge', 'mepm', 'yaaa']))
+        self.assertEqual(set(graph.edges()), set([
+            ('yaaa', 'cydc'), ('cydc', 'yaaa'),
+            ('fnge', 'mepm'), ('mepm', 'fnge'),
+            ('arga', 'yaaa'), ('yaaa', 'arga'),
+            ('arga', 'fnge'), ('fnge', 'arga'),
+            ('arga', 'fnge'), ('fnge', 'arga')
+        ]))
 
     def test_two_strand_gene_proximity_network_generation(self):
         gpng = file_parser.GPNGenerator('tests/data/gene_proximity_network.txt')
-        graph = gpng.generate_gene_proximity_network_two_strands(10, 72)
+        self.assertEqual(gpng.max_right, 100)
 
+        graph = gpng.generate_gene_proximity_network_two_strands(10, 72)
         self.assertIsInstance(graph, nx.MultiDiGraph)
 
-        self.assertEqual(len(graph.nodes()), 4)
-        self.assertEqual(set(graph.nodes()), set(['cydc', 'fnge', 'mepm', 'yaaa']))
-        self.assertEqual(set(graph.edges()), set([('yaaa', 'cydc'), ('cydc', 'yaaa'), ('fnge', 'mepm'), ('mepm', 'fnge')]))
+        self.assertEqual(len(graph.nodes()), 5)
+        self.assertEqual(set(graph.nodes()), set(['arga', 'cydc', 'fnge', 'mepm', 'yaaa']))
+        self.assertEqual(set(graph.edges()), set([
+            ('yaaa', 'arga'), ('arga', 'yaaa'),
+            ('fnge', 'mepm'), ('mepm', 'fnge')
+        ]))
 
     def test_gpn_generator_strand_creation(self):
         gpng = file_parser.GPNGenerator('tests/data/gene_proximity_network.txt')
@@ -175,3 +191,10 @@ class TestParser(TestCase):
 
         self.assertEqual(aug_adja.shape, (3, 3))
         npt.assert_allclose(aug_adja, np.array([[0,1,1], [-1,0,0], [0,0,-1]]))
+
+    def test_sublist_getter(self):
+        gpng = file_parser.GPNGenerator('tests/data/gene_proximity_network.txt')
+
+        vec = [6, 7, 8, 9, 1, 2, 3]
+        self.assertEqual(gpng._get_sublist(vec, 8, 3), [8, 9, 1, 2, 3])
+        self.assertEqual(gpng._get_sublist(vec, 2, 7), [2, 3, 6, 7, 8])

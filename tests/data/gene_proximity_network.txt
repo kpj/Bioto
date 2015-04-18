@@ -1,5 +1,6 @@
 #Gene   LeftEnd RightEnd
-fngE    65    70
-yaaA    1    20
-mepM    50 63
-cydC    25  30
+fngE    65      70
+yaaA    1       20
+mepM    50      63
+cydC    25      30
+argA    75      100

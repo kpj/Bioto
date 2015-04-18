@@ -71,6 +71,17 @@ class GPNGenerator(object):
 
         return terminus
 
+    def _get_sublist(self, lvec, start, end):
+        """ Return sublist based on value range
+        """
+        si = lvec.index(start)
+        ei = lvec.index(end)+1
+
+        if si < ei:
+            return lvec[si:ei]
+
+        return lvec[si:] + lvec[:ei+1]
+
     def parse_gene_proximity_file(self, fname):
         """ Parse gene proximity network file and return nodes ordered by their left starting base and the maximal right end
         """
@@ -96,7 +107,6 @@ class GPNGenerator(object):
     def generate_gene_proximity_network_circular(self, base_window):
         """ Generate GPN for given base window size over a circular genome (warp at beginning and end)
         """
-        # generate graph
         graph = nx.MultiDiGraph()
 
         for i in range(len(self.data)):
@@ -148,10 +158,16 @@ class GPNGenerator(object):
                 roffset = e['right'] + base_window
                 if not roffset in strand: roffset = strand[-1]
 
+                edges = []
                 for n in self.data:
-                    if n['left'] > start and n['left'] < roffset:
-                        graph.add_node(n['name'])
-                        graph.add_edges_from([(e['name'], n['name']), (n['name'], e['name'])])
+                    if n['left'] in self._get_sublist(strand, start+1, roffset):
+                        edges.extend([
+                            (e['name'], n['name']),
+                            (n['name'], e['name'])
+                        ])
+
+                graph.add_node(e['name'])
+                graph.add_edges_from(edges)
 
         handle_strand(pos_strand)
         handle_strand(neg_strand)
