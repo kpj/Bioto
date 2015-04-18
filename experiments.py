@@ -216,6 +216,37 @@ def investigate_base_window_influence():
         'correlation between gene expression vector and PF', correlations
     )
 
+def investigate_origin_of_replication_influence():
+    """ Use the two-stranded GPN with varying origin in order to investigate the importance of particular origin position
+    """
+    # actual origin between 130 and 370 (http://www.metalife.com/Genbank/147023)
+    possible_origins = range(1, 4641628, 1000) # 4641628 is rightmost gene end (yjtD)
+
+    pbar = ProgressBar(maxval=len(possible_origins))
+    pbar.start()
+
+    pf_corrs = []
+    for i, orig in enumerate(possible_origins):
+        g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000, origin=orig)
+
+        exp = g.io.load_averaged_concentrations('../data/concentrations/')
+        col, conc = next(exp.get_data())
+
+        pf_tmp = g.math.get_perron_frobenius()
+        pf = exp.trim_input(pf_tmp, g, col)
+
+        corr, _ = utils.StatsHandler.correlate(pf, conc)
+        pf_corrs.append(corr)
+
+        pbar.update(i)
+    pbar.finish()
+
+    present(
+        'Effect of origin of replication', plotter.Plotter.plot,
+        'origin of replication', possible_origins,
+        'correlation between gene expression vector and PF', pf_corrs
+    )
+
 
 ##################
 # Generated data #
@@ -377,10 +408,11 @@ if __name__ == '__main__':
     #simulate_model(models.NonlinearModel, plot_jc_ev=True, runs=20)
 
     #analysis(utils.GraphGenerator.get_er_graph(100, 0.3), models.MultiplicatorModel)
-    investigate_active_edge_count_influence(models.BooleanModel)
-
     #gene_overview()
+
+    #investigate_active_edge_count_influence(models.BooleanModel)
     #investigate_base_window_influence()
+    investigate_origin_of_replication_influence()
 
     #real_life_average()
     #real_life_all()
