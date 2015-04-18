@@ -6,7 +6,7 @@ import numpy.linalg as npl
 
 from progressbar import ProgressBar
 
-import utils, models, plotter, errors
+import utils, models, plotter, errors, logger
 
 
 ####################
@@ -369,6 +369,7 @@ def analysis(graph, Model, runs=10):
 
 if __name__ == '__main__':
     plotter.Plotter.show_plots = False
+    logger.VERBOSE = False
 
     #simulate_model(models.MultiplicatorModel, runs=20)
     #simulate_model(models.BooleanModel)
