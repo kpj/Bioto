@@ -68,7 +68,7 @@ class GraphGenerator(object):
         log(' > %d edges' % len(trn.graph.edges()))
 
         if not gene_proximity_file is None:
-            log('Generating GPN')
+            log('Generating GPN', end=' ', flush=True)
             gpn = GraphGenerator.get_gene_proximity_network(gene_proximity_file, base_window, origin=origin)
             log(' > %d nodes' % len(gpn.graph.nodes()))
             log(' > %d edges' % len(gpn.graph.edges()))
@@ -84,8 +84,10 @@ class GraphGenerator(object):
         """
         gpng = file_parser.GPNGenerator(gene_prox_file)
         if origin is None:
+            log('(circular genome)')
             gpn = gpng.generate_gene_proximity_network_circular(base_window)
         else:
+            log('(two-stranded genome)')
             gpn = gpng.generate_gene_proximity_network_two_strands(base_window, origin)
 
         return graph.Graph(gpn)
