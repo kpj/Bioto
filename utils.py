@@ -214,7 +214,7 @@ class CacheHandler(object):
     cache_directory = 'plot_data'
 
     @staticmethod
-    def store_plot_data(title, func, *args, model=None):
+    def store_plot_data(title, func, *args, model=None, **kwargs):
         """ Store plot data and return sanitized data dict
         """
         if len(args) == 2:
@@ -252,6 +252,8 @@ class CacheHandler(object):
         if not model is None:
             dic['info'].update(model.info)
             model_id = model.hash()
+
+        dic.update(kwargs)
 
         if not os.path.exists(CacheHandler.cache_directory):
             os.makedirs(CacheHandler.cache_directory)

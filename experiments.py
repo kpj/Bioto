@@ -13,10 +13,10 @@ import utils, models, plotter, errors
 # Helper functions #
 ####################
 
-def present(title, func, *args, model=None):
+def present(title, func, *args, model=None, **kwargs):
     """ Save and (if needed) plot data
     """
-    dic = utils.CacheHandler.store_plot_data(title, func, *args, model=model)
+    dic = utils.CacheHandler.store_plot_data(title, func, *args, model=model, **kwargs)
     func(dic)
 
 
@@ -85,13 +85,15 @@ def real_life_all():
     present(
         'Real-Life data PF (all)', plotter.Plotter.loglog,
         'gene concentration', conc_vec,
-        'perron-frobenius eigenvector', pf_vec
+        'perron-frobenius eigenvector', pf_vec,
+        plt_args={'alpha': 0.02}
     )
 
     present(
         'Real-Life data pagerank (all)', plotter.Plotter.loglog,
         'gene concentration', conc_vec,
-        'pagerank', pr_vec
+        'pagerank', pr_vec,
+        plt_args={'alpha': 0.02}
     )
 
     present(
@@ -376,11 +378,11 @@ if __name__ == '__main__':
     #simulate_model(models.NonlinearModel, plot_jc_ev=True, runs=20)
 
     #analysis(utils.GraphGenerator.get_er_graph(100, 0.3), models.MultiplicatorModel)
-    investigate_active_edge_count_influence(models.BooleanModel)
+    #investigate_active_edge_count_influence(models.BooleanModel)
 
     #gene_overview()
     #investigate_base_window_influence()
 
     #real_life_average()
-    #real_life_all()
+    real_life_all()
     #real_life_single()

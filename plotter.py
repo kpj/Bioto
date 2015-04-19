@@ -254,7 +254,13 @@ class Plotter(object):
 
             Plotter.show('%s.png' % data['title'], fname=fname, plot=p)
         else:
-            ax = Plotter.set_loglog(plt.gca(), data['x_data'], data['y_data'], data['title'], data['x_label'], data['y_label'])
+            ax = Plotter.set_loglog(
+                plt.gca(),
+                data['x_data'], data['y_data'],
+                data['title'],
+                data['x_label'], data['y_label'],
+                **(data['plt_args'] if 'plt_args' in data else {})
+            )
             Plotter.show('%s.png' % data['title'], fname=fname)
 
     @staticmethod
@@ -272,7 +278,7 @@ class Plotter(object):
         Plotter.show('%s.png' % data['title'], fname=fname)
 
     @staticmethod
-    def set_loglog(ax, x, y, title='', xlabel='', ylabel='', show_corr=True):
+    def set_loglog(ax, x, y, title='', xlabel='', ylabel='', show_corr=True, **kwargs):
         """ Return loglog plot (axis) of given data and removes 0-pairs beforehand
         """
         xs = []
@@ -286,7 +292,8 @@ class Plotter(object):
         ax.loglog(
             xs, ys,
             linestyle='None',
-            marker='.', markeredgecolor='blue'
+            marker='.', markeredgecolor='blue',
+            **kwargs
         )
 
         if show_corr:
