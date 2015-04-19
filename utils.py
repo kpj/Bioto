@@ -145,6 +145,11 @@ class DataHandler(object):
         return exp
 
     @staticmethod
+    def load_rnaseq_data(graph, fname):
+        data = file_parser.parse_rnaseq(fname)
+        return DataHandler._handle_data(graph, data)
+
+    @staticmethod
     def load_concentrations(graph, file, conc_range=None):
         """ Extract gene concentrations from file which also appear in graph.
             Also return vector of node indices used in concentration vector

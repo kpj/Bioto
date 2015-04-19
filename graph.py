@@ -53,10 +53,16 @@ class IOComponent(object):
             plt.savefig(file, dpi=150)
             plt.close()
 
-    def load_concentrations(self, file, conc_range=None):
+    def load_concentrations(self, fname, conc_range=None):
         """ Delegates to utils.DataHandler
         """
-        return utils.DataHandler.load_concentrations(self.graph, file, conc_range)
+        if fname.endswith('.soft'):
+            # is microarray data
+            return utils.DataHandler.load_concentrations(self.graph, fname, conc_range)
+        elif fname.endswith('.count'):
+            return utils.DataHandler.load_rnaseq_data(self.graph, fname)
+        else:
+            print('Could not parse file "%s", unknown format' % fname)
 
     def load_averaged_concentrations(self, directory, conc_range=None, cache_file=None):
         """ Delegates to utils.DataHandler

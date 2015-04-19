@@ -128,6 +128,34 @@ def real_life_average():
         'gene concentration', 'count', conc
     )
 
+def real_life_rnaseq():
+    g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
+    exp = g.io.load_concentrations('rnaseq_pipeline/results/SRR933989_mapped.count')
+
+    pf_tmp = g.math.get_perron_frobenius()
+    pr_tmp = g.math.get_pagerank()
+
+    col, conc = next(exp.get_data())
+    pf = exp.trim_input(pf_tmp, g, col)
+    pr = exp.trim_input(pr_tmp, g, col)
+
+    present(
+        'RNAseq data vs PF', plotter.Plotter.loglog,
+        'averaged gene concentration', conc,
+        'perron-frobenius eigenvector', pf
+    )
+
+    present(
+        'RNAseq data vs pagerank', plotter.Plotter.loglog,
+        'averaged gene concentration', conc,
+        'pagerank', pr
+    )
+
+    present(
+        'Histogram of RNAseq Data', plotter.Plotter.plot_histogram,
+        'gene concentration', 'count', conc
+    )
+
 def gene_overview(density_plot=True):
     graph = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
 
@@ -400,7 +428,7 @@ def analysis(graph, Model, runs=10):
 
 if __name__ == '__main__':
     plotter.Plotter.show_plots = False
-    logger.VERBOSE = False
+    logger.VERBOSE = True
 
     #simulate_model(models.MultiplicatorModel, runs=20)
     #simulate_model(models.BooleanModel)
@@ -412,8 +440,9 @@ if __name__ == '__main__':
 
     #investigate_active_edge_count_influence(models.BooleanModel)
     #investigate_base_window_influence()
-    investigate_origin_of_replication_influence()
+    #investigate_origin_of_replication_influence()
 
     #real_life_average()
     #real_life_all()
     #real_life_single()
+    real_life_rnaseq()
