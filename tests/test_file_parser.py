@@ -198,3 +198,13 @@ class TestParser(TestCase):
         vec = [6, 7, 8, 9, 1, 2, 3]
         self.assertEqual(gpng._get_sublist(vec, 8, 3), [8, 9, 1, 2, 3])
         self.assertEqual(gpng._get_sublist(vec, 2, 7), [2, 3, 6, 7, 8])
+
+    def test_rnaseq_parser(self):
+        exp = file_parser.parse_rnaseq('tests/data/rnaseq.count')
+
+        self.assertEqual(len(exp.data['RNAseq']), 3)
+        self.assertEqual(exp.data['RNAseq']['aaea'], 13)
+        self.assertEqual(exp.data['RNAseq']['arga'], 100)
+        self.assertEqual(exp.data['RNAseq']['zuzu'], 42)
+        self.assertEqual(exp.get_genes(), ['aaea', 'arga', 'zuzu'])
+        self.assertEqual(exp.filename, 'rnaseq.count')

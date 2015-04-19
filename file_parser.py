@@ -254,7 +254,7 @@ def parse_concentration(fname, conc_range=None, **kwargs):
 def parse_rnaseq(fname):
     """ Return RNAseq data
     """
-    res = utils.GDSParseResult(['rna_seq'])
+    res = utils.GDSParseResult(['RNAseq'])
     res.add_filename(os.path.basename(fname))
 
     with open(fname, 'r') as fd:
@@ -264,7 +264,7 @@ def parse_rnaseq(fname):
             gname, gcount = line.split()
             gname = gname.lower()
 
-            res.data['rna_seq'][gname] = int(gcount)
+            res.data['RNAseq'][gname] = int(gcount)
             res.add_gene(gname)
 
     return res
