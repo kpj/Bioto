@@ -180,6 +180,20 @@ class TestGraphIO(GraphInit):
 
         shutil.rmtree(utils.DataHandler.backup_dir)
 
+    def test_method_selection(self):
+        microarray_file = 'tests/data/foo.soft'
+        rnaseq_file = 'tests/data/rnaseq.count'
+
+        raw_graph = nx.DiGraph()
+        raw_graph.add_nodes_from(['aaea', 'aaeb', 'haba', 'zuzu'])
+        trn = graph.Graph(raw_graph)
+
+        ma_exp = trn.io.load_concentrations(microarray_file)
+        rs_exp = trn.io.load_concentrations(rnaseq_file)
+
+        self.assertEqual(list(ma_exp.get_columns()), ['GSM37063', 'GSM37064'])
+        self.assertEqual(list(rs_exp.get_columns()), ['RNAseq'])
+
 class TestGraphSystem(GraphInit):
     def test_unassigned_model(self):
         with self.assertRaises(RuntimeError):

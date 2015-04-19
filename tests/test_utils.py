@@ -160,10 +160,37 @@ class TestGraphGenerators(TestCase):
         graph = utils.GraphGenerator.get_regulatory_graph(trn_file, gpn_file, base_window=10, reduce_gpn=False)
 
         self.assertIsInstance(graph.graph, nx.MultiDiGraph)
-        self.assertEqual(len(graph), 7)
-        self.assertEqual(list(graph), ['aaea', 'aaeb', 'cydc', 'fnge', 'mepm', 'yaaa', 'zuzu'])
+        self.assertEqual(len(graph), 8)
+        self.assertEqual(list(graph), ['aaea', 'aaeb', 'arga', 'cydc', 'fnge', 'mepm', 'yaaa', 'zuzu'])
 
-        self.assertEqual(set(graph.graph.edges()), set([('yaaa', 'cydc'), ('cydc', 'yaaa'), ('yaaa', 'mepm'), ('mepm', 'yaaa'), ('fnge', 'mepm'), ('mepm', 'fnge'), ('fnge', 'yaaa'), ('yaaa', 'fnge'), ('aaea', 'aaeb'), ('aaea', 'zuzu'), ('aaeb', 'aaea'), ('zuzu', 'zuzu'), ('zuzu', 'aaeb')]))
+        self.assertEqual(set(graph.graph.edges()), set([
+            ('yaaa', 'cydc'), ('cydc', 'yaaa'),
+            ('fnge', 'mepm'), ('mepm', 'fnge'),
+            ('fnge', 'arga'), ('arga', 'fnge'),
+            ('arga', 'yaaa'), ('yaaa', 'arga'),
+            ('aaea', 'aaeb'), ('aaea', 'zuzu'),
+            ('aaeb', 'aaea'), ('zuzu', 'zuzu'),
+            ('zuzu', 'aaeb')
+        ]))
+
+    def test_gpn_graph(self):
+        gpn_file = 'tests/data/gene_proximity_network.txt'
+
+        # circular genome
+        graph = utils.GraphGenerator.get_gene_proximity_network(gpn_file, base_window=10)
+        self.assertEqual(set(graph.graph.edges()), set([
+            ('yaaa', 'cydc'), ('cydc', 'yaaa'),
+            ('fnge', 'mepm'), ('mepm', 'fnge'),
+            ('fnge', 'arga'), ('arga', 'fnge'),
+            ('arga', 'yaaa'), ('yaaa', 'arga'),
+        ]))
+
+        # two stranded genome
+        graph = utils.GraphGenerator.get_gene_proximity_network(gpn_file, base_window=10, origin=72)
+        self.assertEqual(set(graph.graph.edges()), set([
+            ('yaaa', 'arga'), ('arga', 'yaaa'),
+            ('fnge', 'mepm'), ('mepm', 'fnge')
+        ]))
 
 class TestStatsHandler(TestCase):
     def setUp(self):
@@ -424,6 +451,13 @@ class TestDataHandler(TestCase):
 
         self.assertEqual(exp.data['average'], {'aaea': 467.3333333333333, 'aaeb': 4.})
         self.assertEqual(exp.get_genes(), ['aaea', 'aaeb'])
+
+    def test_rnaseq(self):
+        count_file = 'tests/data/rnaseq.count'
+        exp = utils.DataHandler.load_rnaseq_data(self.graph, count_file)
+
+        self.assertEqual(exp.data['RNAseq'], {'aaea': 13, 'zuzu': 42})
+        self.assertEqual(exp.get_genes(), ['aaea', 'zuzu'])
 
 class TestGDSFormatHandler(TestCase):
     def test_log2_ratio_format(self):

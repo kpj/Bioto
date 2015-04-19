@@ -19,6 +19,7 @@ from progressbar import ProgressBar
 import pysoft
 
 import file_parser, graph, errors
+from logger import log
 
 
 class GraphGenerator(object):
@@ -57,20 +58,20 @@ class GraphGenerator(object):
         return gg
 
     @staticmethod
-    def get_regulatory_graph(tf_reg_file, gene_proximity_file=None, base_window=50000, reduce_gpn=True):
+    def get_regulatory_graph(tf_reg_file, gene_proximity_file=None, base_window=50000, reduce_gpn=True, origin=None):
         """ Return transcriptional regulatory network specified by given file
             If gene_proximity_file is given, TRN and GPN will be composed to a MultiDiGraph
         """
-        print('Generating TRN')
+        log('Generating TRN')
         trn = graph.Graph(file_parser.generate_tf_gene_regulation(tf_reg_file), largest=True)
-        print(' > %d nodes' % len(trn.graph.nodes()))
-        print(' > %d edges' % len(trn.graph.edges()))
+        log(' > %d nodes' % len(trn.graph.nodes()))
+        log(' > %d edges' % len(trn.graph.edges()))
 
         if not gene_proximity_file is None:
-            print('Generating GPN')
-            gpn = GraphGenerator.get_gene_proximity_network(gene_proximity_file, base_window)
-            print(' > %d nodes' % len(gpn.graph.nodes()))
-            print(' > %d edges' % len(gpn.graph.edges()))
+            log('Generating GPN', end=' ', flush=True)
+            gpn = GraphGenerator.get_gene_proximity_network(gene_proximity_file, base_window, origin=origin)
+            log(' > %d nodes' % len(gpn.graph.nodes()))
+            log(' > %d edges' % len(gpn.graph.edges()))
             if reduce_gpn: gpn.reduce_to(trn)
 
             trn += gpn
@@ -78,10 +79,18 @@ class GraphGenerator(object):
         return trn
 
     @staticmethod
-    def get_gene_proximity_network(gene_prox_file, base_window):
+    def get_gene_proximity_network(gene_prox_file, base_window, origin=None):
         """ Return gene proximity network specified by given file
         """
-        return graph.Graph(file_parser.generate_gene_proximity_network(gene_prox_file, base_window))
+        gpng = file_parser.GPNGenerator(gene_prox_file)
+        if origin is None:
+            log('(circular genome)')
+            gpn = gpng.generate_gene_proximity_network_circular(base_window)
+        else:
+            log('(two-stranded genome)')
+            gpn = gpng.generate_gene_proximity_network_two_strands(base_window, origin)
+
+        return graph.Graph(gpn)
 
 class StatsHandler(object):
     FUNC = scits.pearsonr
@@ -128,7 +137,7 @@ class DataHandler(object):
 
         #matched = set(graph).intersection(used_genes)
         no_match = set(graph).difference(used_genes)
-        print(' > graph coverage:', round(1 - len(no_match)/len(graph), 3))
+        log(' > graph coverage:', round(1 - len(no_match)/len(graph), 3))
 
         exp.clear_genes()
         exp.add_genes(used_genes)
@@ -136,19 +145,25 @@ class DataHandler(object):
         return exp
 
     @staticmethod
-    def load_concentrations(graph, file, conc_range=None):
+    def load_rnaseq_data(graph, fname):
+        log('Parsing RNAseq data file "%s"' % fname)
+        data = file_parser.parse_rnaseq(fname)
+        return DataHandler._handle_data(graph, data)
+
+    @staticmethod
+    def load_concentrations(graph, fname, conc_range=None):
         """ Extract gene concentrations from file which also appear in graph.
             Also return vector of node indices used in concentration vector
         """
-        bak_fname = os.path.join(DataHandler.backup_dir, 'conc_%s.bak' % os.path.basename(file))
+        bak_fname = os.path.join(DataHandler.backup_dir, 'conc_%s.bak' % os.path.basename(fname))
 
         if os.path.isfile('%s.npy' % bak_fname):
-            print('Recovering data from', bak_fname)
+            log('Recovering data from "%s"' % bak_fname)
             exp = np.load('%s.npy' % bak_fname).item()
         else:
-            print('Parsing data file', file)
-            gdsh = GDSHandler(os.path.dirname(file))
-            data = gdsh.parse_file(os.path.basename(file), conc_range)
+            log('Parsing SOFT data file "%s"' % fname)
+            gdsh = GDSHandler(os.path.dirname(fname))
+            data = gdsh.parse_file(os.path.basename(fname), conc_range)
 
             exp = DataHandler._handle_data(graph, data)
 
@@ -176,7 +191,7 @@ class DataHandler(object):
             if os.path.isfile(cache_file):
                 os.remove(cache_file)
 
-        print('Averaging data')
+        log('Averaging data')
         pbar = ProgressBar(maxval=len(graph))
         pbar.start()
 
@@ -205,7 +220,7 @@ class DataHandler(object):
         pbar.finish()
 
         res.add_genes(used_genes)
-        print(' > entries/gene (avg): %f' % np.mean(dataset_lens))
+        log(' > entries/gene (avg): %f' % np.mean(dataset_lens))
 
         exp = DataHandler._handle_data(graph, res)
         return exp
@@ -303,7 +318,7 @@ class GDSHandler(object):
         """ Scan directory for SOFT files.
             Extract gene concentration of genes which appear in all datasets if requested
         """
-        print('Parsing SOFT files in "%s"' % self.dir)
+        log('Parsing SOFT files in "%s"' % self.dir)
         walker = list(os.walk(self.dir))
         pbar = ProgressBar(maxval=sum([len(files) for root, dirs, files in walker]))
         pbar.start()

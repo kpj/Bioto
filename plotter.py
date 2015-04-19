@@ -13,6 +13,7 @@ from matplotlib import ticker as ptk
 from scipy.stats import gaussian_kde
 
 import utils
+from logger import log
 
 
 # enable LaTeX
@@ -30,10 +31,18 @@ class Plotter(object):
         """
         fname = os.path.join(Plotter.plot_save_directory, utils.clean_string(name)) if fname is None else fname
 
+        # handle filesuffix
+        if not (fname.endswith('.png') or
+                fname.endswith('.svg')):
+            fname += '.png'
+        log('Plotting "%s"' % fname)
+
+        # handle surrounding directory structure
         dire = os.path.dirname(fname)
         if len(dire) > 0 and not os.path.exists(dire):
             os.makedirs(dire)
 
+        # save plot
         if plot is None:
             # fix confusing axis offset
             formatter = ptk.ScalarFormatter(useOffset=False)
@@ -46,10 +55,6 @@ class Plotter(object):
                 plt.show()
             else:
                 plt.close()
-
-            if not (fname.endswith('.png') or
-                    fname.endswith('.svg')):
-                fname += '.png'
 
             fig.savefig(fname, dpi=150)
         else:

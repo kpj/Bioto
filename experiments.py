@@ -13,10 +13,10 @@ import utils, models, plotter, errors
 # Helper functions #
 ####################
 
-def present(title, func, *args, model=None, **kwargs):
+def present(title, func, *args, model=None):
     """ Save and (if needed) plot data
     """
-    dic = utils.CacheHandler.store_plot_data(title, func, *args, model=model, **kwargs)
+    dic = utils.CacheHandler.store_plot_data(title, func, *args, model=model)
     func(dic)
 
 
@@ -104,7 +104,7 @@ def real_life_all():
 def real_life_average():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
 
-    exp = g.io.load_averaged_concentrations('../data/concentrations/', cache_file='averaged_data.csv')
+    exp = g.io.load_averaged_concentrations('../data/concentrations/')
 
     pf_tmp = g.math.get_perron_frobenius()
     pr_tmp = g.math.get_pagerank()
@@ -127,6 +127,34 @@ def real_life_average():
 
     present(
         'Histogram of Real-Life Data (averaged)', plotter.Plotter.plot_histogram,
+        'gene concentration', 'count', conc
+    )
+
+def real_life_rnaseq():
+    g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
+    exp = g.io.load_concentrations('rnaseq_pipeline/results/SRR933989_mapped.count')
+
+    pf_tmp = g.math.get_perron_frobenius()
+    pr_tmp = g.math.get_pagerank()
+
+    col, conc = next(exp.get_data())
+    pf = exp.trim_input(pf_tmp, g, col)
+    pr = exp.trim_input(pr_tmp, g, col)
+
+    present(
+        'RNAseq data vs PF', plotter.Plotter.loglog,
+        'averaged gene concentration', conc,
+        'perron-frobenius eigenvector', pf
+    )
+
+    present(
+        'RNAseq data vs pagerank', plotter.Plotter.loglog,
+        'averaged gene concentration', conc,
+        'pagerank', pr
+    )
+
+    present(
+        'Histogram of RNAseq Data', plotter.Plotter.plot_histogram,
         'gene concentration', 'count', conc
     )
 
@@ -216,6 +244,37 @@ def investigate_base_window_influence():
         'Effect of base window size in GPN', plotter.Plotter.plot,
         'base window size', used_windows,
         'correlation between gene expression vector and PF', correlations
+    )
+
+def investigate_origin_of_replication_influence():
+    """ Use the two-stranded GPN with varying origin in order to investigate the importance of particular origin position
+    """
+    # actual origin between 130 and 370 (http://www.metalife.com/Genbank/147023)
+    possible_origins = range(1, 4641628, 1000) # 4641628 is rightmost gene end (yjtD)
+
+    pbar = ProgressBar(maxval=len(possible_origins))
+    pbar.start()
+
+    pf_corrs = []
+    for i, orig in enumerate(possible_origins):
+        g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000, origin=orig)
+
+        exp = g.io.load_averaged_concentrations('../data/concentrations/')
+        col, conc = next(exp.get_data())
+
+        pf_tmp = g.math.get_perron_frobenius()
+        pf = exp.trim_input(pf_tmp, g, col)
+
+        corr, _ = utils.StatsHandler.correlate(pf, conc)
+        pf_corrs.append(corr)
+
+        pbar.update(i)
+    pbar.finish()
+
+    present(
+        'Effect of origin of replication', plotter.Plotter.plot,
+        'origin of replication', possible_origins,
+        'correlation between gene expression vector and PF', pf_corrs
     )
 
 
@@ -371,6 +430,7 @@ def analysis(graph, Model, runs=10):
 
 if __name__ == '__main__':
     plotter.Plotter.show_plots = False
+    logger.VERBOSE = True
 
     #simulate_model(models.MultiplicatorModel, runs=20)
     #simulate_model(models.BooleanModel)
@@ -378,11 +438,13 @@ if __name__ == '__main__':
     #simulate_model(models.NonlinearModel, plot_jc_ev=True, runs=20)
 
     #analysis(utils.GraphGenerator.get_er_graph(100, 0.3), models.MultiplicatorModel)
-    #investigate_active_edge_count_influence(models.BooleanModel)
-
     #gene_overview()
+
+    #investigate_active_edge_count_influence(models.BooleanModel)
     #investigate_base_window_influence()
+    #investigate_origin_of_replication_influence()
 
     #real_life_average()
-    real_life_all()
+    #real_life_all()
     #real_life_single()
+    real_life_rnaseq()
