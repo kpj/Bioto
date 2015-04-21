@@ -227,7 +227,23 @@ class TestGraphMath(GraphInit):
         self.assertEqual(len(self.graph), len(res))
 
     def test_degree_distribution(self):
-        npt.assert_allclose(self.graph.math.get_degree_distribution(), np.array([0.42640143, 0.63960215, 0.63960215]))
+        # in-degree
+        npt.assert_allclose(
+            self.graph.math.get_degree_distribution(),
+            np.array([0.40824829, 0.81649658, 0.40824829])
+        )
+
+        # overall-degree
+        npt.assert_allclose(
+            self.graph.math.get_degree_distribution(indegree=None),
+            np.array([0.42640143, 0.63960215, 0.63960215])
+        )
+
+        # out-degree
+        npt.assert_allclose(
+            self.graph.math.get_degree_distribution(indegree=False),
+            np.array([0.40824829, 0.40824829, 0.81649658])
+        )
 
     def test_aug_adja_m_generation(self):
         rg = nx.DiGraph()

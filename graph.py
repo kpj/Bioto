@@ -183,18 +183,22 @@ class Math(object):
 
         return vals
 
-    def get_degree_distribution(self):
+    def get_degree_distribution(self, indegree=True):
         """ Computes normalized degree distribution of current graph
+            The degree is either in- [default], out- or overall-degree
         """
-        degs = nx.degree(self.graph.graph)
+        if indegree:
+            degs = self.graph.graph.in_degree()
+        elif indegree is None:
+            degs = self.graph.graph.degree()
+        else:
+            degs = self.graph.graph.out_degree()
+
         degs = {str(k): v for k, v in degs.items()}
         deg_di = [degs[node] for node in self.graph]
-        max_deg = max(deg_di)
+        deg_di /= npl.norm(deg_di)
 
-        vals = [d/max_deg for d in deg_di]
-        vals /= npl.norm(vals)
-
-        return vals
+        return deg_di
 
 class Graph(object):
     """ Central entity to conduct experiments/analyses on a given network
