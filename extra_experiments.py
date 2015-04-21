@@ -11,10 +11,11 @@ import numpy.random as npr
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 
+import scipy.stats as scits
+import networkx as nx
+
 from prettytable import PrettyTable
 from progressbar import ProgressBar
-
-import networkx as nx
 
 import pysoft
 
@@ -200,6 +201,13 @@ def summarize_gene_expression_data(dirname):
 	for e in res:
 		plotter.Plotter.plot_histogram({'data': e['data'], 'title': 'Gene expression vector overview for %s' % e['fname'], 'x_label': 'gene expression value', 'y_label': 'count'})
 
+def real_life_network_stats():
+	mat = file_parser.get_advanced_adjacency_matrix('../data/architecture/network_tf_gene.txt')
+	freq = scits.itemfreq(mat.flatten())
+
+	print(freq)
+	print(freq[0][1] / freq[2][1])
+
 
 if __name__ == '__main__':
 	plotter.Plotter.show_plots = True
@@ -210,5 +218,6 @@ if __name__ == '__main__':
 	#list_data('../data/concentrations/', 'data_summary.txt')
 	#search_database('/home/kpj/GEO/ftp.ncbi.nlm.nih.gov', save_dir='/home/kpj/GEO/ecoli', stats_file='GDS_stats.json')
 	#plot_orga_distri('GDS_stats.json', 'geo_db_organism_distribution.png')
-	variance_of_gene_expression('/home/kpj/GEO/ecoli')
+	#variance_of_gene_expression('/home/kpj/GEO/ecoli')
 	#summarize_gene_expression_data('../data/concentrations/')
+	real_life_network_stats()

@@ -64,6 +64,17 @@ class Plotter(object):
             ggsave(fname, plot)
 
     @staticmethod
+    def preprocess(**kwargs):
+        """ Do some preprocessing if required
+        """
+        if 'axis_preprocessing' in kwargs:
+            ax = plt.gca()
+
+            cur = kwargs['axis_preprocessing']
+            for k in cur:
+                getattr(ax, k)(*cur[k][0], **cur[k][1])
+
+    @staticmethod
     def plot_heatmap(data, title, xlabel, ylabel):
         """ Plot 2D array as heatmap
         """
@@ -383,6 +394,8 @@ if __name__ == '__main__':
         def handle_file(f):
             dic = utils.CacheHandler.load(f)
             func = getattr(Plotter, dic['info']['function'] if args['plot'] is None else args['plot'])
+
+            Plotter.preprocess(**dic['args'])
             func(dic, fname=get_name(dic['info']) if args['output'] is None else args['output'])
 
         if os.path.isfile(args['file']):

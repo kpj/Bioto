@@ -13,10 +13,12 @@ import utils, models, plotter, errors, logger
 # Helper functions #
 ####################
 
-def present(title, func, *args, model=None):
+def present(title, func, *args, model=None, **kwargs):
     """ Save and (if needed) plot data
     """
-    dic = utils.CacheHandler.store_plot_data(title, func, *args, model=model)
+    dic = utils.CacheHandler.store_plot_data(title, func, *args, model=model, **kwargs)
+
+    plotter.Plotter.preprocess(**kwargs)
     func(dic)
 
 
@@ -348,14 +350,23 @@ def investigate_active_edge_count_influence_quot(Model, node_num=20, edge_num=50
         pf_ge_correlations.append(pg_tmp)
     pbar.finish()
 
+    # compute act/inh ratio similar to TRN
+    trn_ratio = 0.843879907621
+    act_num = round((trn_ratio * edge_num) / (trn_ratio + 1))
+
     present(
-        'PF|NID correlation development for increasing number of activating links (%s, %s)' % (Model.info['name'], 'time norm' if models.BooleanModel.info['norm_time'] else 'gene norm'), plotter.Plotter.errorbar_plot,
+        'Correlation development for increasing number of activating links (%s, %s)' % (Model.info['name'], 'time norm' if models.BooleanModel.info['norm_time'] else 'gene norm'), plotter.Plotter.errorbar_plot,
         'number of activating links', list(range(edge_num+1)),
         'correlation coefficient',
         [
-            ('PF, NID', pf_nid_correlations),
-            ('PF, GE', pf_ge_correlations)
-        ]
+            ('perron-frobenius, node in-degree', pf_nid_correlations),
+            ('perron-frobenius, gene expression', pf_ge_correlations)
+        ],
+        axis_preprocessing={
+            'axvline': ((act_num,), {'linestyle': '--', 'color': 'k'}),
+            'text': ((act_num + 0.5, -0.8, 'i/a ratio in TRN'), {}),
+            'set_ylim': (([-1, 1], {}))
+        }
     )
 
 def investigate_active_edge_count_influence_gene_expr(Model, node_num=20, edge_num=50, repeats=10):
