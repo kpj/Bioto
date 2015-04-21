@@ -162,15 +162,6 @@ class TestParser(TestCase):
             ('fnge', 'mepm'), ('mepm', 'fnge')
         ]))
 
-    def test_gpn_generator_strand_creation(self):
-        gpng = file_parser.GPNGenerator('tests/data/gene_proximity_network.txt')
-        gpng.max_right = 20
-
-        self.assertEqual(gpng._get_strand(1, 7), [1, 2, 3, 4, 5, 6, 7])
-        self.assertEqual(gpng._get_strand(15, 20), [15, 16, 17, 18, 19, 20])
-        self.assertEqual(gpng._get_strand(19, 2), [19, 20, 1, 2])
-        self.assertEqual(gpng._get_strand(15, 5), [15, 16, 17, 18, 19, 20, 1, 2, 3, 4, 5])
-
     def test_gpn_generator_terminus_computation(self):
         gpng = file_parser.GPNGenerator('tests/data/gene_proximity_network.txt')
         gpng.max_right = 9
@@ -191,13 +182,6 @@ class TestParser(TestCase):
 
         self.assertEqual(aug_adja.shape, (3, 3))
         npt.assert_allclose(aug_adja, np.array([[0,1,1], [-1,0,0], [0,0,-1]]))
-
-    def test_sublist_getter(self):
-        gpng = file_parser.GPNGenerator('tests/data/gene_proximity_network.txt')
-
-        vec = [6, 7, 8, 9, 1, 2, 3]
-        self.assertEqual(gpng._get_sublist(vec, 8, 3), [8, 9, 1, 2, 3])
-        self.assertEqual(gpng._get_sublist(vec, 2, 7), [2, 3, 6, 7, 8])
 
     def test_rnaseq_parser(self):
         exp = file_parser.parse_rnaseq('tests/data/rnaseq.count')

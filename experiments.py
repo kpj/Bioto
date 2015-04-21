@@ -252,7 +252,12 @@ def investigate_origin_of_replication_influence():
     """ Use the two-stranded GPN with varying origin in order to investigate the importance of particular origin position
     """
     # actual origin between 130 and 370 (http://www.metalife.com/Genbank/147023)
-    possible_origins = range(1, 4641628, 1000) # 4641628 is rightmost gene end (yjtD)
+    possible_origins = range(1, 4641628, 10000) # 4641628 is rightmost gene end (yjtD)
+
+    # compute average gene concentrations once in advance
+    g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
+    exp = g.io.load_averaged_concentrations('../data/concentrations/')
+    col, conc = next(exp.get_data())
 
     pbar = ProgressBar(maxval=len(possible_origins))
     pbar.start()
@@ -260,9 +265,6 @@ def investigate_origin_of_replication_influence():
     pf_corrs = []
     for i, orig in enumerate(possible_origins):
         g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000, origin=orig)
-
-        exp = g.io.load_averaged_concentrations('../data/concentrations/')
-        col, conc = next(exp.get_data())
 
         pf_tmp = g.math.get_perron_frobenius()
         pf = exp.trim_input(pf_tmp, g, col)
@@ -497,9 +499,9 @@ if __name__ == '__main__':
     #gene_overview()
 
     #investigate_active_edge_count_influence_gene_expr(models.BooleanModel)
-    investigate_active_edge_count_influence_quot(models.BooleanModel)
+    #investigate_active_edge_count_influence_quot(models.BooleanModel)
     #investigate_base_window_influence()
-    #investigate_origin_of_replication_influence()
+    investigate_origin_of_replication_influence()
 
     #real_life_average()
     #real_life_all()
