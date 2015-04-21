@@ -244,10 +244,12 @@ class TestCacheHandler(TestCase):
             pass
 
     def test_data_storage_2_args(self):
-        res = utils.CacheHandler.store_plot_data('The Neverending Story', self.func, 'x axis stuff', 'important data')
+        res = utils.CacheHandler.store_plot_data('The Neverending Story', self.func, 'x axis stuff', 'important data', foo='bar')
 
-        self.assertEqual(len(res), 4)
+        self.assertEqual(len(res), 5)
         self.assertEqual(len(res['info']), 1)
+        
+        self.assertEqual(res['args'], {'foo': 'bar'})
 
         self.assertEqual(res['title'], 'The Neverending Story')
         self.assertEqual(res['info']['function'], '<lambda>')
@@ -260,8 +262,9 @@ class TestCacheHandler(TestCase):
     def test_data_storage_3_args(self):
         res = utils.CacheHandler.store_plot_data('The Neverending Story', self.func, 'x axis stuff', 'y axis stuff', 'important data')
 
-        self.assertEqual(len(res), 5)
+        self.assertEqual(len(res), 6)
         self.assertEqual(len(res['info']), 1)
+        self.assertEqual(len(res['args']), 0)
 
         self.assertEqual(res['title'], 'The Neverending Story')
         self.assertEqual(res['info']['function'], '<lambda>')
@@ -275,8 +278,9 @@ class TestCacheHandler(TestCase):
     def test_data_storage_4_args(self):
         res = utils.CacheHandler.store_plot_data('The Neverending Story', self.func, 'x axis stuff', 'x data', 'y axis stuff', 'y data')
 
-        self.assertEqual(len(res), 6)
+        self.assertEqual(len(res), 7)
         self.assertEqual(len(res['info']), 1)
+        self.assertEqual(len(res['args']), 0)
 
         self.assertEqual(res['title'], 'The Neverending Story')
         self.assertEqual(res['info']['function'], '<lambda>')
@@ -290,8 +294,9 @@ class TestCacheHandler(TestCase):
     def test_data_storage_multiplicator_model(self):
         res = utils.CacheHandler.store_plot_data('The Neverending Story', self.func, 'x axis stuff', 'important data', model=models.MultiplicatorModel)
 
-        self.assertEqual(len(res), 4)
+        self.assertEqual(len(res), 5)
         self.assertEqual(len(res['info']), 2)
+        self.assertEqual(len(res['args']), 0)
 
         self.assertEqual(res['title'], 'The Neverending Story')
         self.assertEqual(res['info']['function'], '<lambda>')
