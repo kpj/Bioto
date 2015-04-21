@@ -3,7 +3,6 @@ import argparse, pprint
 
 import numpy as np
 
-from ggplot import *
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import gridspec
@@ -23,7 +22,6 @@ rc('text', usetex=True)
 class Plotter(object):
     plot_save_directory = 'plot_dir'
     show_plots = True
-    use_ggplot = False # use ggplot is possible
 
     @staticmethod
     def show(name, fname=None, plot=None):
@@ -231,65 +229,29 @@ class Plotter(object):
     def multi_plot(data, fname=None):
         """ Plot multiple graphs into same coordinate system
         """
-        if Plotter.use_ggplot:
-            tmp = {'x': [],'y': [], 'id': []}
-            for i, entry in enumerate(data['data']):
-                tmp['x'].extend(entry['x'])
-                tmp['y'].extend(entry['y'])
-                tmp['id'].extend([i] * len(entry['x']))
+        for entry in data['data']:
+            plt.plot(entry['x'], entry['y'], label=entry['label'])
 
-            p = ggplot(aes(x='x', y='y', group='id', color='id'), data=utils.df(x=tmp['x'], y=tmp['y'], id=tmp['id']))
+        plt.title(data['title'])
+        plt.xlabel(data['x_label'])
+        plt.ylabel(data['y_label'])
 
-            p += geom_line()
-            p += scale_color_brewer(type='qual', palette='Set1')
+        #plt.legend(loc='best')
 
-            p += ggtitle(data['title'])
-            p += xlab(data['x_label'])
-            p += ylab(data['y_label'])
-
-            Plotter.show(data['title'], fname=fname, plot=p)
-        else:
-            for entry in data['data']:
-                plt.plot(entry['x'], entry['y'], label=entry['label'])
-
-            plt.title(data['title'])
-            plt.xlabel(data['x_label'])
-            plt.ylabel(data['y_label'])
-
-            #plt.legend(loc='best')
-
-            Plotter.show(data['title'], fname=fname)
+        Plotter.show(data['title'], fname=fname)
 
     @staticmethod
     def loglog(data, show_corr=True, fname=None):
         """ Yield loglog plot
         """
-        if Plotter.use_ggplot:
-            if show_corr:
-                corr, p_val, = utils.StatsHandler.correlate(data['x_data'], data['y_data'])
-                data['title'] += ' (corr: %.2f, p-value: %.2f)' % (round(corr, 2), round(p_val, 2))
-
-            p = ggplot(aes(x='x', y='y', color='x'), data=utils.df(x=data['x_data'], y=data['y_data']))
-            p += geom_point()
-
-            p += scale_x_log()
-            p += scale_y_log()
-            p += scale_colour_gradient(low='black', high='red')
-
-            p += ggtitle(data['title'])
-            p += xlab(data['x_label'])
-            p += ylab(data['y_label'])
-
-            Plotter.show('%s.png' % data['title'], fname=fname, plot=p)
-        else:
-            ax = Plotter.set_loglog(
-                plt.gca(),
-                data['x_data'], data['y_data'],
-                data['title'],
-                data['x_label'], data['y_label'],
-                **(data['plt_args'] if 'plt_args' in data else {})
-            )
-            Plotter.show('%s.png' % data['title'], fname=fname)
+        ax = Plotter.set_loglog(
+            plt.gca(),
+            data['x_data'], data['y_data'],
+            data['title'],
+            data['x_label'], data['y_label'],
+            **(data['plt_args'] if 'plt_args' in data else {})
+        )
+        Plotter.show('%s.png' % data['title'], fname=fname)
 
     @staticmethod
     def multi_loglog(data, fname=None):
