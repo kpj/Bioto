@@ -364,7 +364,7 @@ def investigate_active_edge_count_influence_quot(Model, node_num=20, edge_num=50
         ],
         axis_preprocessing={
             'axvline': ((act_num,), {'linestyle': '--', 'color': 'k'}),
-            'text': ((act_num + 0.5, -0.8, 'i/a ratio in TRN'), {}),
+            'text': ((act_num + 0.5, -0.8, 'i/a ratio of TRN'), {}),
             'set_ylim': (([-1, 1], {}))
         }
     )
