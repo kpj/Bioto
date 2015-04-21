@@ -6,7 +6,7 @@ import numpy.linalg as npl
 
 from progressbar import ProgressBar
 
-import utils, models, plotter, errors
+import utils, models, plotter, errors, logger
 
 
 ####################
@@ -314,7 +314,7 @@ def simulate_model(Model, n=20, ae=0, ie=50, plot_jc_ev=False, info={}, **kwargs
         )
 
 def investigate_active_edge_count_influence(Model, node_num=20, edge_num=50, repeats=10):
-    """ Compute correlation between pf and gene concentrations for varying numbers of activating links in network.
+    """ Compute correlation between pf/pagerank/node in-degree and gene concentrations for varying numbers of activating links in network.
         repeats specifies how many runs are average for one specific number of activating links
     """
     g = utils.GraphGenerator.get_random_graph(node_num, activating_edges=0, inhibiting_edges=edge_num)
@@ -327,7 +327,7 @@ def investigate_active_edge_count_influence(Model, node_num=20, edge_num=50, rep
         'Pagerank': {
             'get': lambda graph: graph.math.get_pagerank()
         },
-        'Node degree': {
+        'Node in-degree': {
             'get': lambda graph: graph.math.get_degree_distribution()
         }
     }
@@ -430,7 +430,7 @@ def analysis(graph, Model, runs=10):
 
 if __name__ == '__main__':
     plotter.Plotter.show_plots = False
-    logger.VERBOSE = True
+    logger.VERBOSE = False
 
     #simulate_model(models.MultiplicatorModel, runs=20)
     #simulate_model(models.BooleanModel)
@@ -440,11 +440,11 @@ if __name__ == '__main__':
     #analysis(utils.GraphGenerator.get_er_graph(100, 0.3), models.MultiplicatorModel)
     #gene_overview()
 
-    #investigate_active_edge_count_influence(models.BooleanModel)
+    investigate_active_edge_count_influence(models.BooleanModel)
     #investigate_base_window_influence()
     #investigate_origin_of_replication_influence()
 
     #real_life_average()
     #real_life_all()
     #real_life_single()
-    real_life_rnaseq()
+    #real_life_rnaseq()

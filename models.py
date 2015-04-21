@@ -11,6 +11,7 @@ import sympy as sp
 from sympy.utilities.lambdify import lambdify
 
 import utils, stats
+from logger import log
 
 
 class Math(object):
@@ -23,12 +24,12 @@ class Math(object):
         """
         # only create one unique augmented adjacency matrix
         if not self.model.aug_adja_m is None:
-            print('Augmented adjacency matrix already computed, using old one.')
+            log('Augmented adjacency matrix already computed, using old one.')
             return self.model.aug_adja_m
 
         # only create new one, if graph has not been assigned a specific one
         if not self.model.graph.aug_adja_m is None:
-            print('Graph has been assigned an augmented adjacency matrix. Model uses that one.')
+            log('Graph has been assigned an augmented adjacency matrix. Model uses that one.')
             return self.model.graph.aug_adja_m
 
         aug_adja_m = np.copy(self.model.graph.adja_m)
