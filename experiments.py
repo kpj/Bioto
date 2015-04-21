@@ -313,7 +313,52 @@ def simulate_model(Model, n=20, ae=0, ie=50, plot_jc_ev=False, info={}, **kwargs
             model=Model
         )
 
-def investigate_active_edge_count_influence(Model, node_num=20, edge_num=50, repeats=10):
+def investigate_active_edge_count_influence_quot(Model, node_num=20, edge_num=50, repeats=10):
+    """ Compute correlation between PF/NID corr. and PF/GE corr. depending on act/inh link ratio.
+    """
+    pbar = ProgressBar(maxval=(edge_num+1) * repeats)
+    pbar.start()
+    counter = 0
+
+    pf_nid_correlations = []
+    pf_ge_correlations = []
+    for enu in range(edge_num+1):
+        pm_tmp = []
+        pg_tmp = []
+
+        for i in range(repeats):
+            # regenerate graph
+            g = utils.GraphGenerator.get_random_graph(node_num, activating_edges=enu, inhibiting_edges=edge_num-enu)
+
+            # get data
+            sim = g.system.simulate(Model)
+            avg_data = [np.mean(time_unit) for time_unit in sim.T]
+
+            pf = g.math.get_perron_frobenius(remove_self_links=True)
+            nd = g.math.get_degree_distribution()
+
+            # do statistics
+            pm_tmp.append(utils.StatsHandler.correlate(pf, nd)[0])
+            pg_tmp.append(utils.StatsHandler.correlate(pf, avg_data)[0])
+
+            pbar.update(counter)
+            counter += 1
+
+        pf_nid_correlations.append(pm_tmp)
+        pf_ge_correlations.append(pg_tmp)
+    pbar.finish()
+
+    present(
+        'PF|NID correlation development for increasing number of activating links (%s, %s)' % (Model.info['name'], 'time norm' if models.BooleanModel.info['norm_time'] else 'gene norm'), plotter.Plotter.errorbar_plot,
+        'number of activating links', list(range(edge_num+1)),
+        'correlation coefficient',
+        [
+            ('PF, NID', pf_nid_correlations),
+            ('PF, GE', pf_ge_correlations)
+        ]
+    )
+
+def investigate_active_edge_count_influence_gene_expr(Model, node_num=20, edge_num=50, repeats=10):
     """ Compute correlation between pf/pagerank/node in-degree and gene concentrations for varying numbers of activating links in network.
         repeats specifies how many runs are average for one specific number of activating links
     """
@@ -440,7 +485,8 @@ if __name__ == '__main__':
     #analysis(utils.GraphGenerator.get_er_graph(100, 0.3), models.MultiplicatorModel)
     #gene_overview()
 
-    investigate_active_edge_count_influence(models.BooleanModel)
+    #investigate_active_edge_count_influence_gene_expr(models.BooleanModel)
+    investigate_active_edge_count_influence_quot(models.BooleanModel)
     #investigate_base_window_influence()
     #investigate_origin_of_replication_influence()
 

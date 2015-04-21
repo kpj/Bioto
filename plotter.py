@@ -190,13 +190,25 @@ class Plotter(object):
     def errorbar_plot(data, fname=None):
         """ This function assumes that y is a list of lists and automatically computes the error margin
         """
-        y_mean = []
-        y_err = []
-        for e in data['y_data']:
-            y_mean.append(np.mean(e))
-            y_err.append(np.std(e))
+        def gen(dat):
+            """ Generate mean and error terms for given data
+            """
+            y_mean = []
+            y_err = []
+            for e in dat:
+                y_mean.append(np.mean(e))
+                y_err.append(np.std(e))
+            return y_mean, y_err
 
-        plt.errorbar(data['x_data'], y_mean, yerr=y_err, fmt='o')
+        if isinstance(data['y_data'][0][0], str):
+            for lab, dat in data['y_data']:
+                y_mean, y_err = gen(dat)
+                plt.errorbar(data['x_data'], y_mean, yerr=y_err, fmt='o', label=lab)
+
+            plt.legend(loc='best')
+        else:
+            y_mean, y_err = gen(data['y_data'])
+            plt.errorbar(data['x_data'], y_mean, yerr=y_err, fmt='o')
 
         plt.title(data['title'])
         plt.xlabel(data['x_label'])

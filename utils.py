@@ -251,6 +251,7 @@ class CacheHandler(object):
             }
         elif len(args) == 4:
             """ args = (x_label, x_data, y_label, y_data)
+                args = (x_label, x_data, y_label, [(label, y_data), ..])
             """
             dic = {
                 'x_data': args[1],
