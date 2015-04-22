@@ -332,7 +332,10 @@ def investigate_active_edge_count_influence_quot(Model, node_num=20, edge_num=50
 
         for i in range(repeats):
             # regenerate graph
-            g = utils.GraphGenerator.get_random_graph(node_num, activating_edges=enu, inhibiting_edges=edge_num-enu)
+            g = utils.GraphGenerator.get_random_graph(
+                node_num,
+                activating_edges=enu, inhibiting_edges=edge_num-enu, scalefree=True
+            )
 
             # get data
             sim = g.system.simulate(Model)
@@ -499,9 +502,9 @@ if __name__ == '__main__':
     #gene_overview()
 
     #investigate_active_edge_count_influence_gene_expr(models.BooleanModel)
-    #investigate_active_edge_count_influence_quot(models.BooleanModel)
+    investigate_active_edge_count_influence_quot(models.BooleanModel)
     #investigate_base_window_influence()
-    investigate_origin_of_replication_influence()
+    #investigate_origin_of_replication_influence()
 
     #real_life_average()
     #real_life_all()

@@ -32,12 +32,24 @@ class GraphGenerator(object):
         return graph.Graph(nx.erdos_renyi_graph(node_num, edge_prob, directed=True))
 
     @staticmethod
-    def get_random_graph(graphdef, activating_edges=0, inhibiting_edges=0):
+    def get_scalefree_graph(node_num=20):
+        return graph.Graph(nx.scale_free_graph(node_num))
+
+    @staticmethod
+    def get_random_graph(graphdef, activating_edges=0, inhibiting_edges=0, scalefree=False):
         """ Create random graph by subsetting complete graph
+            If graphdef is an integer, this will create an ER graph
         """
         if isinstance(graphdef, int):
             node_num = graphdef
-            g = nx.complete_graph(graphdef, create_using=nx.DiGraph())
+
+            if scalefree:
+                while True:
+                    # brute-force right amount fo edges, this might fail horribly!
+                    g = GraphGenerator.get_scalefree_graph(graphdef).graph
+                    if len(g.edges()) >= activating_edges+inhibiting_edges: break
+            else:
+                g = nx.complete_graph(graphdef, create_using=nx.DiGraph())
         elif isinstance(graphdef, graph.Graph):
             node_num = len(graphdef)
             g = graphdef.graph

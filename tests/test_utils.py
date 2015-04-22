@@ -64,13 +64,14 @@ class TestGraphGenerators(TestCase):
         neg_m[neg_m != -1] = 0
         self.assertEqual(np.sum(neg_m), -50)
 
-    def test_random_graph_network_preservation(self):
+    def test_random_graph_er_network_preservation(self):
         graph = utils.GraphGenerator.get_random_graph(42, 30, 50)
         new_graph = utils.GraphGenerator.get_random_graph(graph, 60, 13)
 
         self.assertEqual(len(new_graph), 42)
         self.assertIsInstance(new_graph.graph, nx.DiGraph)
 
+        self.assertEqual(graph.graph.nodes(), new_graph.graph.nodes())
         self.assertNotEqual(
             graph.aug_adja_m.tolist(),
             new_graph.aug_adja_m.tolist()
@@ -83,6 +84,24 @@ class TestGraphGenerators(TestCase):
         neg_m = new_graph.aug_adja_m.copy()
         neg_m[neg_m != -1] = 0
         self.assertEqual(np.sum(neg_m), -13)
+
+    def test_random_graph_scalefree_network_preservation(self):
+        graph = utils.GraphGenerator.get_scalefree_graph(100)
+        edge_num = len(graph.graph.edges())
+
+        new_graph = utils.GraphGenerator.get_random_graph(
+            42,
+            round(1/2 * edge_num), edge_num - round(1/2 * edge_num)
+        )
+        new_graph2 = utils.GraphGenerator.get_random_graph(
+            new_graph,
+            round(1/3 * edge_num), edge_num - round(1/3 * edge_num)
+        )
+
+        self.assertEqual(
+            set(new_graph.graph.edges()),
+            set(new_graph2.graph.edges())
+        )
 
     def test_random_graph_network_preservation_with_model(self):
         models.BooleanModel.info['cont_evo_runs'] = 5
@@ -148,6 +167,12 @@ class TestGraphGenerators(TestCase):
 
     def test_er_graph(self):
         graph = utils.GraphGenerator.get_er_graph(100, 0.66)
+
+        self.assertEqual(len(graph), 100)
+        self.assertIsInstance(graph.graph, nx.DiGraph)
+
+    def test_scalefree_graph(self):
+        graph = utils.GraphGenerator.get_scalefree_graph(100)
 
         self.assertEqual(len(graph), 100)
         self.assertIsInstance(graph.graph, nx.DiGraph)
@@ -248,7 +273,7 @@ class TestCacheHandler(TestCase):
 
         self.assertEqual(len(res), 5)
         self.assertEqual(len(res['info']), 1)
-        
+
         self.assertEqual(res['args'], {'foo': 'bar'})
 
         self.assertEqual(res['title'], 'The Neverending Story')
