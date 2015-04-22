@@ -317,7 +317,7 @@ def simulate_model(Model, n=20, ae=0, ie=50, plot_jc_ev=False, info={}, **kwargs
             model=Model
         )
 
-def investigate_active_edge_count_influence_quot(Model, node_num=20, edge_num=50, repeats=10):
+def investigate_active_edge_count_influence_quot(Model, node_num=20, edge_num=50, repeats=10, scalefree=False, indegree=True):
     """ Compute correlation between PF/NID corr. and PF/GE corr. depending on act/inh link ratio.
     """
     pbar = ProgressBar(maxval=(edge_num+1) * repeats)
@@ -334,7 +334,7 @@ def investigate_active_edge_count_influence_quot(Model, node_num=20, edge_num=50
             # regenerate graph
             g = utils.GraphGenerator.get_random_graph(
                 node_num,
-                activating_edges=enu, inhibiting_edges=edge_num-enu, scalefree=True
+                activating_edges=enu, inhibiting_edges=edge_num-enu, scalefree=scalefree
             )
 
             # get data
@@ -342,7 +342,7 @@ def investigate_active_edge_count_influence_quot(Model, node_num=20, edge_num=50
             avg_data = [np.mean(time_unit) for time_unit in sim.T]
 
             pf = g.math.get_perron_frobenius(remove_self_links=True)
-            nd = g.math.get_degree_distribution()
+            nd = g.math.get_degree_distribution(indegree=indegree)
 
             # do statistics
             pm_tmp.append(utils.StatsHandler.correlate(pf, nd)[0])
@@ -359,12 +359,15 @@ def investigate_active_edge_count_influence_quot(Model, node_num=20, edge_num=50
     trn_ratio = 0.843879907621
     act_num = round((trn_ratio * edge_num) / (trn_ratio + 1))
 
+    # change tags dependent on degree type
+    title_tag = {True: 'in-degree', None: 'overall-degree', False: 'out-degree'}
+
     present(
-        'Correlation development for increasing number of activating links (%s, %s)' % (Model.info['name'], 'time norm' if models.BooleanModel.info['norm_time'] else 'gene norm'), plotter.Plotter.errorbar_plot,
+        'Correlation development for increasing number of activating links on %s graph (%s, %s; %s)' % ('scale-free' if scalefree else 'ER', Model.info['name'], 'time norm' if models.BooleanModel.info['norm_time'] else 'gene norm', title_tag[indegree]), plotter.Plotter.errorbar_plot,
         'number of activating links', list(range(edge_num+1)),
         'correlation coefficient',
         [
-            ('perron-frobenius, node in-degree', pf_nid_correlations),
+            ('perron-frobenius, node %s' % title_tag[indegree], pf_nid_correlations),
             ('perron-frobenius, gene expression', pf_ge_correlations)
         ],
         axis_preprocessing={
@@ -485,6 +488,18 @@ def analysis(graph, Model, runs=10):
     )
 
 
+###############
+# Experiments #
+###############
+
+def quot_investigator():
+    investigate_active_edge_count_influence_quot(models.BooleanModel, scalefree=True, indegree=True)
+    investigate_active_edge_count_influence_quot(models.BooleanModel, scalefree=True, indegree=None)
+    investigate_active_edge_count_influence_quot(models.BooleanModel, scalefree=True, indegree=False)
+    investigate_active_edge_count_influence_quot(models.BooleanModel, scalefree=False, indegree=True)
+    investigate_active_edge_count_influence_quot(models.BooleanModel, scalefree=False, indegree=None)
+    investigate_active_edge_count_influence_quot(models.BooleanModel, scalefree=False, indegree=False)
+
 ##################
 # Command Center #
 ##################
@@ -502,9 +517,9 @@ if __name__ == '__main__':
     #gene_overview()
 
     #investigate_active_edge_count_influence_gene_expr(models.BooleanModel)
-    investigate_active_edge_count_influence_quot(models.BooleanModel)
     #investigate_base_window_influence()
     #investigate_origin_of_replication_influence()
+    quot_investigator()
 
     #real_life_average()
     #real_life_all()
