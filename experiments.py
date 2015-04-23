@@ -160,7 +160,7 @@ def real_life_rnaseq():
         'gene concentration', 'count', conc
     )
 
-def rnaseq_vs_microarray(rnaseq='SRR933989', gds='GDS2578', gsm='GSM99092'):
+def rnaseq_vs_microarray(rnaseq='SRR933989', gds='GDS2753', gsm='GSM143158'):
     """ Plot RNAseq data against microarray data
 
         The default microarray data/col choice has a histogram which is not too skewed
@@ -168,7 +168,7 @@ def rnaseq_vs_microarray(rnaseq='SRR933989', gds='GDS2578', gsm='GSM99092'):
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
 
     rna_exp = g.io.load_concentrations('rnaseq_pipeline/results/%s_mapped.count' % rnaseq)
-    ma_exp = g.io.load_concentrations('../data/concentrations/%s.soft' % gds)
+    ma_exp = g.io.load_concentrations('../data/concentrations/%s.soft' % gds, throw_on_unknown_format=False)
 
     _, rna_conc = next(rna_exp.get_data())
     _, ma_conc = next(ma_exp.get_data(cols=[gsm]))
@@ -183,7 +183,7 @@ def rnaseq_vs_microarray(rnaseq='SRR933989', gds='GDS2578', gsm='GSM99092'):
         'gene concentration', 'count', ma_conc
     )
 
-    rsc, mac = utils.combine_gds_parse_results(rna_exp, ma_exp, ('RNAseq', 'GSM99092'))
+    rsc, mac = utils.combine_gds_parse_results(rna_exp, ma_exp, ('RNAseq', gsm))
 
     present(
         'RNAseq vs Microarray data', plotter.Plotter.loglog,

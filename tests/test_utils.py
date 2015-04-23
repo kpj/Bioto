@@ -395,6 +395,10 @@ class TestGDSHandler(TestCase):
         with self.assertRaises(errors.InvalidGDSFormatError):
             res = self.gdsh.parse_file(gds_file)
 
+        res = self.gdsh.parse_file(gds_file, throw_on_unknown_format=False)
+        self.assertEqual(len(res.data), 2)
+        self.assertEqual(res.data, {'GSM37063': {'fufu': 42}, 'GSM37064': {'fufu': 43}})
+
     def test_all_genes(self):
         res = self.gdsh.process_directory(conc_range=[0, 'GSM37064'])
 

@@ -1,5 +1,10 @@
 ^DATASET = GDS100
 !dataset_value_type = unsupported format
+^SUBSET = GDS100_1
+!subset_dataset_id = GDS100
+!subset_description = fubar
+!subset_sample_id = GSM37063,GSM37064
+!subset_type = fu/bar
 #ID = foo
 #IDENTIFIER = identifier
 #GSM37063 = Value for GSM37063: glucose1; src: E. coli cell

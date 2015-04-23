@@ -53,14 +53,14 @@ class IOComponent(object):
             plt.savefig(file, dpi=150)
             plt.close()
 
-    def load_concentrations(self, fname, conc_range=None):
+    def load_concentrations(self, fname, conc_range=None, **kwargs):
         """ Delegates to utils.DataHandler
         """
         if fname.endswith('.soft'):
             # is microarray data
-            return utils.DataHandler.load_concentrations(self.graph, fname, conc_range)
+            return utils.DataHandler.load_concentrations(self.graph, fname, conc_range, **kwargs)
         elif fname.endswith('.count'):
-            return utils.DataHandler.load_rnaseq_data(self.graph, fname)
+            return utils.DataHandler.load_rnaseq_data(self.graph, fname, **kwargs)
         else:
             print('Could not parse file "%s", unknown format' % fname)
 

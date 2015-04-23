@@ -157,13 +157,13 @@ class DataHandler(object):
         return exp
 
     @staticmethod
-    def load_rnaseq_data(graph, fname):
+    def load_rnaseq_data(graph, fname, **kwargs):
         log('Parsing RNAseq data file "%s"' % fname)
-        data = file_parser.parse_rnaseq(fname)
+        data = file_parser.parse_rnaseq(fname, **kwargs)
         return DataHandler._handle_data(graph, data)
 
     @staticmethod
-    def load_concentrations(graph, fname, conc_range=None):
+    def load_concentrations(graph, fname, conc_range=None, **kwargs):
         """ Extract gene concentrations from file which also appear in graph.
             Also return vector of node indices used in concentration vector
         """
@@ -175,7 +175,7 @@ class DataHandler(object):
         else:
             log('Parsing SOFT data file "%s"' % fname)
             gdsh = GDSHandler(os.path.dirname(fname))
-            data = gdsh.parse_file(os.path.basename(fname), conc_range)
+            data = gdsh.parse_file(os.path.basename(fname), conc_range, **kwargs)
 
             exp = DataHandler._handle_data(graph, data)
 

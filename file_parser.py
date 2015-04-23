@@ -211,7 +211,7 @@ def parse_concentration(fname, conc_range=None, **kwargs):
 
     return res
 
-def parse_rnaseq(fname):
+def parse_rnaseq(fname, **kwargs):
     """ Return RNAseq data
     """
     res = utils.GDSParseResult(['RNAseq'])
