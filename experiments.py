@@ -160,6 +160,37 @@ def real_life_rnaseq():
         'gene concentration', 'count', conc
     )
 
+def rnaseq_vs_microarray(rnaseq='SRR933989', gds='GDS2578', gsm='GSM99092'):
+    """ Plot RNAseq data against microarray data
+
+        The default microarray data/col choice has a histogram which is not too skewed
+    """
+    g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
+
+    rna_exp = g.io.load_concentrations('rnaseq_pipeline/results/%s_mapped.count' % rnaseq)
+    ma_exp = g.io.load_concentrations('../data/concentrations/%s.soft' % gds)
+
+    _, rna_conc = next(rna_exp.get_data())
+    _, ma_conc = next(ma_exp.get_data(cols=[gsm]))
+
+    present(
+        'Histogram for RNAseq data from %s' % rnaseq, plotter.Plotter.plot_histogram,
+        'gene concentration', 'count', rna_conc
+    )
+
+    present(
+        'Histogram for Microarray data from %s, %s' % (gds, gsm), plotter.Plotter.plot_histogram,
+        'gene concentration', 'count', ma_conc
+    )
+
+    rsc, mac = utils.combine_gds_parse_results(rna_exp, ma_exp, ('RNAseq', 'GSM99092'))
+
+    present(
+        'RNAseq vs Microarray data', plotter.Plotter.loglog,
+        'RNAseq data', rsc,
+        'microarray data', mac
+    )
+
 def gene_overview(density_plot=True):
     graph = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
 
@@ -506,7 +537,7 @@ def quot_investigator():
 
 if __name__ == '__main__':
     plotter.Plotter.show_plots = False
-    logger.VERBOSE = False
+    logger.VERBOSE = True
 
     #simulate_model(models.MultiplicatorModel, runs=20)
     #simulate_model(models.BooleanModel)
@@ -519,9 +550,10 @@ if __name__ == '__main__':
     #investigate_active_edge_count_influence_gene_expr(models.BooleanModel)
     #investigate_base_window_influence()
     #investigate_origin_of_replication_influence()
-    quot_investigator()
+    #quot_investigator()
 
     #real_life_average()
     #real_life_all()
     #real_life_single()
     #real_life_rnaseq()
+    rnaseq_vs_microarray()

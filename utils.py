@@ -466,10 +466,10 @@ class GDSParseResult(object):
         used_gene_indices = [list(graph).index(gene) for gene in self.get_genes_in_col(col)]
         return [inp[i] for i in used_gene_indices]
 
-    def get_data(self):
+    def get_data(self, cols=None):
         """ Return column and contained data
         """
-        for col in sorted(self.data):
+        for col in sorted(self.data if cols is None else cols):
             conc = [t[1] for t in sorted(self.data[col].items(), key=operator.itemgetter(0))]
 
             yield col, conc
@@ -516,6 +516,23 @@ class GDSParseResult(object):
                 foo.append(fname)
                 self.filename = ','.join(foo)
 
+
+def combine_gds_parse_results(res1, res2, col):
+    """ Return data in given column for genes which appear in both results
+    """
+    if isinstance(col, tuple):
+        common_genes = list(sorted(set.intersection(*[set(vec.data[c].keys()) for c, vec in zip(col, [res1, res2])])))
+
+        cols = col
+    else:
+        common_genes = list(sorted(set.intersection(*[set(vec.data[col].keys()) for vec in [res1, res2]])))
+
+        cols = (col, col)
+
+    vec1 = [res1.data[cols[0]][g] for g in common_genes]
+    vec2 = [res2.data[cols[1]][g] for g in common_genes]
+
+    return (vec1, vec2)
 
 def clean_string(s):
     """ Make string useable as filename

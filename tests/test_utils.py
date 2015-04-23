@@ -49,6 +49,20 @@ class TestMethods(TestCase):
         self.assertEqual(utils.get_max_entry_index(vec), 6)
         self.assertEqual(utils.get_max_entry_index(vec, real_entries_only=True), 4)
 
+    def test_gds_result_combiner(self):
+        res1 = utils.GDSParseResult()
+        res1.data = {'foo': {'a': 1, 'b': 2, 'c': 3}, 'bar': {'a': 10}}
+
+        res2 = utils.GDSParseResult()
+        res2.data = {'foo': {'a': 42, 'c': 2}, 'bar': {'b': 20, 'a':1337}}
+
+
+        comb = utils.combine_gds_parse_results(res1, res2, 'foo')
+        self.assertEqual(comb, ([1, 3], [42, 2]))
+
+        comb = utils.combine_gds_parse_results(res1, res2, ('foo', 'bar'))
+        self.assertEqual(comb, ([1, 2], [1337, 20]))
+
 class TestGraphGenerators(TestCase):
     def test_random_graph(self):
         graph = utils.GraphGenerator.get_random_graph(42, 30, 50)
@@ -602,6 +616,10 @@ class TestGDSParseResult(TestCase):
         self.assertEqual(len(gener), 2)
         self.assertEqual(gener[0], ('bar', [10, 20]))
         self.assertEqual(gener[1], ('foo', [1, 2]))
+
+        gener = list(res.get_data(cols=['bar']))
+        self.assertEqual(len(gener), 1)
+        self.assertEqual(gener[0], ('bar', [10, 20]))
 
     def test_input_trimming(self):
         raw_graph = nx.DiGraph()
