@@ -580,3 +580,29 @@ def get_max_entry_index(vec, real_entries_only=False):
         max_index = np.argmax(np.real(vec))
 
     return max_index
+
+def get_all_data(g):
+    """ Return all concentrations, PFs and PRs
+    """
+    pf_tmp = g.math.get_perron_frobenius()
+    pr_tmp = g.math.get_pagerank()
+
+    pf_vec = []
+    pr_vec = []
+    conc_vec = []
+    for fname in os.listdir('../data/concentrations/'):
+        try:
+            exp = g.io.load_concentrations('../data/concentrations/%s' % fname)
+        except errors.InvalidGDSFormatError as e:
+            print('Could not process "%s" (%s)' % (fname, e))
+            continue
+
+        for col, conc in exp.get_data():
+            pf = exp.trim_input(pf_tmp, g, col)
+            pr = exp.trim_input(pr_tmp, g, col)
+
+            pf_vec.extend(pf)
+            pr_vec.extend(pr)
+            conc_vec.extend(conc)
+
+    return conc_vec, pf_vec, pr_vec

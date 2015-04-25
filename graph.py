@@ -1,3 +1,5 @@
+import pickle, datetime
+import os, os.path
 import sys, subprocess
 
 import numpy as np
@@ -17,6 +19,7 @@ import utils, errors
 class IOComponent(object):
     """ IO component for graph
     """
+    DUMP_DIR = 'graph_dumps'
 
     def __init__(self, graph):
         self.graph = graph
@@ -68,6 +71,18 @@ class IOComponent(object):
         """ Delegates to utils.DataHandler
         """
         return utils.DataHandler.load_averaged_concentrations(self.graph, directory, conc_range, cache_file)
+
+    def dump(self, fname=None):
+        """ Dump graph object to file
+        """
+        if not os.path.isdir(IOComponent.DUMP_DIR):
+            os.mkdir(IOComponent.DUMP_DIR)
+
+        if fname is None:
+            fname = '%s.grph' % datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+
+        with open(os.path.join(IOComponent.DUMP_DIR, fname), 'wb') as fd:
+            pickle.dump(self.graph, fd)
 
 class DynamicalSystem(object):
     def __init__(self, graph):
@@ -204,6 +219,17 @@ class Graph(object):
     """ Central entity to conduct experiments/analyses on a given network
     """
 
+    @staticmethod
+    def from_file(fname):
+        """ Generate graph from file
+        """
+        with open(fname, 'rb') as fd:
+            tmp = pickle.load(fd)
+            #if not isinstance(tmp, Graph):
+            #    raise TypeError('Tried to load invalid graph file')
+
+            return tmp
+
     def __init__(self, graph, largest=False):
         """ Only considers largest weakly connected component if needed
         """
@@ -230,6 +256,13 @@ class Graph(object):
         self.graph.remove_nodes_from(own_nodes.difference(his_nodes))
         self.setup()
 
+    def get_components(self):
+        """ Return list of weakly connected sub-components or list with only itself if graph is connected
+            (weakly connected: connected after after raplcing all directed edges with undirected ones)
+        """
+        for subg in nx.weakly_connected_component_subgraphs(self.graph):
+            yield Graph(subg)
+
     def __len__(self):
         """ Returns number of nodes in wrapped graph
         """
@@ -254,3 +287,11 @@ class Graph(object):
             my_graph = nx.MultiDiGraph(my_graph)
 
         return Graph(nx.compose(my_graph, his_graph))
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print('Usage: %s <graph file>' % sys.argv[0])
+        sys.exit(1)
+
+    graph = Graph.from_file(sys.argv[1])

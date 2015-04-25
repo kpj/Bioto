@@ -132,6 +132,33 @@ class GraphTester(GraphInit):
         self.assertEqual(list(self.graph), ['1', '2'])
         self.assertEqual(self.graph.graph.edges(), [('1','2')])
 
+    def test_sub_graph_generator(self):
+        raw_graph = nx.DiGraph()
+        raw_graph.add_nodes_from(['1', '2', '3', '4', '5'])
+        raw_graph.add_edges_from([('1','2'), ('2','3'), ('3','2'), ('3','1'), ('4', '5')])
+        g = graph.Graph(raw_graph)
+
+        subgs = list(g.get_components())
+        self.assertEqual(len(subgs), 2)
+
+        self.assertEqual(
+            set(subgs[0].graph.nodes()),
+            set(['1', '2', '3'])
+        )
+        self.assertEqual(
+            set(subgs[0].graph.edges()),
+            set([('1','2'), ('2','3'), ('3','2'), ('3','1')])
+        )
+
+        self.assertEqual(
+            set(subgs[1].graph.nodes()),
+            set(['4', '5'])
+        )
+        self.assertEqual(
+            set(subgs[1].graph.edges()),
+            set([('4', '5')])
+        )
+
 class TestGraphIO(GraphInit):
     def test_adja_dumping(self):
         adja_file = 'adja_m_testing.txt'

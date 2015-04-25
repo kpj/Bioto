@@ -63,26 +63,7 @@ def real_life_single():
 
 def real_life_all():
     g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
-    pf_tmp = g.math.get_perron_frobenius()
-    pr_tmp = g.math.get_pagerank()
-
-    pf_vec = []
-    pr_vec = []
-    conc_vec = []
-    for fname in os.listdir('../data/concentrations/'):
-        try:
-            exp = g.io.load_concentrations('../data/concentrations/%s' % fname)
-        except errors.InvalidGDSFormatError as e:
-            print('Could not process "%s" (%s)' % (fname, e))
-            continue
-
-        for col, conc in exp.get_data():
-            pf = exp.trim_input(pf_tmp, g, col)
-            pr = exp.trim_input(pr_tmp, g, col)
-
-            pf_vec.extend(pf)
-            pr_vec.extend(pr)
-            conc_vec.extend(conc)
+    conc_vec, pf_vec, pr_vec = utils.get_all_data(g)
 
     present(
         'Real-Life data PF (all)', plotter.Plotter.loglog,
@@ -312,6 +293,33 @@ def investigate_origin_of_replication_influence():
         'correlation between gene expression vector and PF', pf_corrs
     )
 
+def gpn_analysis():
+    """ Check each component of GPN
+    """
+    g = utils.GraphGenerator.get_gene_proximity_network( '../data/architecture/genome.txt', 50000)
+
+    for i, sg in enumerate(g.get_components()):
+        sg.io.dump()
+        conc_vec, pf_vec, pr_vec = utils.get_all_data(g)
+
+        present(
+            'Real-Life data PF (all) on GPN component \#%d' % i, plotter.Plotter.loglog,
+            'gene concentration', conc_vec,
+            'perron-frobenius eigenvector', pf_vec,
+            plt_args={'alpha': 0.02}
+        )
+
+        present(
+            'Real-Life data pagerank (all) on GPN component \#%d' % i, plotter.Plotter.loglog,
+            'gene concentration', conc_vec,
+            'pagerank', pr_vec,
+            plt_args={'alpha': 0.02}
+        )
+
+        present(
+            'Histogram of Real-Life Data (all) on GPN component \#%d' % i, plotter.Plotter.plot_histogram,
+            'gene concentration', 'count', conc_vec
+        )
 
 ##################
 # Generated data #
@@ -556,4 +564,6 @@ if __name__ == '__main__':
     #real_life_all()
     #real_life_single()
     #real_life_rnaseq()
-    rnaseq_vs_microarray()
+    #rnaseq_vs_microarray()
+
+    gpn_analysis()
