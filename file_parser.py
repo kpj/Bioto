@@ -134,7 +134,7 @@ class GPNGenerator(object):
 
         return graph
 
-def get_advanced_adjacency_matrix(file):
+def get_advanced_adjacency_matrix(file, graph=None):
     """ Returns adjacency matrix where an activating relationship is represented with a 1,
         an inhibiting one with -1 and 0 otherwise.
     """
@@ -149,7 +149,7 @@ def get_advanced_adjacency_matrix(file):
     data = parse_regulation_file(file)
 
     # create matrix
-    entries = sorted(data.keys())
+    entries = sorted(data.keys()) if graph is None else list(graph)
 
     mat = []
     for row_ele in entries:

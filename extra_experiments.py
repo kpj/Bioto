@@ -202,11 +202,17 @@ def summarize_gene_expression_data(dirname):
 		plotter.Plotter.plot_histogram({'data': e['data'], 'title': 'Gene expression vector overview for %s' % e['fname'], 'x_label': 'gene expression value', 'y_label': 'count'})
 
 def real_life_network_stats():
-	mat = file_parser.get_advanced_adjacency_matrix('../data/architecture/network_tf_gene.txt')
-	freq = scits.itemfreq(mat.flatten())
+	def stats(g):
+		mat = file_parser.get_advanced_adjacency_matrix('../data/architecture/network_tf_gene.txt', graph=g)
+		freq = scits.itemfreq(mat.flatten())
+		print(freq)
 
-	print(freq)
-	print(freq[0][1] / freq[2][1])
+	trn = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt')
+	stats(trn)
+
+	trn_gpn_circ = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
+
+	trn_gpn_tstra = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000, origin=250)
 
 
 if __name__ == '__main__':
