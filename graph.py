@@ -1,4 +1,4 @@
-import pickle, datetime
+import pickle
 import os, os.path
 import sys, subprocess
 
@@ -79,7 +79,7 @@ class IOComponent(object):
             os.mkdir(IOComponent.DUMP_DIR)
 
         if fname is None:
-            fname = '%s.grph' % datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+            fname = '%s.grph' % utils.get_strtime()
 
         with open(os.path.join(IOComponent.DUMP_DIR, fname), 'wb') as fd:
             pickle.dump(self.graph, fd)

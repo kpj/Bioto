@@ -24,7 +24,7 @@ class Plotter(object):
     show_plots = True
 
     @staticmethod
-    def show(name, fname=None, plot=None):
+    def show(name, fname=None, timestamp=True):
         """ Shows plot and automatically saves after closing preview
         """
         fname = os.path.join(Plotter.plot_save_directory, utils.clean_string(name)) if fname is None else fname
@@ -35,31 +35,32 @@ class Plotter(object):
             fname += '.png'
         log('Plotting "%s"' % fname)
 
+        # add timestamp
+        if timestamp:
+            parts = os.path.splitext(fname)
+            no_ext = parts[0]
+            no_ext += '_%s' % utils.get_strtime()
+            fname = '%s.%s' % (no_ext, parts[1])
+
         # handle surrounding directory structure
         dire = os.path.dirname(fname)
         if len(dire) > 0 and not os.path.exists(dire):
             os.makedirs(dire)
 
-        # save plot
-        if plot is None:
-            # fix confusing axis offset
-            formatter = ptk.ScalarFormatter(useOffset=False)
-            plt.gca().xaxis.set_major_formatter(formatter)
-            plt.gca().yaxis.set_major_formatter(formatter)
+        # fix confusing axis offset
+        formatter = ptk.ScalarFormatter(useOffset=False)
+        plt.gca().xaxis.set_major_formatter(formatter)
+        plt.gca().yaxis.set_major_formatter(formatter)
 
-            fig = plt.gcf()
+        fig = plt.gcf()
 
-            if Plotter.show_plots:
-                plt.show()
-            else:
-                plt.close()
-
-            fig.savefig(fname, dpi=150)
+        if Plotter.show_plots:
+            plt.show()
         else:
-            if Plotter.show_plots:
-                print(plot)
+            plt.close()
 
-            ggsave(fname, plot)
+        # save plot
+        fig.savefig(fname, dpi=150)
 
     @staticmethod
     def preprocess(**kwargs):

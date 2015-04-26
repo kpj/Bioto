@@ -6,6 +6,7 @@ import operator
 import json, csv
 import hashlib
 import random
+import datetime
 
 import numpy as np
 import numpy.random as npr
@@ -606,3 +607,6 @@ def get_all_data(g):
             conc_vec.extend(conc)
 
     return conc_vec, pf_vec, pr_vec
+
+def get_strtime():
+    return datetime.datetime.now().strftime('%Y%m%d%H%M%S')

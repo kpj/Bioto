@@ -335,9 +335,9 @@ def simulate_model(Model, n=20, ae=0, ie=50, plot_jc_ev=False, info={}, **kwargs
     pf = g.math.get_perron_frobenius(remove_self_links=True)
     if plot_jc_ev: ev = g.system.used_model.math.get_jacobian_ev(avg_data)
 
-    #show_evolution(g, sim)#, pf=pf)
+    show_evolution(g, sim)#, pf=pf)
     present(
-        '%s with PF of A' % Model.info['name'], plotter.Plotter.plot,
+        '%s with PF of A (%s)' % (Model.info['name'], 'time norm' if models.BooleanModel.info['norm_time'] else 'gene norm'), plotter.Plotter.plot,
         'gene concentration', avg_data,
         'perron-frobenius eigenvector', pf,
         model=Model
@@ -495,7 +495,7 @@ def show_evolution(graph, sim, genes=range(5), pf=None):
             data.append(pf_ev)
 
     present(
-        'System Evolution of %s' % graph.system.used_model.info['name'], plotter.Plotter.multi_plot,
+        'System Evolution of %s (%s)' % (graph.system.used_model.info['name'], 'time norm' if graph.system.used_model.info['norm_time'] else 'gene norm'), plotter.Plotter.multi_plot,
         'time', 'simulated gene expression level',
         data
     )
@@ -539,6 +539,30 @@ def quot_investigator():
     investigate_active_edge_count_influence_quot(models.BooleanModel, scalefree=False, indegree=None)
     investigate_active_edge_count_influence_quot(models.BooleanModel, scalefree=False, indegree=False)
 
+def BM_investigator():
+    simulate_model(
+        models.BooleanModel,
+        n=20, ae=0, ie=50,
+        info={'norm_time': True}
+    )
+    simulate_model(
+        models.BooleanModel,
+        n=20, ae=0, ie=50,
+        info={'norm_time': False}
+    )
+
+    simulate_model(
+        models.BooleanModel,
+        n=20, ae=50, ie=0,
+        info={'norm_time': True}
+    )
+    simulate_model(
+        models.BooleanModel,
+        n=20, ae=50, ie=0,
+        info={'norm_time': False}
+    )
+
+
 ##################
 # Command Center #
 ##################
@@ -558,7 +582,6 @@ if __name__ == '__main__':
     #investigate_active_edge_count_influence_gene_expr(models.BooleanModel)
     #investigate_base_window_influence()
     #investigate_origin_of_replication_influence()
-    #quot_investigator()
 
     #real_life_average()
     #real_life_all()
@@ -566,4 +589,7 @@ if __name__ == '__main__':
     #real_life_rnaseq()
     #rnaseq_vs_microarray()
 
-    gpn_analysis()
+    #gpn_analysis()
+
+    #quot_investigator()
+    BM_investigator()
