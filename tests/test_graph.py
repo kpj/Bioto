@@ -138,25 +138,25 @@ class GraphTester(GraphInit):
         raw_graph.add_edges_from([('1','2'), ('2','3'), ('3','2'), ('3','1'), ('4', '5')])
         g = graph.Graph(raw_graph)
 
-        subgs = list(g.get_components())
+        subgs = list(sorted(g.get_components()))
         self.assertEqual(len(subgs), 2)
 
         self.assertEqual(
             set(subgs[0].graph.nodes()),
-            set(['1', '2', '3'])
+            set(['4', '5'])
         )
         self.assertEqual(
             set(subgs[0].graph.edges()),
-            set([('1','2'), ('2','3'), ('3','2'), ('3','1')])
+            set([('4', '5')])
         )
 
         self.assertEqual(
             set(subgs[1].graph.nodes()),
-            set(['4', '5'])
+            set(['1', '2', '3'])
         )
         self.assertEqual(
             set(subgs[1].graph.edges()),
-            set([('4', '5')])
+            set([('1','2'), ('2','3'), ('3','2'), ('3','1')])
         )
 
 class TestGraphIO(GraphInit):

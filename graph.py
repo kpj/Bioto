@@ -288,6 +288,9 @@ class Graph(object):
 
         return Graph(nx.compose(my_graph, his_graph))
 
+    def __lt__(self, other):
+        return len(self) < len(other)
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
