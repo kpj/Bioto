@@ -24,7 +24,7 @@ class Plotter(object):
     show_plots = True
 
     @staticmethod
-    def show(name, fname=None, timestamp=True):
+    def show(name, fname=None, timestamp=False):
         """ Shows plot and automatically saves after closing preview
         """
         fname = os.path.join(Plotter.plot_save_directory, utils.clean_string(name)) if fname is None else fname
@@ -40,7 +40,7 @@ class Plotter(object):
             parts = os.path.splitext(fname)
             no_ext = parts[0]
             no_ext += '_%s' % utils.get_strtime()
-            fname = '%s.%s' % (no_ext, parts[1])
+            fname = '%s%s' % (no_ext, parts[1])
 
         # handle surrounding directory structure
         dire = os.path.dirname(fname)
@@ -60,7 +60,8 @@ class Plotter(object):
             plt.close()
 
         # save plot
-        fig.savefig(fname, dpi=150)
+        fig.dpi = 250
+        fig.savefig(fname, dpi=fig.dpi)
 
     @staticmethod
     def preprocess(**kwargs):
