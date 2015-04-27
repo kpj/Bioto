@@ -181,14 +181,22 @@ class Plotter(object):
 
     @staticmethod
     def plot(data, fname=None):
+        xs = []
+        ys = []
+        for i, j in zip(data['x_data'], data['y_data']):
+            # remove 0-pairs
+            if not (abs(i) < 1e-15 or abs(j) < 1e-15):
+                xs.append(i)
+                ys.append(j)
+
         plt.plot(
-            data['x_data'], data['y_data'],
+            xs, ys,
             linestyle='None',
             marker='.', markeredgecolor='blue'
         )
 
         title = data['title']
-        corr, p_val, = utils.StatsHandler.correlate(data['x_data'], data['y_data'])
+        corr, p_val, = utils.StatsHandler.correlate(xs, ys)
         title += ' (corr: %.2f, p-value: %.2f)' % (round(corr, 2), round(p_val, 2))
 
         plt.title(title)
@@ -277,7 +285,7 @@ class Plotter(object):
         ys = []
         for i, j in zip(x, y):
             # remove 0-pairs
-            if not (i < 1e-15 or j < 1e-15):
+            if not (abs(i) < 1e-15 or abs(j) < 1e-15):
                 xs.append(i)
                 ys.append(j)
 
