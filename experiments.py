@@ -471,6 +471,58 @@ def investigate_active_edge_count_influence_gene_expr(Model, node_num=20, edge_n
             'correlation coefficient', dats[k]['correlations']
         )
 
+def investigate_network_size_influence(Model, max_node_num=200, repeats=10):
+    node_range = range(10, max_node_num+1, 10)
+    pbar = ProgressBar(maxval=len(node_range) * repeats)
+
+    dats = {
+        'PF': {
+            'get': lambda graph: graph.math.get_perron_frobenius(remove_self_links=True)
+        },
+        'Pagerank': {
+            'get': lambda graph: graph.math.get_pagerank()
+        },
+        'Node in-degree': {
+            'get': lambda graph: graph.math.get_degree_distribution()
+        }
+    }
+
+    for k in dats:
+        dats[k]['correlations'] = []
+        dats[k]['tmp'] = []
+        dats[k]['val'] = 0
+
+    pbar.start()
+    counter = 0
+    for node_num in node_range:
+        for k in dats: dats[k]['tmp'] = []
+        for i in range(repeats):
+            # regenerate graph
+            g = utils.GraphGenerator.get_random_graph(node_num, activating_edges=0, inhibiting_edges=int(node_num * 2.21))
+            for k in dats: dats[k]['val'] = dats[k]['get'](g)
+
+            # get data
+            sim = g.system.simulate(Model)
+            avg_data = [np.mean(time_unit) for time_unit in sim.T]
+
+            # do statistics
+            for k in dats:
+                corr, _ = utils.StatsHandler.correlate(dats[k]['val'], avg_data)
+                dats[k]['tmp'].append(corr)
+
+            pbar.update(counter)
+            counter += 1
+
+        for k in dats: dats[k]['correlations'].append(dats[k]['tmp'])
+    pbar.finish()
+
+    for k in dats:
+        present(
+            '%s correlation development for increasing number of nodes (%s, %s)' % (k, Model.info['name'], 'time norm' if models.BooleanModel.info['norm_time'] else 'gene norm'), plotter.Plotter.errorbar_plot,
+            'number of nodes', list(node_range),
+            'correlation coefficient', dats[k]['correlations']
+        )
+
 def show_evolution(graph, sim, genes=range(5), pf=None):
     """ Plots evolution of individual genes over time interval
     """
@@ -569,7 +621,7 @@ def BM_investigator():
 
 if __name__ == '__main__':
     plotter.Plotter.show_plots = False
-    logger.VERBOSE = True
+    logger.VERBOSE = False
 
     #simulate_model(models.MultiplicatorModel, runs=20)
     #simulate_model(models.BooleanModel)
@@ -580,6 +632,7 @@ if __name__ == '__main__':
     #gene_overview()
 
     #investigate_active_edge_count_influence_gene_expr(models.BooleanModel)
+    investigate_network_size_influence(models.BooleanModel)
     #investigate_base_window_influence()
     #investigate_origin_of_replication_influence()
 
@@ -592,4 +645,4 @@ if __name__ == '__main__':
     #gpn_analysis()
 
     #quot_investigator()
-    BM_investigator()
+    #BM_investigator()
