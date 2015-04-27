@@ -542,23 +542,23 @@ def quot_investigator():
 def BM_investigator():
     simulate_model(
         models.BooleanModel,
-        n=20, ae=0, ie=50,
+        n=100, ae=0, ie=233,
         info={'norm_time': True}
     )
     simulate_model(
         models.BooleanModel,
-        n=20, ae=0, ie=50,
+        n=100, ae=0, ie=233,
         info={'norm_time': False}
     )
 
     simulate_model(
         models.BooleanModel,
-        n=20, ae=50, ie=0,
+        n=100, ae=233, ie=0,
         info={'norm_time': True}
     )
     simulate_model(
         models.BooleanModel,
-        n=20, ae=50, ie=0,
+        n=100, ae=233, ie=0,
         info={'norm_time': False}
     )
 
