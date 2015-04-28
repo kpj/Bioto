@@ -471,7 +471,7 @@ def investigate_active_edge_count_influence_gene_expr(Model, node_num=20, edge_n
             'correlation coefficient', dats[k]['correlations']
         )
 
-def investigate_network_size_influence(Model, max_node_num=200, repeats=10):
+def investigate_network_size_influence(Model, max_node_num=300, repeats=10):
     node_range = range(10, max_node_num+1, 10)
     pbar = ProgressBar(maxval=len(node_range) * repeats)
 
