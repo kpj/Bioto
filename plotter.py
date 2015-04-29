@@ -192,7 +192,8 @@ class Plotter(object):
         plt.plot(
             xs, ys,
             linestyle='None',
-            marker='.', markeredgecolor='blue'
+            marker='.', markeredgecolor='blue',
+            **(data['plt_args'] if 'plt_args' in data else {})
         )
 
         title = data['title']
