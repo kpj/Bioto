@@ -13,7 +13,7 @@ edge_prob = 0.3
 runs = 12
 
 # init
-graph_handler = utils.GraphGenerator.get_random_graph(node_num, edge_prob)
+graph_handler = utils.GraphGenerator.get_er_graph(node_num, edge_prob)
 
 # generate data
 data = graph_handler.system.simulate(models.MultiplicatorModel, runs=runs)
