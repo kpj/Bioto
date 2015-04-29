@@ -230,6 +230,14 @@ class Plotter(object):
             y_mean, y_err = gen(data['y_data'])
             plt.errorbar(data['x_data'], y_mean, yerr=y_err, fmt='o')
 
+            if 'polyfit' in data['args'] and data['args']['polyfit']:
+                coeffs = np.polyfit(data['x_data'], y_mean, 1)
+
+                y_vec = np.polyval(coeffs, data['x_data'])
+                plt.plot(data['x_data'], y_vec, label='${0:.2}x{2} {1:.2}$'.format(coeffs[0], abs(coeffs[1]), '+' if coeffs[1] > 0 else '-'))
+
+                plt.legend(loc='best')
+
         plt.title(data['title'])
         plt.xlabel(data['x_label'])
         plt.ylabel(data['y_label'])

@@ -473,7 +473,8 @@ def investigate_active_edge_count_influence_gene_expr(Model, node_num=20, edge_n
         present(
             '%s correlation development for increasing number of activating links (%s, %s)' % (k, Model.info['name'], 'time norm' if models.BooleanModel.info['norm_time'] else 'gene norm'), plotter.Plotter.errorbar_plot,
             'number of activating links', list(range(edge_num+1)),
-            'correlation coefficient', dats[k]['correlations']
+            'correlation coefficient', dats[k]['correlations'],
+            polyfit=True
         )
 
 def investigate_network_size_influence(Model, max_node_num=300, repeats=10):
@@ -640,7 +641,7 @@ if __name__ == '__main__':
     #analysis(utils.GraphGenerator.get_er_graph(100, 0.3), models.MultiplicatorModel)
     #gene_overview()
 
-    #investigate_active_edge_count_influence_gene_expr(models.BooleanModel)
+    investigate_active_edge_count_influence_gene_expr(models.BooleanModel)
     #investigate_network_size_influence(models.BooleanModel)
     #investigate_base_window_influence()
     #investigate_origin_of_replication_influence()
@@ -655,4 +656,4 @@ if __name__ == '__main__':
 
     #quot_investigator()
     #BM_investigator()
-    tsgpn_origin_investigator()
+    #tsgpn_origin_investigator()
