@@ -260,14 +260,14 @@ def investigate_base_window_influence():
         'correlation between gene expression vector and PF', correlations
     )
 
-def investigate_origin_of_replication_influence():
+def investigate_origin_of_replication_influence(base_window=50000):
     """ Use the two-stranded GPN with varying origin in order to investigate the importance of particular origin position
     """
     # actual origin between 130 and 370 (http://www.metalife.com/Genbank/147023)
     possible_origins = range(1, 4641628, 10000) # 4641628 is rightmost gene end (yjtD)
 
     # compute average gene concentrations once in advance
-    g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
+    g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', base_window)
     exp = g.io.load_averaged_concentrations('../data/concentrations/')
     col, conc = next(exp.get_data())
 
@@ -276,9 +276,14 @@ def investigate_origin_of_replication_influence():
 
     pf_corrs = []
     for i, orig in enumerate(possible_origins):
-        g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000, origin=orig)
+        g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', base_window, origin=orig)
 
-        pf_tmp = g.math.get_perron_frobenius()
+        try:
+            pf_tmp = g.math.get_perron_frobenius()
+        except errors.PowerIterationError:
+            print('Skipping %d' % orig)
+            g.io.dump()
+            continue
         pf = exp.trim_input(pf_tmp, g, col)
 
         corr, _ = utils.StatsHandler.correlate(pf, conc)
@@ -288,7 +293,7 @@ def investigate_origin_of_replication_influence():
     pbar.finish()
 
     present(
-        'Effect of origin of replication', plotter.Plotter.plot,
+        'Effect of origin of replication (bw: %d)' % base_window, plotter.Plotter.plot,
         'origin of replication', possible_origins,
         'correlation between gene expression vector and PF', pf_corrs
     )
@@ -614,6 +619,10 @@ def BM_investigator():
         info={'norm_time': False}
     )
 
+def tsgpn_origin_investigator():
+    investigate_origin_of_replication_influence(25000)
+    investigate_origin_of_replication_influence(50000)
+    investigate_origin_of_replication_influence(100000)
 
 ##################
 # Command Center #
@@ -632,7 +641,7 @@ if __name__ == '__main__':
     #gene_overview()
 
     #investigate_active_edge_count_influence_gene_expr(models.BooleanModel)
-    investigate_network_size_influence(models.BooleanModel)
+    #investigate_network_size_influence(models.BooleanModel)
     #investigate_base_window_influence()
     #investigate_origin_of_replication_influence()
 
@@ -646,3 +655,4 @@ if __name__ == '__main__':
 
     #quot_investigator()
     #BM_investigator()
+    tsgpn_origin_investigator()
