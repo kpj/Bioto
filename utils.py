@@ -46,7 +46,7 @@ class GraphGenerator(object):
 
             if scalefree:
                 while True:
-                    # brute-force right amount fo edges, this might fail horribly!
+                    # brute-force right amount of edges, this might fail horribly!
                     g = GraphGenerator.get_scalefree_graph(graphdef).graph
                     if len(g.edges()) >= activating_edges+inhibiting_edges: break
             else:
