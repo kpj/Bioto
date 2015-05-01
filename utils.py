@@ -282,7 +282,10 @@ class CacheHandler(object):
             dic['info'].update(model.info)
             model_id = model.hash()
 
-        dic['args'] = kwargs
+        if 'args' in dic:
+            dic['args'].update(kwargs)
+        else:
+            dic['args'] = kwargs
 
         if not os.path.exists(CacheHandler.cache_directory):
             os.makedirs(CacheHandler.cache_directory)
