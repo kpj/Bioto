@@ -212,7 +212,11 @@ def real_life_network_stats():
 
 	trn_gpn_circ = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000)
 
-	trn_gpn_tstra = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000, origin=250)
+	trn_gpn_tstra = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000, origin=3925850)
+
+def visualize_graph():
+	g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000, origin=3925850)
+	g.io.visualize('out.png', verbose=True)
 
 
 if __name__ == '__main__':
@@ -227,3 +231,4 @@ if __name__ == '__main__':
 	#variance_of_gene_expression('/home/kpj/GEO/ecoli')
 	#summarize_gene_expression_data('../data/concentrations/')
 	real_life_network_stats()
+	#visualize_graph()
