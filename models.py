@@ -173,7 +173,7 @@ class BooleanModel(Model):
         x0 = npr.randint(2, size=num) if initial_state is None else initial_state
 
         data = np.matrix(x0)
-        for t in range(BooleanModel.info['max_bin_mod_runs']):
+        for t in range(BooleanModel.info['max_bin_mod_runs']-1):
             cur = rule(data[-1])
             data = np.vstack((data, cur))
 
