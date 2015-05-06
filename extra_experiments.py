@@ -19,7 +19,7 @@ from progressbar import ProgressBar
 
 import pysoft
 
-import plotter, utils, models, graph, file_parser, experiment_classes
+import plotter, utils, models, graph, file_parser, experiment_classes, logger
 
 
 def investigate_ER_edge_probs(node_num):
@@ -218,6 +218,37 @@ def visualize_graph():
 	g = utils.GraphGenerator.get_regulatory_graph('../data/architecture/network_tf_gene.txt', '../data/architecture/genome.txt', 50000, origin=3925850)
 	g.io.visualize('out.png', verbose=True)
 
+def BM_histogram(n=20, runs=100, **kwargs):
+	plotter.Plotter.show_plots = False
+	logger.VERBOSE = False
+
+	Model = models.BooleanModel
+	pbar = ProgressBar(maxval=runs)
+
+	all_data = []
+	pbar.start()
+	for i in range(runs):
+		e_num = round(n * 2.33)
+		act = round(2133/(2133+1768) * e_num)
+		inh = e_num-act
+		#print(n, e_num, act, inh)
+
+		g = utils.GraphGenerator.get_random_graph(n, activating_edges=act, inhibiting_edges=inh)
+
+		sim = g.system.simulate(Model, **kwargs)
+		all_data.extend(sim.flatten())
+		pbar.update(i)
+	pbar.finish()
+
+	plt.gca().set_xscale('log')
+	plt.gca().set_yscale('log')
+
+	utils.present(
+        'Histogram of simulated gene expression vector (%s, %s)' % (Model.info['name'], 'time norm' if models.BooleanModel.info['norm_time'] else 'gene norm'), plotter.Plotter.plot_histogram,
+        'gene concentration', 'count', all_data,
+		bins=np.logspace(-4, 0, 200)
+    )
+
 
 if __name__ == '__main__':
 	plotter.Plotter.show_plots = True
@@ -230,5 +261,6 @@ if __name__ == '__main__':
 	#plot_orga_distri('GDS_stats.json', 'geo_db_organism_distribution.png')
 	#variance_of_gene_expression('/home/kpj/GEO/ecoli')
 	#summarize_gene_expression_data('../data/concentrations/')
-	real_life_network_stats()
+	#real_life_network_stats()
 	#visualize_graph()
+	BM_histogram()
