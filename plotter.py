@@ -171,7 +171,7 @@ class Plotter(object):
 
     @staticmethod
     def plot_histogram(data, fname=None):
-        plt.hist(data['data'], bins=200)
+        plt.hist(data['data'], bins=data['args']['bins'] if 'bins' in data['args'] else 200)
 
         plt.title(data['title'])
         plt.xlabel(data['x_label'])
