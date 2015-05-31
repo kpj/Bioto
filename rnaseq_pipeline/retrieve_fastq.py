@@ -67,10 +67,13 @@ def retrieve_srr(uid_fname, srr_fname):
             _url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=sra&id=%s' % line
             _xml = curl_xml(_url)
 
-            identifiers = _xml.find('EXPERIMENT_PACKAGE').find('RUN_SET').find('RUN').find('IDENTIFIERS')
-            srr = identifiers.find('PRIMARY_ID').text
+            try:
+                identifiers = _xml.find('EXPERIMENT_PACKAGE').find('RUN_SET').find('RUN').find('IDENTIFIERS')
+                srr = identifiers.find('PRIMARY_ID').text
 
-            srr_fd.write(srr + '\n')
+                srr_fd.write(srr + '\n')
+            except AttributeError:
+                pass
 
             pbar.update(i)
         pbar.finish()
