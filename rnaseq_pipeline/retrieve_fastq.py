@@ -12,6 +12,7 @@ from progressbar import ProgressBar
 
 
 CHUNK_SIZE = 5000 # how many UIDs to retrieve at once
+FASTQ_DUMP_CMD = '/home/kpj/Downloads/sratoolkit.2.4.5-2-ubuntu64/bin/fa    stq-dump'
 
 def curl_xml(url):
     content = urllib.request.urlopen(url).read().decode('utf-8')
@@ -77,8 +78,6 @@ def retrieve_srr(uid_fname, srr_fname):
 def retrieve_fastq(fname, dst_dir):
     """ Load all specified SRR files into given directory
     """
-    FASTQ_DUMP_CMD = '/home/kpj/Downloads/sratoolkit.2.4.5-2-ubuntu64/bin/fastq-dump'
-
     if not os.path.isdir(dst_dir):
         os.mkdir(dst_dir)
 
