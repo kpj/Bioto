@@ -11,7 +11,8 @@ import xml.etree.ElementTree as ET
 from progressbar import ProgressBar
 
 
-CHUNK_SIZE = 5000 # how many UIDs to retrieve at once
+UID_CHUNK_SIZE = 5000
+SRR_CHUNK_SIZE = 200
 FASTQ_DUMP_CMD = '/home/kpj/Downloads/sratoolkit.2.4.5-2-ubuntu64/bin/fa    stq-dump'
 
 def curl_xml(url):
@@ -39,7 +40,7 @@ def retrieve_uids(term, fname):
     with open(fname, 'w') as fd:
         i = 0
         while True:
-            _url = get_url(i, CHUNK_SIZE)
+            _url = get_url(i, UID_CHUNK_SIZE)
             _xml = curl_xml(_url)
 
             query_size = int(_xml.find('RetMax').text)
@@ -61,19 +62,29 @@ def retrieve_srr(uid_fname, srr_fname):
         pbar = ProgressBar(maxval=len(uid_lines))
 
         pbar.start()
+        current_query = []
         for i, line in enumerate(uid_lines):
             if len(line) == 0: continue
 
-            _url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=sra&id=%s' % line
-            _xml = curl_xml(_url)
+            if len(current_query) < SRR_CHUNK_SIZE:
+                current_query.append(line)
+            else:
+                queries = 'OR'.join(current_query)
 
-            try:
-                identifiers = _xml.find('EXPERIMENT_PACKAGE').find('RUN_SET').find('RUN').find('IDENTIFIERS')
-                srr = identifiers.find('PRIMARY_ID').text
+                _url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=sra&id=%s' % queries
+                _xml = curl_xml(_url)
 
-                srr_fd.write(srr + '\n')
-            except AttributeError:
-                pass
+                if not _xml is None:
+                    for exp_pkg in _xml.findall('EXPERIMENT_PACKAGE'):
+                        try:
+                            identifiers = exp_pkg.find('RUN_SET').find('RUN').find('IDENTIFIERS')
+                            srr = identifiers.find('PRIMARY_ID').text
+
+                            srr_fd.write(srr + '\n')
+                        except AttributeError:
+                            pass
+
+                current_query = []
 
             pbar.update(i)
         pbar.finish()
