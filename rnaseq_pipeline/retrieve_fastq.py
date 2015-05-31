@@ -13,7 +13,7 @@ from progressbar import ProgressBar
 
 UID_CHUNK_SIZE = 5000
 SRR_CHUNK_SIZE = 200
-FASTQ_DUMP_CMD = '/home/kpj/Downloads/sratoolkit.2.4.5-2-ubuntu64/bin/fa    stq-dump'
+FASTQ_DUMP_CMD = '/home/kpj/Downloads/sratoolkit.2.4.5-2-ubuntu64/bin/fastq-dump'
 
 def curl_xml(url):
     content = urllib.request.urlopen(url).read().decode('utf-8')
